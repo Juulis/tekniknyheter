@@ -59,11 +59,15 @@ const countEl = document.getElementById('count');
 const searchInput = document.getElementById('search');
 const categoryFiltersEl = document.getElementById('category-filters');
 const clearFiltersBtn = document.getElementById('clear-filters');
+const sortSelect = document.getElementById('sort');
+
+const SORTS = new Set(['newest', 'oldest', 'title']);
 
 const state = {
   allItems: [],
   query: '',
   category: 'Alla',
+  sort: 'newest',
 };
 
 function hoursAgo(hours) {
@@ -146,20 +150,59 @@ function uniqueCategories(items) {
   return ['Alla', ...[...new Set(items.map((item) => item.category))].sort((a, b) => a.localeCompare(b, 'sv'))];
 }
 
+function sortItems(items) {
+  const copy = [...items];
+  if (state.sort === 'oldest') {
+    return copy.sort((a, b) => new Date(a.publishedAt) - new Date(b.publishedAt));
+  }
+  if (state.sort === 'title') {
+    return copy.sort((a, b) => String(a.title || '').localeCompare(String(b.title || ''), 'sv'));
+  }
+  return copy.sort((a, b) => new Date(b.publishedAt) - new Date(a.publishedAt));
+}
+
 function filteredItems() {
   const q = state.query.trim().toLowerCase();
-  return state.allItems.filter((item) => {
+  const filtered = state.allItems.filter((item) => {
     const categoryOk = state.category === 'Alla' || item.category === state.category;
     if (!categoryOk) return false;
     if (!q) return true;
     const hay = `${item.title || ''} ${item.summary || ''} ${item.source || ''} ${item.category || ''}`.toLowerCase();
     return hay.includes(q);
   });
+  return sortItems(filtered);
 }
 
 function syncClearButton() {
-  const active = Boolean(state.query.trim()) || state.category !== 'Alla';
+  const active =
+    Boolean(state.query.trim()) || state.category !== 'Alla' || state.sort !== 'newest';
   clearFiltersBtn.hidden = !active;
+}
+
+function readUrlState() {
+  const params = new URLSearchParams(window.location.search);
+  const q = params.get('q') || '';
+  const category = params.get('category') || 'Alla';
+  const sort = params.get('sort') || 'newest';
+  state.query = q;
+  state.category = category || 'Alla';
+  state.sort = SORTS.has(sort) ? sort : 'newest';
+  searchInput.value = state.query;
+  sortSelect.value = state.sort;
+}
+
+function writeUrlState() {
+  const params = new URLSearchParams();
+  if (state.query.trim()) params.set('q', state.query.trim());
+  if (state.category && state.category !== 'Alla') params.set('category', state.category);
+  if (state.sort && state.sort !== 'newest') params.set('sort', state.sort);
+
+  const next = params.toString();
+  const url = next ? `${window.location.pathname}?${next}` : window.location.pathname;
+  const current = `${window.location.pathname}${window.location.search}`;
+  if (url !== current) {
+    history.replaceState(null, '', url);
+  }
 }
 
 function renderCategoryFilters() {
@@ -185,6 +228,7 @@ function renderList() {
   const items = filteredItems();
   setCount(items.length, state.allItems.length);
   syncClearButton();
+  writeUrlState();
 
   if (!state.allItems.length) {
     listEl.innerHTML = '<div class="empty">Inga nyheter ännu. När boten postar till API:t dyker de upp här.</div>';
@@ -199,7 +243,10 @@ function renderList() {
 
   listEl.innerHTML = items
     .map((item, index) => {
-      const featured = index === 0 && state.category === 'Alla' && !state.query.trim() ? ' featured' : '';
+      const featured =
+        index === 0 && state.category === 'Alla' && !state.query.trim() && state.sort === 'newest'
+          ? ' featured'
+          : '';
       const title = item.url
         ? `<a href="${escapeAttr(item.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(item.title)}</a>`
         : escapeHtml(item.title);
@@ -265,7 +312,9 @@ function toggleTheme() {
 function clearFilters() {
   state.query = '';
   state.category = 'Alla';
+  state.sort = 'newest';
   searchInput.value = '';
+  sortSelect.value = 'newest';
   applyFiltersAndRender();
 }
 
@@ -306,6 +355,11 @@ searchInput.addEventListener('input', () => {
   }, 120);
 });
 
+sortSelect.addEventListener('change', () => {
+  state.sort = SORTS.has(sortSelect.value) ? sortSelect.value : 'newest';
+  renderList();
+});
+
 categoryFiltersEl.addEventListener('click', (event) => {
   const btn = event.target.closest('[data-category]');
   if (!btn) return;
@@ -320,8 +374,14 @@ listEl.addEventListener('click', (event) => {
   applyFiltersAndRender();
 });
 
+window.addEventListener('popstate', () => {
+  readUrlState();
+  applyFiltersAndRender();
+});
+
 clearFiltersBtn.addEventListener('click', clearFilters);
 themeToggle.addEventListener('click', toggleTheme);
 refreshBtn.addEventListener('click', loadNews);
 syncThemeButton();
+readUrlState();
 loadNews();

@@ -33,6 +33,17 @@ function filterItems(items, { q, category }) {
     });
 }
 
+function sortItems(items, sort) {
+  const copy = [...items];
+  if (sort === 'oldest') {
+    return copy.sort((a, b) => new Date(a.publishedAt) - new Date(b.publishedAt));
+  }
+  if (sort === 'title') {
+    return copy.sort((a, b) => String(a.title || '').localeCompare(String(b.title || ''), 'sv'));
+  }
+  return copy.sort((a, b) => new Date(b.publishedAt) - new Date(a.publishedAt));
+}
+
 module.exports = async function handler(req, res) {
   cors(res);
 
@@ -47,14 +58,16 @@ module.exports = async function handler(req, res) {
   const url = new URL(req.url, 'http://localhost');
   const q = url.searchParams.get('q') || '';
   const category = url.searchParams.get('category') || '';
+  const sort = url.searchParams.get('sort') || 'newest';
   const all = listNews().map((item) => ({ ...item, category: guessCategory(item) }));
-  const items = filterItems(all, { q, category });
+  const filtered = filterItems(all, { q, category });
+  const items = sortItems(filtered, sort);
 
   return res.status(200).json({
     items,
     total: all.length,
     filtered: items.length,
-    query: { q, category: category || null },
+    query: { q, category: category || null, sort },
     generatedAt: new Date().toISOString(),
   });
 };

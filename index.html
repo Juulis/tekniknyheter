@@ -46,6 +46,14 @@
         </label>
         <div id="category-filters" class="category-filters" role="group" aria-label="Kategorier"></div>
         <div class="toolbar">
+          <label class="sort">
+            <span class="sr-only">Sortering</span>
+            <select id="sort" aria-label="Sortering">
+              <option value="newest">Nyast först</option>
+              <option value="oldest">Äldst först</option>
+              <option value="title">Titel A–Ö</option>
+            </select>
+          </label>
           <button id="refresh" type="button">Uppdatera</button>
           <button id="clear-filters" type="button" class="ghost" hidden>Rensa filter</button>
           <span id="count" class="count" hidden></span>
