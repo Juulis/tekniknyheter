@@ -3,9 +3,35 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Tekniknyheter</title>
-    <meta name="description" content="Tekniknyheter samlade från bots och källor." />
+    <title>Tekniknyheter — AI, hårdvara och utvecklarnyheter</title>
+    <meta
+      name="description"
+      content="Tekniknyheter samlade från bots och källor. AI, hårdvara, utveckling, policy och infra — med sök, filter och live-API."
+    />
+    <meta name="theme-color" content="#070b16" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#f4f7fc" media="(prefers-color-scheme: light)" />
     <meta name="color-scheme" content="dark light" />
+    <meta name="robots" content="index,follow" />
+    <link rel="canonical" href="https://juulis.github.io/tekniknyheter/" />
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="sv_SE" />
+    <meta property="og:title" content="Tekniknyheter" />
+    <meta
+      property="og:description"
+      content="Bot-driven tekniknyhetssida med sök, kategorier och API-ingest."
+    />
+    <meta property="og:url" content="https://juulis.github.io/tekniknyheter/" />
+    <meta property="og:site_name" content="Tekniknyheter" />
+
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="Tekniknyheter" />
+    <meta
+      name="twitter:description"
+      content="Bot-driven tekniknyhetssida med sök, kategorier och API-ingest."
+    />
+
     <link rel="stylesheet" href="styles.css" />
     <script>
       (function () {
@@ -21,6 +47,7 @@
     </script>
   </head>
   <body>
+    <a class="skip-link" href="#news-list">Hoppa till nyheter</a>
     <div class="wrap">
       <header>
         <div class="brand">
@@ -29,24 +56,25 @@
           <p class="lede">Samlar AI, hårdvara, mjukvara och policy — redo för live-feed från din nyhetsbot.</p>
         </div>
         <div class="header-actions">
-          <div id="status" class="badge" data-state="loading">Startar…</div>
-          <button id="theme-toggle" type="button" class="ghost" aria-label="Byt tema">Tema</button>
+          <div id="status" class="badge" data-state="loading" role="status" aria-live="polite">Startar…</div>
+          <button id="theme-toggle" type="button" class="ghost" aria-label="Byt mellan ljust och mörkt tema">Tema</button>
         </div>
       </header>
 
       <section class="filters" aria-label="Sök och filtrera">
-        <label class="search">
+        <label class="search" for="search">
           <span class="sr-only">Sök nyheter</span>
           <input
             id="search"
             type="search"
             placeholder="Sök titel, sammanfattning eller källa…"
             autocomplete="off"
+            enterkeyhint="search"
           />
         </label>
         <div id="category-filters" class="category-filters" role="group" aria-label="Kategorier"></div>
         <div class="toolbar">
-          <label class="sort">
+          <label class="sort" for="sort">
             <span class="sr-only">Sortering</span>
             <select id="sort" aria-label="Sortering">
               <option value="newest">Nyast först</option>
@@ -56,11 +84,11 @@
           </label>
           <button id="refresh" type="button">Uppdatera</button>
           <button id="clear-filters" type="button" class="ghost" hidden>Rensa filter</button>
-          <span id="count" class="count" hidden></span>
+          <span id="count" class="count" hidden aria-live="polite"></span>
         </div>
       </section>
 
-      <main id="news-list" class="grid" aria-live="polite"></main>
+      <main id="news-list" class="grid" tabindex="-1" aria-live="polite" aria-busy="true"></main>
 
       <footer>
         <span>Frontend: GitHub Pages</span>

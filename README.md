@@ -1,45 +1,55 @@
 # Tekniknyheter
 
-Skal till en tekniknyhetssida.
+Bot-driven tekniknyhetssida.
 
-- **Frontend:** statisk sajt för [GitHub Pages](https://pages.github.com/)
+- **Frontend:** statisk sajt på [GitHub Pages](https://pages.github.com/) via GitHub Actions
 - **Backend:** serverless API på [Vercel](https://vercel.com/)
-- **Innehåll:** en annan bot kan skicka in nyheter via `POST /api/ingest`
+- **Innehåll:** en annan bot skickar in nyheter via `POST /api/ingest`
 
-Repo: https://github.com/Juulis/tekniknyheter
+Repo: https://github.com/Juulis/tekniknyheter  
+Förväntad Pages-URL: https://juulis.github.io/tekniknyheter/
+
+## Funktioner i skalet
+
+- Nyhetskort med kategori, källa, relativ tid
+- Sök + kategorifilter + sortering (nyast / äldst / titel)
+- Delbara URL:er: `?q=ai&category=AI&sort=newest`
+- Dark/light-läge (sparat i `localStorage`)
+- Skeleton loading, tom-/fel-lägen, sample-data utan API
 
 ## Struktur
 
 ```
 /
-  index.html      # Pages-frontend
+  index.html
   styles.css
   app.js
-  config.js       # apiBaseUrl till Vercel
+  config.js                 # apiBaseUrl till Vercel
+  favicon.svg / robots.txt / sitemap.xml
+  .github/workflows/pages.yml
   api/
-    news.js       # GET  /api/news
-    ingest.js     # POST /api/ingest
-    _lib/store.js # tillfällig lagring + exempeldata
+    news.js                 # GET  /api/news?q=&category=&sort=
+    ingest.js               # POST /api/ingest
+    _lib/store.js           # tillfällig lagring + seed
   vercel.json
 ```
 
-## 1. Aktivera GitHub Pages
+## 1. GitHub Pages (Actions)
 
-1. Öppna **Settings → Pages** i repot
-2. Source: **Deploy from a branch**
-3. Branch: `main` / `/ (root)`
-4. Spara — sajten landar på `https://juulis.github.io/tekniknyheter/`
+Pages ska vara satt till **GitHub Actions**. Workflowen `.github/workflows/pages.yml` deployar frontend-filerna vid push till `main`.
 
-## 2. Deploya API till Vercel
+Sajt: `https://juulis.github.io/tekniknyheter/`
 
-1. Importera repot i Vercel
-2. Lägg till miljövariabeln `INGEST_API_KEY` (valfritt starkt lösenord/token)
+## 2. Vercel (API)
+
+1. Importera `Juulis/tekniknyheter` i Vercel
+2. Sätt miljövariabeln `INGEST_API_KEY`
 3. Deploy
-4. Uppdatera `config.js` med din Vercel-URL, t.ex.:
+4. Uppdatera `config.js`:
 
 ```js
 window.TEKNIKNYHETER_CONFIG = {
-  apiBaseUrl: 'https://tekniknyheter.vercel.app',
+  apiBaseUrl: 'https://DIN-VERCEL-URL',
 };
 ```
 
@@ -47,13 +57,23 @@ window.TEKNIKNYHETER_CONFIG = {
 
 ### `GET /api/news`
 
-Returnerar `{ items: NewsItem[], generatedAt }`.
+Query (valfritt): `q`, `category`, `sort` (`newest` | `oldest` | `title`)
+
+Svar:
+
+```json
+{
+  "items": [],
+  "total": 0,
+  "filtered": 0,
+  "query": { "q": "", "category": null, "sort": "newest" },
+  "generatedAt": "..."
+}
+```
 
 ### `POST /api/ingest`
 
 Header: `X-Ingest-Key: <INGEST_API_KEY>`
-
-Body (ett objekt eller `{ items: [...] }`):
 
 ```json
 {
@@ -61,25 +81,26 @@ Body (ett objekt eller `{ items: [...] }`):
   "summary": "Kort text",
   "url": "https://exempel.se/artikel",
   "source": "Nyhetsbot",
+  "category": "AI",
   "publishedAt": "2026-09-13T20:00:00.000Z"
 }
 ```
 
-Exempel:
+Även array eller `{ "items": [...] }` fungerar.
 
 ```bash
 curl -X POST "https://DIN-VERCEL-URL/api/ingest" \
   -H "Content-Type: application/json" \
   -H "X-Ingest-Key: $INGEST_API_KEY" \
-  -d '{"title":"Test","summary":"Från boten","source":"Nyhetsbot"}'
+  -d '{"title":"Test","summary":"Från boten","source":"Nyhetsbot","category":"AI"}'
 ```
 
-## Obs om lagring
+## Lagring
 
-`api/_lib/store.js` är **tillfällig** (minne per serverless-instans) med seed-data. Bra för skalet — byt till t.ex. Vercel KV / databas innan produktion.
+`api/_lib/store.js` är **tillfällig** (minne per serverless-instans) + seed-data. Byt till Vercel KV / databas innan produktion.
 
 ## Nästa steg
 
-1. Sätt Pages + Vercel
+1. Klara Vercel-deploy + `config.js`
 2. Koppla nyhetsboten till `/api/ingest`
-3. Byt till hållbar lagring
+3. Hållbar lagring
