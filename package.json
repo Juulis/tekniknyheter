@@ -1,0 +1,12 @@
+{
+  "name": "tekniknyheter",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Tekniknyhetssida — frontend på GitHub Pages, API på Vercel",
+  "scripts": {
+    "dev": "vercel dev"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
