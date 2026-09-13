@@ -1,4 +1,4 @@
-// Byt till din Vercel-URL efter deploy, t.ex. https://tekniknyheter.vercel.app
+// Vercel production API
 window.TEKNIKNYHETER_CONFIG = {
   apiBaseUrl: 'https://tekniknyheter.vercel.app',
 };
