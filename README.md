@@ -1,106 +1,52 @@
 # Tekniknyheter
 
-Bot-driven tekniknyhetssida.
+Bot-driven tekniknyhetssida med **redaktionell prioritering**.
 
-- **Frontend:** statisk sajt på [GitHub Pages](https://pages.github.com/) via GitHub Actions
-- **Backend:** serverless API på [Vercel](https://vercel.com/)
-- **Innehåll:** en annan bot skickar in nyheter via `POST /api/ingest`
+- **Frontend:** https://juulis.github.io/tekniknyheter/
+- **API:** https://tekniknyheter.vercel.app
+- **Repo:** https://github.com/Juulis/tekniknyheter
 
-Repo: https://github.com/Juulis/tekniknyheter  
-Förväntad Pages-URL: https://juulis.github.io/tekniknyheter/
+## Redaktionell prio (Juulis)
 
-## Funktioner i skalet
+Prioritera **positiva** nyheter inom:
 
-- Nyhetskort med kategori, källa, relativ tid
-- Sök + kategorifilter + sortering (nyast / äldst / titel)
-- Delbara URL:er: `?q=ai&category=AI&sort=newest`
-- Dark/light-läge (sparat i `localStorage`)
-- Skeleton loading, tom-/fel-lägen, sample-data utan API
+- Tesla
+- Elbilar
+- Elon Musk
+- NVIDIA / Jensen Huang
+- Elon Musks bolag (Tesla, xAI, SpaceX, Neuralink, m.fl.)
+- Geopolitiska tekniknyheter (lag/AI-regler m.m.)
+- AI
 
-## Struktur
+Negativt brus i samma ämnen har lägre prio.
 
-```
-/
-  index.html
-  styles.css
-  app.js
-  config.js                 # apiBaseUrl till Vercel
-  favicon.svg / robots.txt / sitemap.xml
-  .github/workflows/pages.yml
-  api/
-    news.js                 # GET  /api/news?q=&category=&sort=
-    ingest.js               # POST /api/ingest
-    _lib/store.js           # tillfällig lagring + seed
-  vercel.json
-```
+### Hur det är implementerat
 
-## 1. GitHub Pages (Actions)
+| Lager | Beteende |
+| --- | --- |
+| `api/_lib/editorial.js` | Tags, sentiment-heuristik, `priorityScore`, topic-lista |
+| `GET /api/news` | Default `editorial=1&positive=1&sort=priority` |
+| `POST /api/ingest` | Auto-taggar; `strictEditorial: true` eller header `X-Strict-Editorial: 1` avvisar lågprio/negativt |
+| Frontend | Visar tags, sorterar på redaktionell prio, kategorier från prio-ämnen |
 
-Pages ska vara satt till **GitHub Actions**. Workflowen `.github/workflows/pages.yml` deployar frontend-filerna vid push till `main`.
+Ingest-tips till nyhetsboten: skicka gärna `tags`, `sentiment: "positive"` och `priority: true` när det passar.
 
-Sajt: `https://juulis.github.io/tekniknyheter/`
-
-## 2. Vercel (API)
-
-1. Importera `Juulis/tekniknyheter` i Vercel
-2. Sätt miljövariabeln `INGEST_API_KEY`
-3. Deploy
-4. Uppdatera `config.js`:
-
-```js
-window.TEKNIKNYHETER_CONFIG = {
-  apiBaseUrl: 'https://DIN-VERCEL-URL',
-};
-```
-
-## API
-
-### `GET /api/news`
-
-Query (valfritt): `q`, `category`, `sort` (`newest` | `oldest` | `title`)
-
-Svar:
-
-```json
-{
-  "items": [],
-  "total": 0,
-  "filtered": 0,
-  "query": { "q": "", "category": null, "sort": "newest" },
-  "generatedAt": "..."
-}
-```
-
-### `POST /api/ingest`
-
-Header: `X-Ingest-Key: <INGEST_API_KEY>`
-
-```json
-{
-  "title": "Rubrik",
-  "summary": "Kort text",
-  "url": "https://exempel.se/artikel",
-  "source": "Nyhetsbot",
-  "category": "AI",
-  "publishedAt": "2026-09-13T20:00:00.000Z"
-}
-```
-
-Även array eller `{ "items": [...] }` fungerar.
+## API i korthet
 
 ```bash
-curl -X POST "https://DIN-VERCEL-URL/api/ingest" \
-  -H "Content-Type: application/json" \
-  -H "X-Ingest-Key: $INGEST_API_KEY" \
-  -d '{"title":"Test","summary":"Från boten","source":"Nyhetsbot","category":"AI"}'
+curl "https://tekniknyheter.vercel.app/api/news?editorial=1&positive=1&sort=priority"
 ```
 
-## Lagring
+```bash
+curl -X POST "https://tekniknyheter.vercel.app/api/ingest" \
+  -H "Content-Type: application/json" \
+  -H "X-Ingest-Key: $INGEST_API_KEY" \
+  -H "X-Strict-Editorial: 1" \
+  -d '{"title":"Tesla ...","summary":"...","source":"Bot","sentiment":"positive"}'
+```
 
-`api/_lib/store.js` är **tillfällig** (minne per serverless-instans) + seed-data. Byt till Vercel KV / databas innan produktion.
+## Deploy
 
-## Nästa steg
-
-1. Klara Vercel-deploy + `config.js`
-2. Koppla nyhetsboten till `/api/ingest`
-3. Hållbar lagring
+- Pages: GitHub Actions (`.github/workflows/pages.yml`)
+- API: Vercel-projekt `tekniknyheter` (team juuffy), auto-deploy från `main`
+- Sätt `INGEST_API_KEY` i Vercel env om den saknas
