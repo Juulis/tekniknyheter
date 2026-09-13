@@ -1,73 +1,63 @@
-const fallbackNews = [
+const EDITORIAL_FALLBACK = [
   {
     id: 'local-1',
-    title: 'EU föreslår nya AI-regler för öppna modeller',
-    summary:
-      'Utkastet handlar om transparenskrav, riskklassning och hur öppna modeller ska dokumenteras innan bred användning.',
-    url: 'https://digital-strategy.ec.europa.eu',
-    source: 'Policy Watch',
-    category: 'Policy',
-    publishedAt: hoursAgo(3),
+    title: 'Tesla levererar rekordmånga bilar i kvartalet',
+    summary: 'Leveranserna ökar i flera marknader samtidigt som Supercharger-nätet växer.',
+    url: 'https://www.tesla.com',
+    source: 'EV Desk',
+    category: 'Tesla',
+    tags: ['Tesla', 'Elbilar'],
+    sentiment: 'positive',
+    priorityScore: 40,
+    publishedAt: hoursAgo(2),
   },
   {
     id: 'local-2',
-    title: 'Nytt M-chip lovar längsta batteritiden hittills',
-    summary:
-      'Tillverkaren visar benchmarks där maskinen klarar heldagsarbete utan laddning, med fokus på tyst kylning.',
-    url: 'https://www.apple.com',
-    source: 'Hardware Daily',
-    category: 'Hårdvara',
-    publishedAt: hoursAgo(7),
+    title: 'NVIDIA och Jensen Huang visar nästa AI-GPU-generation',
+    summary: 'Nya chips lovar högre träningseffektivitet för LLM:er.',
+    url: 'https://www.nvidia.com',
+    source: 'Chip Wire',
+    category: 'NVIDIA',
+    tags: ['NVIDIA', 'Jensen Huang', 'AI'],
+    sentiment: 'positive',
+    priorityScore: 42,
+    publishedAt: hoursAgo(5),
   },
   {
     id: 'local-3',
-    title: 'Öppen LLM sätter rekord i kodbench',
-    summary:
-      'En community-tränad modell når toppresultat i flera programmeringsuppgifter och släpps med öppna vikter.',
-    url: 'https://huggingface.co',
-    source: 'Model Hub',
+    title: 'xAI öppnar nya kapaciteter i Grok för utvecklare',
+    summary: 'API-utökningen gör det enklare att bygga produktivitetsverktyg.',
+    url: 'https://x.ai',
+    source: 'AI Brief',
     category: 'AI',
-    publishedAt: hoursAgo(14),
+    tags: ['xAI', 'AI', 'Elon Musk'],
+    sentiment: 'positive',
+    priorityScore: 38,
+    publishedAt: hoursAgo(9),
   },
   {
     id: 'local-4',
-    title: 'GitHub lanserar snabbare Pages-deploys',
-    summary:
-      'Byggtider kortas för statiska sajter, med bättre cache och tydligare status i Actions-loggen.',
-    url: 'https://github.blog',
-    source: 'DevTools',
-    category: 'Utveckling',
-    publishedAt: hoursAgo(22),
+    title: 'SpaceX Starship klarar ny testmilstolpe',
+    summary: 'Lyckad flygsekvens stärker tidplanen för frekventa uppskjutningar.',
+    url: 'https://www.spacex.com',
+    source: 'Orbit Daily',
+    category: 'SpaceX',
+    tags: ['SpaceX', 'Elon Musk'],
+    sentiment: 'positive',
+    priorityScore: 35,
+    publishedAt: hoursAgo(14),
   },
   {
     id: 'local-5',
-    title: 'Vercel KV får enklare SDK för edge-lagring',
-    summary:
-      'Nytt paket gör det smidigare att spara JSON nära användaren — bra nästa steg när vårt nyhetslager ska bli hållbart.',
-    url: 'https://vercel.com/blog',
-    source: 'Cloud Notes',
-    category: 'Infra',
-    publishedAt: hoursAgo(30),
-  },
-  {
-    id: 'local-6',
-    title: 'Rust 1.x stabiliserar fler async-API:er',
-    summary:
-      'Release notes lyfter fram bättre ergonomi för futures och tydligare felmeddelanden i compilern.',
-    url: 'https://blog.rust-lang.org',
-    source: 'Lang Weekly',
-    category: 'Utveckling',
-    publishedAt: hoursAgo(40),
-  },
-  {
-    id: 'local-7',
-    title: 'Kvantchip når 99,9 % två-qubit-fidelitet i labb',
-    summary:
-      'Forskargrupp visar att felkorrigering blir mer praktisk när brusnivåerna sjunker under kritiska trösklar.',
-    url: 'https://www.nature.com',
-    source: 'Science Desk',
-    category: 'Hårdvara',
-    publishedAt: hoursAgo(52),
+    title: 'EU:s AI Act får tydligare vägledning för innovation',
+    summary: 'Riktlinjer ska göra det enklare att följa reglerna utan att bromsa utveckling.',
+    url: 'https://digital-strategy.ec.europa.eu',
+    source: 'Policy Watch',
+    category: 'Geopolitik',
+    tags: ['Geopolitik', 'AI'],
+    sentiment: 'positive',
+    priorityScore: 30,
+    publishedAt: hoursAgo(20),
   },
 ];
 
@@ -81,13 +71,13 @@ const categoryFiltersEl = document.getElementById('category-filters');
 const clearFiltersBtn = document.getElementById('clear-filters');
 const sortSelect = document.getElementById('sort');
 
-const SORTS = new Set(['newest', 'oldest', 'title']);
+const SORTS = new Set(['priority', 'newest', 'oldest', 'title']);
 
 const state = {
   allItems: [],
   query: '',
   category: 'Alla',
-  sort: 'newest',
+  sort: 'priority',
 };
 
 function hoursAgo(hours) {
@@ -130,11 +120,7 @@ function setCount(shown, total) {
     return;
   }
   countEl.hidden = false;
-  if (shown === total) {
-    countEl.textContent = total === 1 ? '1 nyhet' : `${total} nyheter`;
-  } else {
-    countEl.textContent = `Visar ${shown} av ${total}`;
-  }
+  countEl.textContent = shown === total ? `${total} nyheter` : `Visar ${shown} av ${total}`;
 }
 
 function setBusy(busy) {
@@ -156,62 +142,40 @@ function renderSkeleton() {
     .join('');
 }
 
-function guessCategory(item) {
-  if (item.category) return item.category;
-  const hay = `${item.title || ''} ${item.summary || ''}`.toLowerCase();
-  if (/ai|llm|model|gpt|openai/.test(hay)) return 'AI';
-  if (/chip|gpu|laptop|iphone|hardware|batteri|kvant/.test(hay)) return 'Hårdvara';
-  if (/eu|lag|policy|regler|gdpr/.test(hay)) return 'Policy';
-  if (/github|vercel|deploy|sdk|api|kod|rust/.test(hay)) return 'Utveckling';
-  if (/kv|infra|edge|cloud/.test(hay)) return 'Infra';
-  return 'Teknik';
-}
-
-function normalizeItems(items) {
-  return items.map((item) => ({ ...item, category: guessCategory(item) }));
-}
-
 function uniqueCategories(items) {
-  return ['Alla', ...[...new Set(items.map((item) => item.category))].sort((a, b) => a.localeCompare(b, 'sv'))];
+  return ['Alla', ...[...new Set(items.map((item) => item.category).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'sv'))];
 }
 
 function sortItems(items) {
   const copy = [...items];
-  if (state.sort === 'oldest') {
-    return copy.sort((a, b) => new Date(a.publishedAt) - new Date(b.publishedAt));
-  }
-  if (state.sort === 'title') {
-    return copy.sort((a, b) => String(a.title || '').localeCompare(String(b.title || ''), 'sv'));
-  }
-  return copy.sort((a, b) => new Date(b.publishedAt) - new Date(a.publishedAt));
+  if (state.sort === 'oldest') return copy.sort((a, b) => new Date(a.publishedAt) - new Date(b.publishedAt));
+  if (state.sort === 'title') return copy.sort((a, b) => String(a.title || '').localeCompare(String(b.title || ''), 'sv'));
+  if (state.sort === 'newest') return copy.sort((a, b) => new Date(b.publishedAt) - new Date(a.publishedAt));
+  return copy.sort((a, b) => (b.priorityScore || 0) - (a.priorityScore || 0) || new Date(b.publishedAt) - new Date(a.publishedAt));
 }
 
 function filteredItems() {
   const q = state.query.trim().toLowerCase();
-  const filtered = state.allItems.filter((item) => {
-    const categoryOk = state.category === 'Alla' || item.category === state.category;
-    if (!categoryOk) return false;
-    if (!q) return true;
-    const hay = `${item.title || ''} ${item.summary || ''} ${item.source || ''} ${item.category || ''}`.toLowerCase();
-    return hay.includes(q);
-  });
-  return sortItems(filtered);
+  return sortItems(
+    state.allItems.filter((item) => {
+      if (state.category !== 'Alla' && item.category !== state.category) return false;
+      if (!q) return true;
+      const hay = `${item.title || ''} ${item.summary || ''} ${item.source || ''} ${item.category || ''} ${(item.tags || []).join(' ')}`.toLowerCase();
+      return hay.includes(q);
+    })
+  );
 }
 
 function syncClearButton() {
-  const active =
-    Boolean(state.query.trim()) || state.category !== 'Alla' || state.sort !== 'newest';
-  clearFiltersBtn.hidden = !active;
+  clearFiltersBtn.hidden = !(state.query.trim() || state.category !== 'Alla' || state.sort !== 'priority');
 }
 
 function readUrlState() {
   const params = new URLSearchParams(window.location.search);
-  const q = params.get('q') || '';
-  const category = params.get('category') || 'Alla';
-  const sort = params.get('sort') || 'newest';
-  state.query = q;
-  state.category = category || 'Alla';
-  state.sort = SORTS.has(sort) ? sort : 'newest';
+  state.query = params.get('q') || '';
+  state.category = params.get('category') || 'Alla';
+  const sort = params.get('sort') || 'priority';
+  state.sort = SORTS.has(sort) ? sort : 'priority';
   searchInput.value = state.query;
   sortSelect.value = state.sort;
 }
@@ -219,32 +183,19 @@ function readUrlState() {
 function writeUrlState() {
   const params = new URLSearchParams();
   if (state.query.trim()) params.set('q', state.query.trim());
-  if (state.category && state.category !== 'Alla') params.set('category', state.category);
-  if (state.sort && state.sort !== 'newest') params.set('sort', state.sort);
-
+  if (state.category !== 'Alla') params.set('category', state.category);
+  if (state.sort !== 'priority') params.set('sort', state.sort);
   const next = params.toString();
   const url = next ? `${window.location.pathname}?${next}` : window.location.pathname;
-  const current = `${window.location.pathname}${window.location.search}`;
-  if (url !== current) {
-    history.replaceState(null, '', url);
-  }
+  if (url !== `${window.location.pathname}${window.location.search}`) history.replaceState(null, '', url);
 }
 
 function renderCategoryFilters() {
   const cats = uniqueCategories(state.allItems);
-  if (!cats.includes(state.category)) {
-    state.category = 'Alla';
-  }
-
+  if (!cats.includes(state.category)) state.category = 'Alla';
   categoryFiltersEl.innerHTML = cats
     .map(
-      (cat) => `
-      <button
-        type="button"
-        class="filter-chip"
-        data-category="${escapeAttr(cat)}"
-        aria-pressed="${cat === state.category ? 'true' : 'false'}"
-      >${escapeHtml(cat)}</button>`
+      (cat) => `<button type="button" class="filter-chip" data-category="${escapeAttr(cat)}" aria-pressed="${cat === state.category}">${escapeHtml(cat)}</button>`
     )
     .join('');
 }
@@ -257,25 +208,24 @@ function renderList() {
   setBusy(false);
 
   if (!state.allItems.length) {
-    listEl.innerHTML = '<div class="empty" role="status">Inga nyheter ännu. När boten postar till API:t dyker de upp här.</div>';
+    listEl.innerHTML = '<div class="empty" role="status">Inga nyheter ännu.</div>';
     return;
   }
-
   if (!items.length) {
-    listEl.innerHTML =
-      '<div class="empty" role="status">Inga träffar. Prova ett annat sökord eller kategori.</div>';
+    listEl.innerHTML = '<div class="empty" role="status">Inga träffar i redaktionell vy.</div>';
     return;
   }
 
   listEl.innerHTML = items
     .map((item, index) => {
-      const featured =
-        index === 0 && state.category === 'Alla' && !state.query.trim() && state.sort === 'newest'
-          ? ' featured'
-          : '';
+      const featured = index === 0 && state.category === 'Alla' && !state.query.trim() ? ' featured' : '';
       const title = item.url
         ? `<a href="${escapeAttr(item.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(item.title)}</a>`
         : escapeHtml(item.title);
+      const tags = (item.tags || [])
+        .slice(0, 4)
+        .map((t) => `<span class="chip">${escapeHtml(t)}</span>`)
+        .join('');
       const link = item.url
         ? `<a class="read-more" href="${escapeAttr(item.url)}" target="_blank" rel="noopener noreferrer">Läs mer<span class="sr-only">: ${escapeHtml(item.title)}</span></a>`
         : '<span></span>';
@@ -283,15 +233,15 @@ function renderList() {
       return `
         <article class="card${featured}">
           <div class="meta">
-            <button type="button" class="chip buttonish" data-category="${escapeAttr(item.category)}" aria-label="Filtrera på ${escapeAttr(item.category)}">${escapeHtml(item.category)}</button>
+            <button type="button" class="chip buttonish" data-category="${escapeAttr(item.category)}" aria-label="Filtrera på ${escapeAttr(item.category)}">${escapeHtml(item.category || 'Teknik')}</button>
+            ${tags}
             <span class="source">${escapeHtml(item.source || 'Okänd källa')}</span>
-            <time class="time" datetime="${escapeAttr(item.publishedAt)}" title="${escapeAttr(formatDate(item.publishedAt))}">${escapeHtml(formatRelative(item.publishedAt))}</time>
+            <time class="time" datetime="${escapeAttr(item.publishedAt)}">${escapeHtml(formatRelative(item.publishedAt))}</time>
           </div>
           <h2>${title}</h2>
           <p>${escapeHtml(item.summary || '')}</p>
           <div class="card-footer">${link}</div>
-        </article>
-      `;
+        </article>`;
     })
     .join('');
 }
@@ -302,7 +252,7 @@ function applyFiltersAndRender() {
 }
 
 function setItems(items) {
-  state.allItems = normalizeItems(items);
+  state.allItems = items;
   applyFiltersAndRender();
 }
 
@@ -331,18 +281,16 @@ function syncThemeButton() {
 function toggleTheme() {
   const next = currentTheme() === 'dark' ? 'light' : 'dark';
   document.documentElement.setAttribute('data-theme', next);
-  try {
-    localStorage.setItem('tn-theme', next);
-  } catch (_) {}
+  try { localStorage.setItem('tn-theme', next); } catch (_) {}
   syncThemeButton();
 }
 
 function clearFilters() {
   state.query = '';
   state.category = 'Alla';
-  state.sort = 'newest';
+  state.sort = 'priority';
   searchInput.value = '';
-  sortSelect.value = 'newest';
+  sortSelect.value = 'priority';
   applyFiltersAndRender();
 }
 
@@ -353,21 +301,16 @@ async function loadNews() {
   renderSkeleton();
 
   try {
-    const res = await fetch(`${base.replace(/\/$/, '')}/api/news`, {
+    const res = await fetch(`${base.replace(/\/$/, '')}/api/news?editorial=1&positive=1&sort=priority`, {
       headers: { Accept: 'application/json' },
     });
-
-    if (!res.ok) {
-      throw new Error(`API svarade ${res.status}`);
-    }
-
+    if (!res.ok) throw new Error(`API svarade ${res.status}`);
     const data = await res.json();
-    const items = Array.isArray(data.items) ? data.items : [];
-    setItems(items);
-    setStatus('live', 'Live från API');
+    setItems(Array.isArray(data.items) ? data.items : []);
+    setStatus('live', 'Live · redaktionell prio');
   } catch (err) {
     console.warn(err);
-    setItems(fallbackNews);
+    setItems(EDITORIAL_FALLBACK);
     setStatus('fallback', 'Visar lokal exempeldata');
   } finally {
     refreshBtn.disabled = false;
@@ -384,7 +327,7 @@ searchInput.addEventListener('input', () => {
 });
 
 sortSelect.addEventListener('change', () => {
-  state.sort = SORTS.has(sortSelect.value) ? sortSelect.value : 'newest';
+  state.sort = SORTS.has(sortSelect.value) ? sortSelect.value : 'priority';
   renderList();
 });
 

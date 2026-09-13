@@ -3,10 +3,10 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Tekniknyheter — AI, hårdvara och utvecklarnyheter</title>
+    <title>Tekniknyheter — Tesla, NVIDIA, AI och mer</title>
     <meta
       name="description"
-      content="Tekniknyheter samlade från bots och källor. AI, hårdvara, utveckling, policy och infra — med sök, filter och live-API."
+      content="Positiva tekniknyheter med fokus på Tesla, elbilar, Elon Musk, NVIDIA, AI och geopolitik."
     />
     <meta name="theme-color" content="#070b16" media="(prefers-color-scheme: dark)" />
     <meta name="theme-color" content="#f4f7fc" media="(prefers-color-scheme: light)" />
@@ -20,7 +20,7 @@
     <meta property="og:title" content="Tekniknyheter" />
     <meta
       property="og:description"
-      content="Bot-driven tekniknyhetssida med sök, kategorier och API-ingest."
+      content="Positiva tekniknyheter: Tesla, NVIDIA, AI, Elon Musks bolag och geopolitik."
     />
     <meta property="og:url" content="https://juulis.github.io/tekniknyheter/" />
     <meta property="og:site_name" content="Tekniknyheter" />
@@ -29,7 +29,7 @@
     <meta name="twitter:title" content="Tekniknyheter" />
     <meta
       name="twitter:description"
-      content="Bot-driven tekniknyhetssida med sök, kategorier och API-ingest."
+      content="Positiva tekniknyheter: Tesla, NVIDIA, AI, Elon Musks bolag och geopolitik."
     />
 
     <link rel="stylesheet" href="styles.css" />
@@ -51,9 +51,9 @@
     <div class="wrap">
       <header>
         <div class="brand">
-          <p class="eyebrow">Daglig teknik · bot-driven</p>
+          <p class="eyebrow">Positiv teknik · bot-driven</p>
           <h1>Tekniknyheter</h1>
-          <p class="lede">Samlar AI, hårdvara, mjukvara och policy — redo för live-feed från din nyhetsbot.</p>
+          <p class="lede">Fokus: Tesla, elbilar, Elon Musk, NVIDIA, AI, SpaceX/xAI/Neuralink och geopolitik.</p>
         </div>
         <div class="header-actions">
           <div id="status" class="badge" data-state="loading" role="status" aria-live="polite">Startar…</div>
@@ -67,7 +67,7 @@
           <input
             id="search"
             type="search"
-            placeholder="Sök titel, sammanfattning eller källa…"
+            placeholder="Sök Tesla, NVIDIA, AI…"
             autocomplete="off"
             enterkeyhint="search"
           />
@@ -77,6 +77,7 @@
           <label class="sort" for="sort">
             <span class="sr-only">Sortering</span>
             <select id="sort" aria-label="Sortering">
+              <option value="priority">Redaktionell prio</option>
               <option value="newest">Nyast först</option>
               <option value="oldest">Äldst först</option>
               <option value="title">Titel A–Ö</option>
