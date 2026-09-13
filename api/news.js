@@ -1,5 +1,6 @@
 const { listNews } = require('./_lib/store');
 const { enrich, compareEditorial, matchesEditorialFocus, PRIORITY_TOPICS } = require('./_lib/editorial');
+const { fetchLiveArticles } = require('./_lib/sources');
 
 function cors(res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -48,6 +49,22 @@ function sortItems(items, sort) {
   return copy.sort(compareEditorial);
 }
 
+function mergeItems(...lists) {
+  const byKey = new Map();
+  for (const list of lists) {
+    for (const raw of list) {
+      const item = enrich(raw);
+      const key = (item.url || item.id || item.title || '').toLowerCase();
+      if (!key) continue;
+      const prev = byKey.get(key);
+      if (!prev || (item.priorityScore || 0) > (prev.priorityScore || 0)) {
+        byKey.set(key, item);
+      }
+    }
+  }
+  return [...byKey.values()];
+}
+
 module.exports = async function handler(req, res) {
   cors(res);
 
@@ -66,17 +83,32 @@ module.exports = async function handler(req, res) {
   const sort = url.searchParams.get('sort') || 'priority';
   const editorial = url.searchParams.get('editorial') || '1';
   const positive = url.searchParams.get('positive') || '1';
+  const live = url.searchParams.get('live') !== '0';
 
-  const all = listNews().map(enrich);
+  let liveItems = [];
+  let liveError = null;
+  if (live) {
+    try {
+      liveItems = await fetchLiveArticles({ force: url.searchParams.get('refresh') === '1' });
+    } catch (err) {
+      liveError = err.message || 'live fetch failed';
+    }
+  }
+
+  const stored = listNews().map(enrich);
+  const all = mergeItems(liveItems, stored);
   const filtered = filterItems(all, { q, category, tag, editorial, positive });
-  const items = sortItems(filtered, sort);
+  const items = sortItems(filtered, sort).slice(0, 50);
 
   return res.status(200).json({
     items,
     total: all.length,
     filtered: items.length,
+    liveCount: liveItems.length,
+    storedCount: stored.length,
+    liveError,
     editorialTopics: PRIORITY_TOPICS.map((t) => ({ id: t.id, label: t.label, category: t.category })),
-    query: { q, category: category || null, tag: tag || null, sort, editorial, positive },
+    query: { q, category: category || null, tag: tag || null, sort, editorial, positive, live },
     generatedAt: new Date().toISOString(),
   });
 };
