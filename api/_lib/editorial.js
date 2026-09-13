@@ -59,7 +59,7 @@ const PRIORITY_TOPICS = [
     id: 'ai',
     label: 'AI',
     category: 'AI',
-    patterns: [/\bai\b/i, /\bartificial intelligence\b/i, /\bllm\b/i, /\bmodel\b/i, /machine learning/i, /openai|anthropic|deepmind/i],
+    patterns: [/\bai\b/i, /\bartificial intelligence\b/i, /\bllm\b/i, /machine learning/i, /openai|anthropic|deepmind/i],
   },
 ];
 
@@ -113,7 +113,6 @@ function priorityScore(item) {
     if (tags.includes(topic.label)) score += 10;
   }
 
-  // Musk-ekosystem bonus
   if (tags.some((t) => ['Tesla', 'Elon Musk', 'xAI', 'SpaceX', 'Neuralink'].includes(t))) {
     score += 8;
   }
@@ -130,10 +129,6 @@ function priorityScore(item) {
   if (typeof item.priorityScore === 'number') score += item.priorityScore;
 
   return score;
-}
-
-enrich(item) {
-  /* placeholder - fix below */
 }
 
 function enrich(item) {
@@ -160,7 +155,6 @@ function compareEditorial(a, b) {
 }
 
 function matchesEditorialFocus(item, { preferPositive = true } = {}) {
-  if (!item.editorialPriority && !(item.tags || []).length) return false;
   if (preferPositive && item.sentiment === 'negative' && (item.priorityScore || 0) < 20) {
     return false;
   }

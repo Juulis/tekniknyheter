@@ -1,4 +1,5 @@
 const { addNews, addMany } = require('./_lib/store');
+const { enrich, matchesEditorialFocus } = require('./_lib/editorial');
 
 function cors(res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -35,15 +36,49 @@ module.exports = async function handler(req, res) {
 
   try {
     const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body || {};
+    const strict = body.strictEditorial === true || req.headers['x-strict-editorial'] === '1';
     const payload = Array.isArray(body) ? body : body.items || [body];
 
     if (!payload.length) {
       return res.status(400).json({ error: 'Inga nyheter i body' });
     }
 
-    const created = Array.isArray(body) || body.items ? addMany(payload) : [addNews(payload[0])];
+    const accepted = [];
+    const rejected = [];
 
-    return res.status(201).json({ ok: true, created });
+    for (const raw of payload) {
+      const preview = enrich(raw);
+      if (strict && !matchesEditorialFocus(preview, { preferPositive: true })) {
+        rejected.push({
+          title: preview.title,
+          reason: 'Utanför redaktionell prio eller för negativ ton',
+          priorityScore: preview.priorityScore,
+          sentiment: preview.sentiment,
+          tags: preview.tags,
+        });
+        continue;
+      }
+      accepted.push(raw);
+    }
+
+    if (!accepted.length) {
+      return res.status(422).json({
+        ok: false,
+        error: 'Inga items matchade redaktionell prio',
+        rejected,
+        hint: 'Prioritera positiva nyheter om Tesla, elbilar, Elon Musk, NVIDIA/Jensen, Musk-bolag, geopolitik-tech och AI.',
+      });
+    }
+
+    const created = addMany(accepted);
+
+    return res.status(201).json({
+      ok: true,
+      created,
+      rejected,
+      editorialHint:
+        'Prioritera positiva nyheter: Tesla, elbilar, Elon Musk, NVIDIA, Jensen Huang, xAI/SpaceX/Neuralink, geopolitik-tech, AI.',
+    });
   } catch (err) {
     return res.status(400).json({ error: err.message || 'Ogiltig body' });
   }
