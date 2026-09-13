@@ -55,6 +55,26 @@ const seed = [
     category: 'Infra',
     publishedAt: hoursAgo(30),
   },
+  {
+    id: 'seed-6',
+    title: 'Rust 1.x stabiliserar fler async-API:er',
+    summary:
+      'Release notes lyfter fram bättre ergonomi för futures och tydligare felmeddelanden i compilern.',
+    url: 'https://blog.rust-lang.org',
+    source: 'Lang Weekly',
+    category: 'Utveckling',
+    publishedAt: hoursAgo(40),
+  },
+  {
+    id: 'seed-7',
+    title: 'Kvantchip når 99,9 % två-qubit-fidelitet i labb',
+    summary:
+      'Forskargrupp visar att felkorrigering blir mer praktisk när brusnivåerna sjunker under kritiska trösklar.',
+    url: 'https://www.nature.com',
+    source: 'Science Desk',
+    category: 'Hårdvara',
+    publishedAt: hoursAgo(52),
+  },
 ];
 
 const globalKey = '__tekniknyheter_store__';

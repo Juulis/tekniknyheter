@@ -49,6 +49,26 @@ const fallbackNews = [
     category: 'Infra',
     publishedAt: hoursAgo(30),
   },
+  {
+    id: 'local-6',
+    title: 'Rust 1.x stabiliserar fler async-API:er',
+    summary:
+      'Release notes lyfter fram bättre ergonomi för futures och tydligare felmeddelanden i compilern.',
+    url: 'https://blog.rust-lang.org',
+    source: 'Lang Weekly',
+    category: 'Utveckling',
+    publishedAt: hoursAgo(40),
+  },
+  {
+    id: 'local-7',
+    title: 'Kvantchip når 99,9 % två-qubit-fidelitet i labb',
+    summary:
+      'Forskargrupp visar att felkorrigering blir mer praktisk när brusnivåerna sjunker under kritiska trösklar.',
+    url: 'https://www.nature.com',
+    source: 'Science Desk',
+    category: 'Hårdvara',
+    publishedAt: hoursAgo(52),
+  },
 ];
 
 const statusEl = document.getElementById('status');
@@ -117,7 +137,12 @@ function setCount(shown, total) {
   }
 }
 
+function setBusy(busy) {
+  listEl.setAttribute('aria-busy', busy ? 'true' : 'false');
+}
+
 function renderSkeleton() {
+  setBusy(true);
   listEl.innerHTML = Array.from({ length: 4 })
     .map(
       (_, i) => `
@@ -135,9 +160,9 @@ function guessCategory(item) {
   if (item.category) return item.category;
   const hay = `${item.title || ''} ${item.summary || ''}`.toLowerCase();
   if (/ai|llm|model|gpt|openai/.test(hay)) return 'AI';
-  if (/chip|gpu|laptop|iphone|hardware|batteri/.test(hay)) return 'Hårdvara';
+  if (/chip|gpu|laptop|iphone|hardware|batteri|kvant/.test(hay)) return 'Hårdvara';
   if (/eu|lag|policy|regler|gdpr/.test(hay)) return 'Policy';
-  if (/github|vercel|deploy|sdk|api|kod/.test(hay)) return 'Utveckling';
+  if (/github|vercel|deploy|sdk|api|kod|rust/.test(hay)) return 'Utveckling';
   if (/kv|infra|edge|cloud/.test(hay)) return 'Infra';
   return 'Teknik';
 }
@@ -229,15 +254,16 @@ function renderList() {
   setCount(items.length, state.allItems.length);
   syncClearButton();
   writeUrlState();
+  setBusy(false);
 
   if (!state.allItems.length) {
-    listEl.innerHTML = '<div class="empty">Inga nyheter ännu. När boten postar till API:t dyker de upp här.</div>';
+    listEl.innerHTML = '<div class="empty" role="status">Inga nyheter ännu. När boten postar till API:t dyker de upp här.</div>';
     return;
   }
 
   if (!items.length) {
     listEl.innerHTML =
-      '<div class="empty">Inga träffar. Prova ett annat sökord eller kategori.</div>';
+      '<div class="empty" role="status">Inga träffar. Prova ett annat sökord eller kategori.</div>';
     return;
   }
 
@@ -251,15 +277,15 @@ function renderList() {
         ? `<a href="${escapeAttr(item.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(item.title)}</a>`
         : escapeHtml(item.title);
       const link = item.url
-        ? `<a class="read-more" href="${escapeAttr(item.url)}" target="_blank" rel="noopener noreferrer">Läs mer</a>`
+        ? `<a class="read-more" href="${escapeAttr(item.url)}" target="_blank" rel="noopener noreferrer">Läs mer<span class="sr-only">: ${escapeHtml(item.title)}</span></a>`
         : '<span></span>';
 
       return `
         <article class="card${featured}">
           <div class="meta">
-            <button type="button" class="chip buttonish" data-category="${escapeAttr(item.category)}">${escapeHtml(item.category)}</button>
+            <button type="button" class="chip buttonish" data-category="${escapeAttr(item.category)}" aria-label="Filtrera på ${escapeAttr(item.category)}">${escapeHtml(item.category)}</button>
             <span class="source">${escapeHtml(item.source || 'Okänd källa')}</span>
-            <span class="time" title="${escapeAttr(formatDate(item.publishedAt))}">${escapeHtml(formatRelative(item.publishedAt))}</span>
+            <time class="time" datetime="${escapeAttr(item.publishedAt)}" title="${escapeAttr(formatDate(item.publishedAt))}">${escapeHtml(formatRelative(item.publishedAt))}</time>
           </div>
           <h2>${title}</h2>
           <p>${escapeHtml(item.summary || '')}</p>
@@ -297,7 +323,9 @@ function currentTheme() {
 }
 
 function syncThemeButton() {
-  themeToggle.textContent = currentTheme() === 'dark' ? 'Ljust läge' : 'Mörkt läge';
+  const dark = currentTheme() === 'dark';
+  themeToggle.textContent = dark ? 'Ljust läge' : 'Mörkt läge';
+  themeToggle.setAttribute('aria-pressed', dark ? 'true' : 'false');
 }
 
 function toggleTheme() {
