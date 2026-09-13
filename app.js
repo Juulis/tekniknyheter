@@ -1,64 +1,9 @@
 const EDITORIAL_FALLBACK = [
-  {
-    id: 'local-1',
-    title: 'Tesla levererar rekordmånga bilar i kvartalet',
-    summary: 'Leveranserna ökar i flera marknader samtidigt som Supercharger-nätet växer.',
-    url: 'https://www.tesla.com',
-    source: 'EV Desk',
-    category: 'Tesla',
-    tags: ['Tesla', 'Elbilar'],
-    sentiment: 'positive',
-    priorityScore: 40,
-    publishedAt: hoursAgo(2),
-  },
-  {
-    id: 'local-2',
-    title: 'NVIDIA och Jensen Huang visar nästa AI-GPU-generation',
-    summary: 'Nya chips lovar högre träningseffektivitet för LLM:er.',
-    url: 'https://www.nvidia.com',
-    source: 'Chip Wire',
-    category: 'NVIDIA',
-    tags: ['NVIDIA', 'Jensen Huang', 'AI'],
-    sentiment: 'positive',
-    priorityScore: 42,
-    publishedAt: hoursAgo(5),
-  },
-  {
-    id: 'local-3',
-    title: 'xAI öppnar nya kapaciteter i Grok för utvecklare',
-    summary: 'API-utökningen gör det enklare att bygga produktivitetsverktyg.',
-    url: 'https://x.ai',
-    source: 'AI Brief',
-    category: 'AI',
-    tags: ['xAI', 'AI', 'Elon Musk'],
-    sentiment: 'positive',
-    priorityScore: 38,
-    publishedAt: hoursAgo(9),
-  },
-  {
-    id: 'local-4',
-    title: 'SpaceX Starship klarar ny testmilstolpe',
-    summary: 'Lyckad flygsekvens stärker tidplanen för frekventa uppskjutningar.',
-    url: 'https://www.spacex.com',
-    source: 'Orbit Daily',
-    category: 'SpaceX',
-    tags: ['SpaceX', 'Elon Musk'],
-    sentiment: 'positive',
-    priorityScore: 35,
-    publishedAt: hoursAgo(14),
-  },
-  {
-    id: 'local-5',
-    title: 'EU:s AI Act får tydligare vägledning för innovation',
-    summary: 'Riktlinjer ska göra det enklare att följa reglerna utan att bromsa utveckling.',
-    url: 'https://digital-strategy.ec.europa.eu',
-    source: 'Policy Watch',
-    category: 'Geopolitik',
-    tags: ['Geopolitik', 'AI'],
-    sentiment: 'positive',
-    priorityScore: 30,
-    publishedAt: hoursAgo(20),
-  },
+  {id:'local-1',title:'Tesla levererar rekordmånga bilar i kvartalet',summary:'Leveranserna ökar i flera marknader samtidigt som Supercharger-nätet växer.',url:'https://www.tesla.com',source:'EV Desk',category:'Tesla',tags:['Tesla','Elbilar'],sentiment:'positive',priorityScore:40,publishedAt:hoursAgo(2)},
+  {id:'local-2',title:'NVIDIA och Jensen Huang visar nästa AI-GPU-generation',summary:'Nya chips lovar högre träningseffektivitet för LLM:er.',url:'https://www.nvidia.com',source:'Chip Wire',category:'NVIDIA',tags:['NVIDIA','Jensen Huang','AI'],sentiment:'positive',priorityScore:42,publishedAt:hoursAgo(5)},
+  {id:'local-3',title:'xAI öppnar nya kapaciteter i Grok för utvecklare',summary:'API-utökningen gör det enklare att bygga produktivitetsverktyg.',url:'https://x.ai',source:'AI Brief',category:'AI',tags:['xAI','AI','Elon Musk'],sentiment:'positive',priorityScore:38,publishedAt:hoursAgo(9)},
+  {id:'local-4',title:'SpaceX Starship klarar ny testmilstolpe',summary:'Lyckad flygsekvens stärker tidplanen för frekventa uppskjutningar.',url:'https://www.spacex.com',source:'Orbit Daily',category:'SpaceX',tags:['SpaceX','Elon Musk'],sentiment:'positive',priorityScore:35,publishedAt:hoursAgo(14)},
+  {id:'local-5',title:'EU:s AI Act får tydligare vägledning för innovation',summary:'Riktlinjer ska göra det enklare att följa reglerna utan att bromsa utveckling.',url:'https://digital-strategy.ec.europa.eu',source:'Policy Watch',category:'Geopolitik',tags:['Geopolitik','AI'],sentiment:'positive',priorityScore:30,publishedAt:hoursAgo(20)},
 ];
 
 const statusEl = document.getElementById('status');
@@ -200,6 +145,27 @@ function renderCategoryFilters() {
     .join('');
 }
 
+async function shareItem(item) {
+  const url = item.url || window.location.href;
+  const title = item.title || 'Tekniknyheter';
+  const text = item.summary || title;
+  try {
+    if (navigator.share) {
+      await navigator.share({ title, text, url });
+      return;
+    }
+  } catch (err) {
+    if (err && err.name === 'AbortError') return;
+  }
+  try {
+    await navigator.clipboard.writeText(url);
+    setStatus('live', 'Länk kopierad');
+    setTimeout(() => setStatus('live', 'Live · redaktionell prio'), 1600);
+  } catch (_) {
+    window.prompt('Kopiera länken', url);
+  }
+}
+
 function renderList() {
   const items = filteredItems();
   setCount(items.length, state.allItems.length);
@@ -230,17 +196,28 @@ function renderList() {
         ? `<a class="read-more" href="${escapeAttr(item.url)}" target="_blank" rel="noopener noreferrer">Läs mer<span class="sr-only">: ${escapeHtml(item.title)}</span></a>`
         : '<span></span>';
 
+      const cat = item.category || 'Teknik';
+      const media = item.imageUrl
+        ? `<a class="card-media" href="${escapeAttr(item.url || '#')}" target="_blank" rel="noopener noreferrer" tabindex="-1" aria-hidden="true"><img src="${escapeAttr(item.imageUrl)}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" /></a>`
+        : `<div class="card-media placeholder" data-cat="${escapeAttr(cat)}" aria-hidden="true"><span class="ph-label">${escapeHtml(cat)}</span></div>`;
+
       return `
-        <article class="card${featured}">
-          <div class="meta">
-            <button type="button" class="chip buttonish" data-category="${escapeAttr(item.category)}" aria-label="Filtrera på ${escapeAttr(item.category)}">${escapeHtml(item.category || 'Teknik')}</button>
-            ${tags}
-            <span class="source">${escapeHtml(item.source || 'Okänd källa')}</span>
-            <time class="time" datetime="${escapeAttr(item.publishedAt)}">${escapeHtml(formatRelative(item.publishedAt))}</time>
+        <article class="card${featured} has-image">
+          ${media}
+          <div class="card-body">
+            <div class="meta">
+              <button type="button" class="chip buttonish" data-category="${escapeAttr(cat)}" aria-label="Filtrera på ${escapeAttr(cat)}">${escapeHtml(cat)}</button>
+              ${tags}
+              <span class="source">${escapeHtml(item.source || 'Okänd källa')}</span>
+              <time class="time" datetime="${escapeAttr(item.publishedAt)}">${escapeHtml(formatRelative(item.publishedAt))}</time>
+            </div>
+            <h2>${title}</h2>
+            <p>${escapeHtml(item.summary || '')}</p>
+            <div class="card-footer">
+              ${link}
+              <button type="button" class="ghost share-btn" data-share-id="${escapeAttr(item.id || '')}" aria-label="Dela ${escapeAttr(item.title || 'artikel')}">Dela</button>
+            </div>
           </div>
-          <h2>${title}</h2>
-          <p>${escapeHtml(item.summary || '')}</p>
-          <div class="card-footer">${link}</div>
         </article>`;
     })
     .join('');
@@ -294,14 +271,16 @@ function clearFilters() {
   applyFiltersAndRender();
 }
 
-async function loadNews() {
+async function loadNews({ force = false } = {}) {
   const base = (window.TEKNIKNYHETER_CONFIG && window.TEKNIKNYHETER_CONFIG.apiBaseUrl) || '';
   setStatus('loading', 'Hämtar nyheter…');
   refreshBtn.disabled = true;
   renderSkeleton();
 
   try {
-    const res = await fetch(`${base.replace(/\/$/, '')}/api/news?editorial=1&positive=1&sort=priority`, {
+    const qs = new URLSearchParams({ editorial: '1', positive: '1', sort: 'priority' });
+    if (force) qs.set('refresh', '1');
+    const res = await fetch(`${base.replace(/\/$/, '')}/api/news?${qs}`, {
       headers: { Accept: 'application/json' },
     });
     if (!res.ok) throw new Error(`API svarade ${res.status}`);
@@ -339,6 +318,14 @@ categoryFiltersEl.addEventListener('click', (event) => {
 });
 
 listEl.addEventListener('click', (event) => {
+  const shareBtn = event.target.closest('.share-btn');
+  if (shareBtn) {
+    const id = shareBtn.getAttribute('data-share-id');
+    const shareLabel = shareBtn.getAttribute('aria-label') || '';
+    const item = state.allItems.find((x) => String(x.id) === String(id)) || state.allItems.find((x) => x.title && shareLabel.includes(x.title));
+    if (item) shareItem(item);
+    return;
+  }
   const btn = event.target.closest('.chip.buttonish[data-category]');
   if (!btn) return;
   state.category = btn.getAttribute('data-category') || 'Alla';
@@ -352,7 +339,7 @@ window.addEventListener('popstate', () => {
 
 clearFiltersBtn.addEventListener('click', clearFilters);
 themeToggle.addEventListener('click', toggleTheme);
-refreshBtn.addEventListener('click', loadNews);
+refreshBtn.addEventListener('click', () => loadNews({ force: true }));
 syncThemeButton();
 readUrlState();
 loadNews();
