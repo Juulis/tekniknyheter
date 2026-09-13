@@ -67,7 +67,7 @@ const POSITIVE_HINTS =
   /lanserar|genombrott|rekord|växer|ökar|vinner|godkänd|klarar|förbättrar|billigare|snabbare|ny milstolpe|expand|breakthrough|record|approves|beats|surpasses|opens|launches/i;
 
 const NEGATIVE_HINTS =
-  /krasch|faller|åtal|stämmer|böter|skandal|döds|olycka|recall|ban|banned|lawsuit|crash|plunge|fraud|hack|breach|layoff|varsel/i;
+  /krasch|faller|åtal|stämmer|böter|skandal|döds|olycka|recall|ban|banned|lawsuit|crash|plunge|fraud|hack|breach|layoff|varsel|slowdown|weaken|what could go wrong|goes wrong|riskerar|kritisera/i;
 
 function textOf(item) {
   return `${item.title || ''} ${item.summary || ''} ${item.source || ''} ${(item.tags || []).join(' ')}`;
@@ -131,9 +131,26 @@ function priorityScore(item) {
   return score;
 }
 
+function uniqueTags(tags, category) {
+  const seen = new Set();
+  const out = [];
+  const cat = String(category || '').toLowerCase();
+  for (const tag of tags || []) {
+    const t = String(tag).trim();
+    if (!t) continue;
+    const key = t.toLowerCase();
+    if (seen.has(key)) continue;
+    if (cat && key === cat) continue;
+    seen.add(key);
+    out.push(t);
+  }
+  return out;
+}
+
 function enrich(item) {
-  const tags = detectTags(item);
-  const category = detectCategory(item, tags);
+  const detected = detectTags(item);
+  const category = detectCategory(item, detected);
+  const tags = uniqueTags(detected, category);
   const sentiment = sentimentOf({ ...item, tags });
   const score = priorityScore({ ...item, tags, sentiment });
   const editorialPriority = score >= 12;
