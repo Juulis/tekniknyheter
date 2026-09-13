@@ -30,7 +30,7 @@ jobs:
       - name: Prepare site
         run: |
           mkdir -p _site
-          cp index.html styles.css app.js config.js favicon.svg robots.txt sitemap.xml _site/
+          cp index.html styles.css app.js app-core.js app-ui.js config.js favicon.svg robots.txt sitemap.xml _site/ 2>/dev/null || cp index.html styles.css app-core.js app-ui.js config.js favicon.svg robots.txt sitemap.xml _site/
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
