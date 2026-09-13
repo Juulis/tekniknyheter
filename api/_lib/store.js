@@ -1,29 +1,59 @@
 /** Ephemeral in-memory store for the shell. Replace with durable storage later. */
 
+function hoursAgo(hours) {
+  return new Date(Date.now() - hours * 60 * 60 * 1000).toISOString();
+}
+
 const seed = [
   {
     id: 'seed-1',
-    title: 'Apple lanserar nya M-chip',
-    summary: 'Nästa generation chip lovar bättre prestanda och batteritid i Mac och iPad.',
-    url: 'https://www.apple.com',
-    source: 'Exempel',
-    publishedAt: new Date(Date.now() - 1000 * 60 * 60 * 5).toISOString(),
+    title: 'EU föreslår nya AI-regler för öppna modeller',
+    summary:
+      'Utkastet handlar om transparenskrav, riskklassning och hur öppna modeller ska dokumenteras innan bred användning.',
+    url: 'https://digital-strategy.ec.europa.eu',
+    source: 'Policy Watch',
+    category: 'Policy',
+    publishedAt: hoursAgo(3),
   },
   {
     id: 'seed-2',
-    title: 'Open source-modell slår nya rekord',
-    summary: 'En öppen modell når jämförbara resultat med slutna alternativ i flera benchmarks.',
-    url: 'https://huggingface.co',
-    source: 'Exempel',
-    publishedAt: new Date(Date.now() - 1000 * 60 * 60 * 12).toISOString(),
+    title: 'Nytt M-chip lovar längsta batteritiden hittills',
+    summary:
+      'Tillverkaren visar benchmarks där maskinen klarar heldagsarbete utan laddning, med fokus på tyst kylning.',
+    url: 'https://www.apple.com',
+    source: 'Hardware Daily',
+    category: 'Hårdvara',
+    publishedAt: hoursAgo(7),
   },
   {
     id: 'seed-3',
-    title: 'EU skärper regler för digitala plattformar',
-    summary: 'Nya krav på transparens och datadelning väntas påverka hur techbolag agerar i Europa.',
-    url: 'https://digital-strategy.ec.europa.eu',
-    source: 'Exempel',
-    publishedAt: new Date(Date.now() - 1000 * 60 * 60 * 26).toISOString(),
+    title: 'Öppen LLM sätter rekord i kodbench',
+    summary:
+      'En community-tränad modell når toppresultat i flera programmeringsuppgifter och släpps med öppna vikter.',
+    url: 'https://huggingface.co',
+    source: 'Model Hub',
+    category: 'AI',
+    publishedAt: hoursAgo(14),
+  },
+  {
+    id: 'seed-4',
+    title: 'GitHub lanserar snabbare Pages-deploys',
+    summary:
+      'Byggtider kortas för statiska sajter, med bättre cache och tydligare status i Actions-loggen.',
+    url: 'https://github.blog',
+    source: 'DevTools',
+    category: 'Utveckling',
+    publishedAt: hoursAgo(22),
+  },
+  {
+    id: 'seed-5',
+    title: 'Vercel KV får enklare SDK för edge-lagring',
+    summary:
+      'Nytt paket gör det smidigare att spara JSON nära användaren — bra nästa steg när nyhetslagret ska bli hållbart.',
+    url: 'https://vercel.com/blog',
+    source: 'Cloud Notes',
+    category: 'Infra',
+    publishedAt: hoursAgo(30),
   },
 ];
 
@@ -50,6 +80,7 @@ function addNews(item) {
     summary: String(item.summary || '').trim(),
     url: item.url ? String(item.url).trim() : null,
     source: item.source ? String(item.source).trim() : 'Bot',
+    category: item.category ? String(item.category).trim() : null,
     publishedAt: item.publishedAt || new Date().toISOString(),
   };
   if (!entry.title) {
