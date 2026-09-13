@@ -56,6 +56,15 @@ const listEl = document.getElementById('news-list');
 const refreshBtn = document.getElementById('refresh');
 const themeToggle = document.getElementById('theme-toggle');
 const countEl = document.getElementById('count');
+const searchInput = document.getElementById('search');
+const categoryFiltersEl = document.getElementById('category-filters');
+const clearFiltersBtn = document.getElementById('clear-filters');
+
+const state = {
+  allItems: [],
+  query: '',
+  category: 'Alla',
+};
 
 function hoursAgo(hours) {
   return new Date(Date.now() - hours * 60 * 60 * 1000).toISOString();
@@ -86,18 +95,22 @@ function formatRelative(iso) {
   }
 }
 
-function setStatus(state, text) {
-  statusEl.dataset.state = state;
+function setStatus(stateName, text) {
+  statusEl.dataset.state = stateName;
   statusEl.textContent = text;
 }
 
-function setCount(n) {
-  if (!n) {
+function setCount(shown, total) {
+  if (!total) {
     countEl.hidden = true;
     return;
   }
   countEl.hidden = false;
-  countEl.textContent = n === 1 ? '1 nyhet' : `${n} nyheter`;
+  if (shown === total) {
+    countEl.textContent = total === 1 ? '1 nyhet' : `${total} nyheter`;
+  } else {
+    countEl.textContent = `Visar ${shown} av ${total}`;
+  }
 }
 
 function renderSkeleton() {
@@ -121,28 +134,72 @@ function guessCategory(item) {
   if (/chip|gpu|laptop|iphone|hardware|batteri/.test(hay)) return 'Hårdvara';
   if (/eu|lag|policy|regler|gdpr/.test(hay)) return 'Policy';
   if (/github|vercel|deploy|sdk|api|kod/.test(hay)) return 'Utveckling';
+  if (/kv|infra|edge|cloud/.test(hay)) return 'Infra';
   return 'Teknik';
 }
 
-function render(items, { errorMessage } = {}) {
-  if (errorMessage && !items.length) {
-    listEl.innerHTML = `<div class="error">${escapeHtml(errorMessage)}</div>`;
-    setCount(0);
+function normalizeItems(items) {
+  return items.map((item) => ({ ...item, category: guessCategory(item) }));
+}
+
+function uniqueCategories(items) {
+  return ['Alla', ...[...new Set(items.map((item) => item.category))].sort((a, b) => a.localeCompare(b, 'sv'))];
+}
+
+function filteredItems() {
+  const q = state.query.trim().toLowerCase();
+  return state.allItems.filter((item) => {
+    const categoryOk = state.category === 'Alla' || item.category === state.category;
+    if (!categoryOk) return false;
+    if (!q) return true;
+    const hay = `${item.title || ''} ${item.summary || ''} ${item.source || ''} ${item.category || ''}`.toLowerCase();
+    return hay.includes(q);
+  });
+}
+
+function syncClearButton() {
+  const active = Boolean(state.query.trim()) || state.category !== 'Alla';
+  clearFiltersBtn.hidden = !active;
+}
+
+function renderCategoryFilters() {
+  const cats = uniqueCategories(state.allItems);
+  if (!cats.includes(state.category)) {
+    state.category = 'Alla';
+  }
+
+  categoryFiltersEl.innerHTML = cats
+    .map(
+      (cat) => `
+      <button
+        type="button"
+        class="filter-chip"
+        data-category="${escapeAttr(cat)}"
+        aria-pressed="${cat === state.category ? 'true' : 'false'}"
+      >${escapeHtml(cat)}</button>`
+    )
+    .join('');
+}
+
+function renderList() {
+  const items = filteredItems();
+  setCount(items.length, state.allItems.length);
+  syncClearButton();
+
+  if (!state.allItems.length) {
+    listEl.innerHTML = '<div class="empty">Inga nyheter ännu. När boten postar till API:t dyker de upp här.</div>';
     return;
   }
 
   if (!items.length) {
-    listEl.innerHTML = '<div class="empty">Inga nyheter ännu. När boten postar till API:t dyker de upp här.</div>';
-    setCount(0);
+    listEl.innerHTML =
+      '<div class="empty">Inga träffar. Prova ett annat sökord eller kategori.</div>';
     return;
   }
 
-  setCount(items.length);
-
   listEl.innerHTML = items
     .map((item, index) => {
-      const category = guessCategory(item);
-      const featured = index === 0 ? ' featured' : '';
+      const featured = index === 0 && state.category === 'Alla' && !state.query.trim() ? ' featured' : '';
       const title = item.url
         ? `<a href="${escapeAttr(item.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(item.title)}</a>`
         : escapeHtml(item.title);
@@ -153,7 +210,7 @@ function render(items, { errorMessage } = {}) {
       return `
         <article class="card${featured}">
           <div class="meta">
-            <span class="chip">${escapeHtml(category)}</span>
+            <button type="button" class="chip buttonish" data-category="${escapeAttr(item.category)}">${escapeHtml(item.category)}</button>
             <span class="source">${escapeHtml(item.source || 'Okänd källa')}</span>
             <span class="time" title="${escapeAttr(formatDate(item.publishedAt))}">${escapeHtml(formatRelative(item.publishedAt))}</span>
           </div>
@@ -164,6 +221,16 @@ function render(items, { errorMessage } = {}) {
       `;
     })
     .join('');
+}
+
+function applyFiltersAndRender() {
+  renderCategoryFilters();
+  renderList();
+}
+
+function setItems(items) {
+  state.allItems = normalizeItems(items);
+  applyFiltersAndRender();
 }
 
 function escapeHtml(value) {
@@ -195,6 +262,13 @@ function toggleTheme() {
   syncThemeButton();
 }
 
+function clearFilters() {
+  state.query = '';
+  state.category = 'Alla';
+  searchInput.value = '';
+  applyFiltersAndRender();
+}
+
 async function loadNews() {
   const base = (window.TEKNIKNYHETER_CONFIG && window.TEKNIKNYHETER_CONFIG.apiBaseUrl) || '';
   setStatus('loading', 'Hämtar nyheter…');
@@ -212,17 +286,41 @@ async function loadNews() {
 
     const data = await res.json();
     const items = Array.isArray(data.items) ? data.items : [];
-    render(items);
+    setItems(items);
     setStatus('live', 'Live från API');
   } catch (err) {
     console.warn(err);
-    render(fallbackNews);
+    setItems(fallbackNews);
     setStatus('fallback', 'Visar lokal exempeldata');
   } finally {
     refreshBtn.disabled = false;
   }
 }
 
+let searchTimer;
+searchInput.addEventListener('input', () => {
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(() => {
+    state.query = searchInput.value;
+    renderList();
+  }, 120);
+});
+
+categoryFiltersEl.addEventListener('click', (event) => {
+  const btn = event.target.closest('[data-category]');
+  if (!btn) return;
+  state.category = btn.getAttribute('data-category') || 'Alla';
+  applyFiltersAndRender();
+});
+
+listEl.addEventListener('click', (event) => {
+  const btn = event.target.closest('.chip.buttonish[data-category]');
+  if (!btn) return;
+  state.category = btn.getAttribute('data-category') || 'Alla';
+  applyFiltersAndRender();
+});
+
+clearFiltersBtn.addEventListener('click', clearFilters);
 themeToggle.addEventListener('click', toggleTheme);
 refreshBtn.addEventListener('click', loadNews);
 syncThemeButton();

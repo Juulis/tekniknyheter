@@ -34,10 +34,23 @@
         </div>
       </header>
 
-      <div class="toolbar">
-        <button id="refresh" type="button">Uppdatera</button>
-        <span id="count" class="count" hidden></span>
-      </div>
+      <section class="filters" aria-label="Sök och filtrera">
+        <label class="search">
+          <span class="sr-only">Sök nyheter</span>
+          <input
+            id="search"
+            type="search"
+            placeholder="Sök titel, sammanfattning eller källa…"
+            autocomplete="off"
+          />
+        </label>
+        <div id="category-filters" class="category-filters" role="group" aria-label="Kategorier"></div>
+        <div class="toolbar">
+          <button id="refresh" type="button">Uppdatera</button>
+          <button id="clear-filters" type="button" class="ghost" hidden>Rensa filter</button>
+          <span id="count" class="count" hidden></span>
+        </div>
+      </section>
 
       <main id="news-list" class="grid" aria-live="polite"></main>
 
