@@ -3,32 +3,44 @@ const { enrich, matchesEditorialFocus, compareEditorial } = require('./editorial
 const FEEDS = [
   {
     source: 'Google News',
-    url: 'https://news.google.com/rss/search?q=Tesla+when:3d&hl=en-US&gl=US&ceid=US:en',
+    url: 'https://news.google.com/rss/search?q=Tesla+OR+Cybertruck+OR+Optimus+when:3d&hl=en-US&gl=US&ceid=US:en',
   },
   {
     source: 'Google News',
-    url: 'https://news.google.com/rss/search?q=NVIDIA+OR+%22Jensen+Huang%22+when:3d&hl=en-US&gl=US&ceid=US:en',
+    url: 'https://news.google.com/rss/search?q=NVIDIA+OR+%22Jensen+Huang%22+OR+CUDA+when:3d&hl=en-US&gl=US&ceid=US:en',
   },
   {
     source: 'Google News',
-    url: 'https://news.google.com/rss/search?q=%22Elon+Musk%22+OR+SpaceX+OR+xAI+OR+Neuralink+when:3d&hl=en-US&gl=US&ceid=US:en',
+    url: 'https://news.google.com/rss/search?q=%22Elon+Musk%22+OR+xAI+OR+Grok+when:3d&hl=en-US&gl=US&ceid=US:en',
   },
   {
     source: 'Google News',
-    url: 'https://news.google.com/rss/search?q=%22electric+vehicle%22+OR+EV+OR+elbilar+when:3d&hl=en-US&gl=US&ceid=US:en',
+    url: 'https://news.google.com/rss/search?q=SpaceX+OR+Starship+OR+Starlink+when:3d&hl=en-US&gl=US&ceid=US:en',
   },
   {
     source: 'Google News',
-    url: 'https://news.google.com/rss/search?q=AI+regulation+OR+%22AI+Act%22+OR+%22chip+export%22+when:3d&hl=en-US&gl=US&ceid=US:en',
+    url: 'https://news.google.com/rss/search?q=Neuralink+when:7d&hl=en-US&gl=US&ceid=US:en',
   },
   {
     source: 'Google News',
-    url: 'https://news.google.com/rss/search?q=artificial+intelligence+breakthrough+OR+LLM+when:3d&hl=en-US&gl=US&ceid=US:en',
+    url: 'https://news.google.com/rss/search?q=%22electric+vehicle%22+OR+EV+OR+elbilar+OR+supercharger+when:3d&hl=en-US&gl=US&ceid=US:en',
+  },
+  {
+    source: 'Google News',
+    url: 'https://news.google.com/rss/search?q=AI+regulation+OR+%22AI+Act%22+OR+%22chip+export%22+OR+%22export+controls%22+when:3d&hl=en-US&gl=US&ceid=US:en',
+  },
+  {
+    source: 'Google News',
+    url: 'https://news.google.com/rss/search?q=%22artificial+intelligence%22+breakthrough+OR+LLM+OR+%22open+source+AI%22+when:3d&hl=en-US&gl=US&ceid=US:en',
+  },
+  {
+    source: 'Google News SE',
+    url: 'https://news.google.com/rss/search?q=Tesla+OR+elbilar+OR+NVIDIA+OR+AI+when:3d&hl=sv&gl=SE&ceid=SE:sv',
   },
 ];
 
 const cacheKey = '__tekniknyheter_sources_cache__';
-const CACHE_MS = 15 * 60 * 1000;
+const CACHE_MS = 10 * 60 * 1000;
 
 function decodeXml(value) {
   return String(value || '')
@@ -55,14 +67,40 @@ function tagValue(block, tag) {
   return m ? decodeXml(m[1]) : '';
 }
 
+function attrValue(block, tag, attr) {
+  const re = new RegExp(`<${tag}[^>]*\\s${attr}=["']([^"']+)["'][^>]*/?>`, 'i');
+  const m = block.match(re);
+  return m ? decodeXml(m[1]) : '';
+}
+
+function extractImage(block, description) {
+  const candidates = [
+    attrValue(block, 'media:content', 'url'),
+    attrValue(block, 'media:thumbnail', 'url'),
+    attrValue(block, 'enclosure', 'url'),
+  ].filter(Boolean);
+
+  const imgInDesc = String(description || '').match(/<img[^>]+src=["']([^"']+)["']/i);
+  if (imgInDesc) candidates.push(decodeXml(imgInDesc[1]));
+
+  for (const url of candidates) {
+    if (/^https?:\/\//i.test(url) && !/\.(mp3|mp4|m4a|aac)(\?|$)/i.test(url)) {
+      return url;
+    }
+  }
+  return '';
+}
+
 function parseRssItems(xml, sourceName) {
   const items = [];
   const blocks = String(xml).match(/<item[\s\S]*?<\/item>/gi) || [];
   for (const block of blocks) {
     const title = stripHtml(tagValue(block, 'title'));
     const link = stripHtml(tagValue(block, 'link'));
-    const description = stripHtml(tagValue(block, 'description'));
+    const rawDescription = tagValue(block, 'description');
+    const description = stripHtml(rawDescription);
     const pubDate = stripHtml(tagValue(block, 'pubDate'));
+    const imageUrl = extractImage(block, rawDescription);
     if (!title || !link) continue;
     items.push({
       id: `rss-${Buffer.from(link).toString('base64url').slice(0, 24)}`,
@@ -70,6 +108,7 @@ function parseRssItems(xml, sourceName) {
       summary: description.slice(0, 280),
       url: link,
       source: sourceName,
+      imageUrl: imageUrl || undefined,
       publishedAt: pubDate ? new Date(pubDate).toISOString() : new Date().toISOString(),
     });
   }
@@ -114,7 +153,7 @@ async function fetchLiveArticles({ force = false } = {}) {
     }
   }
 
-  const items = [...byUrl.values()].sort(compareEditorial).slice(0, 40);
+  const items = [...byUrl.values()].sort(compareEditorial).slice(0, 50);
   globalThis[cacheKey] = { at: now, items };
   return items;
 }
