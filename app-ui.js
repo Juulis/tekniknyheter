@@ -31,43 +31,47 @@ function renderList() {
     return;
   }
   if (!items.length) {
-    listEl.innerHTML = '<div class="empty" role="status">Inga träffar i redaktionell vy.</div>';
+    const qLabel = state.query.trim() ? `«${escapeHtml(state.query.trim())}»` : 'filtret';
+    listEl.innerHTML = `<div class="empty" role="status">Inga träffar för ${qLabel}.</div>`;
     return;
   }
 
   listEl.innerHTML = items
     .map((item, index) => {
       const featured = index === 0 && state.category === 'Alla' && !state.query.trim() ? ' featured' : '';
-      const title = item.url
-        ? `<a href="${escapeAttr(item.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(item.title)}</a>`
-        : escapeHtml(item.title);
+      const cat = item.category || 'Teknik';
+      const catLower = String(cat).toLowerCase();
       const tags = (item.tags || [])
-        .slice(0, 4)
+        .filter((t) => String(t).toLowerCase() !== catLower)
+        .slice(0, 3)
         .map((t) => `<span class="chip">${escapeHtml(t)}</span>`)
         .join('');
-      const link = item.url
-        ? `<a class="read-more" href="${escapeAttr(item.url)}" target="_blank" rel="noopener noreferrer">Läs mer<span class="sr-only">: ${escapeHtml(item.title)}</span></a>`
-        : '<span></span>';
-
-      const cat = item.category || 'Teknik';
+      const summary = item.summary ? `<p>${escapeHtml(item.summary)}</p>` : '';
+      const sentiment = item.sentiment && item.sentiment !== 'neutral'
+        ? `<span class="chip sentiment ${escapeAttr(item.sentiment)}">${escapeHtml(item.sentiment === 'positive' ? 'Positiv' : 'Negativ')}</span>`
+        : '';
+      const lang = item.lang === 'sv' ? 'sv' : 'en';
+      const title = item.url
+        ? `<a href="${escapeAttr(item.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(item.title)}<span class="sr-only"> (öppnas i ny flik)</span></a>`
+        : escapeHtml(item.title);
       const media = item.imageUrl
-        ? `<a class="card-media" href="${escapeAttr(item.url || '#')}" target="_blank" rel="noopener noreferrer" tabindex="-1" aria-hidden="true"><img src="${escapeAttr(item.imageUrl)}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" /></a>`
+        ? `<div class="card-media" aria-hidden="true"><img src="${escapeAttr(item.imageUrl)}" alt="" width="640" height="360" loading="lazy" decoding="async" referrerpolicy="no-referrer" /></div>`
         : `<div class="card-media placeholder" data-cat="${escapeAttr(cat)}" aria-hidden="true"><span class="ph-label">${escapeHtml(cat)}</span></div>`;
 
       return `
-        <article class="card${featured} has-image">
+        <article class="card${featured} has-image" lang="${lang}">
           ${media}
           <div class="card-body">
             <div class="meta">
               <button type="button" class="chip buttonish" data-category="${escapeAttr(cat)}" aria-label="Filtrera på ${escapeAttr(cat)}">${escapeHtml(cat)}</button>
               ${tags}
+              ${sentiment}
               <span class="source">${escapeHtml(item.source || 'Okänd källa')}</span>
               <time class="time" datetime="${escapeAttr(item.publishedAt)}">${escapeHtml(formatRelative(item.publishedAt))}</time>
             </div>
             <h2>${title}</h2>
-            <p>${escapeHtml(item.summary || '')}</p>
+            ${summary}
             <div class="card-footer">
-              ${link}
               <button type="button" class="ghost share-btn" data-share-id="${escapeAttr(item.id || '')}" aria-label="Dela ${escapeAttr(item.title || 'artikel')}">Dela</button>
             </div>
           </div>
