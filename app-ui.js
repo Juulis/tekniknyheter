@@ -19,46 +19,28 @@ async function shareItem(item) {
   }
 }
 
-function renderList() {
-  const items = filteredItems();
-  setCount(items.length, state.allItems.length);
-  syncClearButton();
-  writeUrlState();
-  setBusy(false);
+function cardHtml(item, index) {
+  const featured = index === 0 && state.category === 'Alla' && !state.query.trim() ? ' featured' : '';
+  const cat = item.category || 'Teknik';
+  const catLower = String(cat).toLowerCase();
+  const tags = (item.tags || [])
+    .filter((t) => String(t).toLowerCase() !== catLower)
+    .slice(0, 3)
+    .map((t) => `<span class="chip">${escapeHtml(t)}</span>`)
+    .join('');
+  const summary = item.summary ? `<p>${escapeHtml(item.summary)}</p>` : '';
+  const sentiment = item.sentiment && item.sentiment !== 'neutral'
+    ? `<span class="chip sentiment ${escapeAttr(item.sentiment)}">${escapeHtml(item.sentiment === 'positive' ? 'Positiv' : 'Negativ')}</span>`
+    : '';
+  const lang = item.lang === 'sv' ? 'sv' : 'en';
+  const title = item.url
+    ? `<a href="${escapeAttr(item.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(item.title)}<span class="sr-only"> (öppnas i ny flik)</span></a>`
+    : escapeHtml(item.title);
+  const media = item.imageUrl
+    ? `<div class="card-media" aria-hidden="true"><img src="${escapeAttr(item.imageUrl)}" alt="" width="640" height="360" loading="lazy" decoding="async" referrerpolicy="no-referrer" /></div>`
+    : `<div class="card-media placeholder" data-cat="${escapeAttr(cat)}" aria-hidden="true"><span class="ph-label">${escapeHtml(cat)}</span></div>`;
 
-  if (!state.allItems.length) {
-    listEl.innerHTML = '<div class="empty" role="status">Inga nyheter ännu.</div>';
-    return;
-  }
-  if (!items.length) {
-    const qLabel = state.query.trim() ? `«${escapeHtml(state.query.trim())}»` : 'filtret';
-    listEl.innerHTML = `<div class="empty" role="status">Inga träffar för ${qLabel}.</div>`;
-    return;
-  }
-
-  listEl.innerHTML = items
-    .map((item, index) => {
-      const featured = index === 0 && state.category === 'Alla' && !state.query.trim() ? ' featured' : '';
-      const cat = item.category || 'Teknik';
-      const catLower = String(cat).toLowerCase();
-      const tags = (item.tags || [])
-        .filter((t) => String(t).toLowerCase() !== catLower)
-        .slice(0, 3)
-        .map((t) => `<span class="chip">${escapeHtml(t)}</span>`)
-        .join('');
-      const summary = item.summary ? `<p>${escapeHtml(item.summary)}</p>` : '';
-      const sentiment = item.sentiment && item.sentiment !== 'neutral'
-        ? `<span class="chip sentiment ${escapeAttr(item.sentiment)}">${escapeHtml(item.sentiment === 'positive' ? 'Positiv' : 'Negativ')}</span>`
-        : '';
-      const lang = item.lang === 'sv' ? 'sv' : 'en';
-      const title = item.url
-        ? `<a href="${escapeAttr(item.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(item.title)}<span class="sr-only"> (öppnas i ny flik)</span></a>`
-        : escapeHtml(item.title);
-      const media = item.imageUrl
-        ? `<div class="card-media" aria-hidden="true"><img src="${escapeAttr(item.imageUrl)}" alt="" width="640" height="360" loading="lazy" decoding="async" referrerpolicy="no-referrer" /></div>`
-        : `<div class="card-media placeholder" data-cat="${escapeAttr(cat)}" aria-hidden="true"><span class="ph-label">${escapeHtml(cat)}</span></div>`;
-
-      return `
+  return `
         <article class="card${featured} has-image" lang="${lang}">
           ${media}
           <div class="card-body">
@@ -76,8 +58,52 @@ function renderList() {
             </div>
           </div>
         </article>`;
-    })
-    .join('');
+}
+
+function moreHtml(remaining) {
+  if (remaining <= 0) return '';
+  const next = Math.min(PAGE_SIZE, remaining);
+  return `<div class="more-wrap" style="grid-column:1/-1;display:flex;justify-content:center;padding:8px 0 16px"><button type="button" class="ghost more-btn" aria-label="Visa ${next} fler nyheter">Visa fler (${remaining} kvar)</button></div>`;
+}
+
+function renderList() {
+  const items = filteredItems();
+  const shown = Math.min(state.visible, items.length);
+  setCount(shown, items.length, state.allItems.length);
+  syncClearButton();
+  writeUrlState();
+  setBusy(false);
+
+  if (!state.allItems.length) {
+    listEl.innerHTML = '<div class="empty" role="status">Inga nyheter ännu.</div>';
+    return;
+  }
+  if (!items.length) {
+    const qLabel = state.query.trim() ? `«${escapeHtml(state.query.trim())}»` : 'filtret';
+    listEl.innerHTML = `<div class="empty" role="status">Inga träffar för ${qLabel}.</div>`;
+    return;
+  }
+
+  listEl.innerHTML = items.slice(0, shown).map(cardHtml).join('') + moreHtml(items.length - shown);
+}
+
+function showMore() {
+  const items = filteredItems();
+  const before = Math.min(state.visible, items.length);
+  state.visible += PAGE_SIZE;
+  const shown = Math.min(state.visible, items.length);
+  const wrap = listEl.querySelector('.more-wrap');
+  if (wrap) wrap.remove();
+  const html = items
+    .slice(before, shown)
+    .map((item, i) => cardHtml(item, before + i))
+    .join('') + moreHtml(items.length - shown);
+  listEl.insertAdjacentHTML('beforeend', html);
+  setCount(shown, items.length, state.allItems.length);
+  const cards = listEl.querySelectorAll('article.card');
+  const firstNew = cards[before];
+  const link = firstNew && firstNew.querySelector('h2 a');
+  if (link) link.focus({ preventScroll: false });
 }
 
 function applyFiltersAndRender() {
@@ -87,6 +113,7 @@ function applyFiltersAndRender() {
 
 function setItems(items) {
   state.allItems = items;
+  resetVisible();
   applyFiltersAndRender();
 }
 
@@ -125,6 +152,7 @@ function clearFilters() {
   state.sort = 'priority';
   searchInput.value = '';
   sortSelect.value = 'priority';
+  resetVisible();
   applyFiltersAndRender();
 }
 
@@ -158,12 +186,14 @@ searchInput.addEventListener('input', () => {
   clearTimeout(searchTimer);
   searchTimer = setTimeout(() => {
     state.query = searchInput.value;
+    resetVisible();
     renderList();
   }, 120);
 });
 
 sortSelect.addEventListener('change', () => {
   state.sort = SORTS.has(sortSelect.value) ? sortSelect.value : 'priority';
+  resetVisible();
   renderList();
 });
 
@@ -171,10 +201,15 @@ categoryFiltersEl.addEventListener('click', (event) => {
   const btn = event.target.closest('[data-category]');
   if (!btn) return;
   state.category = btn.getAttribute('data-category') || 'Alla';
+  resetVisible();
   applyFiltersAndRender();
 });
 
 listEl.addEventListener('click', (event) => {
+  if (event.target.closest('.more-btn')) {
+    showMore();
+    return;
+  }
   const shareBtn = event.target.closest('.share-btn');
   if (shareBtn) {
     const id = shareBtn.getAttribute('data-share-id');
@@ -186,11 +221,13 @@ listEl.addEventListener('click', (event) => {
   const btn = event.target.closest('.chip.buttonish[data-category]');
   if (!btn) return;
   state.category = btn.getAttribute('data-category') || 'Alla';
+  resetVisible();
   applyFiltersAndRender();
 });
 
 window.addEventListener('popstate', () => {
   readUrlState();
+  resetVisible();
   applyFiltersAndRender();
 });
 
