@@ -17,12 +17,14 @@ const clearFiltersBtn = document.getElementById('clear-filters');
 const sortSelect = document.getElementById('sort');
 
 const SORTS = new Set(['priority', 'newest', 'oldest', 'title']);
+const PAGE_SIZE = 12;
 
 const state = {
   allItems: [],
   query: '',
   category: 'Alla',
   sort: 'priority',
+  visible: PAGE_SIZE,
 };
 
 function hoursAgo(hours) {
@@ -59,13 +61,17 @@ function setStatus(stateName, text) {
   statusEl.textContent = text;
 }
 
-function setCount(shown, total) {
+function setCount(shown, filtered, total) {
   if (!total) {
     countEl.hidden = true;
     return;
   }
   countEl.hidden = false;
-  countEl.textContent = shown === total ? `${total} nyheter` : `Visar ${shown} av ${total}`;
+  countEl.textContent = `Visar ${shown} av ${filtered}`;
+}
+
+function resetVisible() {
+  state.visible = PAGE_SIZE;
 }
 
 function setBusy(busy) {
