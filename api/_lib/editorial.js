@@ -5,7 +5,7 @@ const PRIORITY_TOPICS = [
     id: 'tesla',
     label: 'Tesla',
     category: 'Tesla',
-    patterns: [/\btesla\b/i, /\bmodel\s*[3syx]\b/i, /\bcrypto?night\b/i, /\bfsd\b/i, /full self[- ]driving/i],
+    patterns: [/\btesla\b/i, /\bcybertruck\b/i, /\boptimus\b/i, /\bmodel\s*[3syx]\b/i, /\bcrypto?night\b/i, /\bfsd\b/i, /full self[- ]driving/i],
   },
   {
     id: 'ev',
@@ -53,7 +53,7 @@ const PRIORITY_TOPICS = [
     id: 'geopolitics',
     label: 'Geopolitik',
     category: 'Geopolitik',
-    patterns: [/\beu\b/i, /\busa?\b/i, /china|kina/i, /export control/i, /chip ban/i, /ai act/i, /lag(ändring|stiftning)/i, /reglering/i, /policy/i, /sanction/i],
+    patterns: [/\bEU\b/, /\bUSA?\b/, /\bchina\b|\bkina\b/i, /export control/i, /chip ban/i, /ai act/i, /lag(ändring|stiftning)/i, /reglering/i, /policy/i, /sanction/i],
   },
   {
     id: 'ai',
@@ -69,27 +69,64 @@ const POSITIVE_HINTS =
 const NEGATIVE_HINTS =
   /krasch|faller|åtal|stämmer|böter|skandal|döds|olycka|recall|ban|banned|lawsuit|crash|plunge|fraud|hack|breach|layoff|varsel|slowdown|weaken|what could go wrong|goes wrong|riskerar|kritisera/i;
 
+/** Text för ämnesdetektion: endast titel + sammanfattning (aldrig utgivare/källa). */
+function topicText(item) {
+  return `${item.title || ''} ${item.summary || ''}`;
+}
+
+/** Text för sentiment: källa får användas här. */
 function textOf(item) {
   return `${item.title || ''} ${item.summary || ''} ${item.source || ''} ${(item.tags || []).join(' ')}`;
 }
 
+function matchTopic(topic, text) {
+  let best = -1;
+  for (const re of topic.patterns) {
+    const m = re.exec(text);
+    if (m && (best < 0 || m.index < best)) best = m.index;
+  }
+  return best;
+}
+
 function detectTags(item) {
-  const text = textOf(item);
+  const text = topicText(item);
   const tags = new Set(Array.isArray(item.tags) ? item.tags.map(String) : []);
   for (const topic of PRIORITY_TOPICS) {
-    if (topic.patterns.some((re) => re.test(text))) {
+    if (matchTopic(topic, text) >= 0) {
       tags.add(topic.label);
     }
   }
   return [...tags];
 }
 
-function detectCategory(item, tags) {
-  if (item.category) return item.category;
+/** Starka entiteter (vinner över svagare ämnen); vid flera träffar vinner den som står först i titeln. */
+const STRONG_TOPICS = new Set(['spacex', 'neuralink', 'nvidia', 'jensen', 'xai', 'tesla', 'aiact']);
+const WEAK_ORDER = ['ev', 'elon', 'ai', 'geopolitics'];
+const AI_ACT_RE = /\bai act\b|export controls?|chip (ban|export)|\bEU\b.{0,40}(regulat|polic|law)|(regulat|polic|law).{0,40}\bEU\b/i;
+
+function categoryFromText(text) {
+  if (!text.trim()) return null;
+  let best = null;
+  const consider = (id, category, index) => {
+    if (index < 0) return;
+    if (!best || index < best.index) best = { id, category, index };
+  };
   for (const topic of PRIORITY_TOPICS) {
-    if (tags.includes(topic.label) && topic.category) return topic.category;
+    if (STRONG_TOPICS.has(topic.id)) consider(topic.id, topic.category, matchTopic(topic, text));
   }
-  return 'Teknik';
+  const act = AI_ACT_RE.exec(text);
+  if (act) consider('aiact', 'Geopolitik', act.index);
+  if (best) return best.category;
+  for (const id of WEAK_ORDER) {
+    const topic = PRIORITY_TOPICS.find((t) => t.id === id);
+    if (topic && matchTopic(topic, text) >= 0) return topic.category;
+  }
+  return null;
+}
+
+function detectCategory(item) {
+  if (item.category) return item.category;
+  return categoryFromText(String(item.title || '')) || categoryFromText(String(item.summary || '')) || 'Teknik';
 }
 
 function sentimentOf(item) {
@@ -149,7 +186,7 @@ function uniqueTags(tags, category) {
 
 function enrich(item) {
   const detected = detectTags(item);
-  const category = detectCategory(item, detected);
+  const category = detectCategory(item);
   const tags = uniqueTags(detected, category);
   const sentiment = sentimentOf({ ...item, tags });
   const score = priorityScore({ ...item, tags, sentiment });
