@@ -1,6 +1,6 @@
 const { listNews } = require('./_lib/store');
 const { enrich, compareEditorial, matchesEditorialFocus, PRIORITY_TOPICS } = require('./_lib/editorial');
-const { fetchLiveArticles, resolveStats, dedupeItems } = require('./_lib/sources');
+const { fetchLiveArticles, resolveStats, summaryStats, dedupeItems } = require('./_lib/sources');
 
 // Lagrade/seed-nyheter blandas bara in när live-RSS ger färre än så här många nyheter (eller misslyckas).
 const MIN_LIVE_ITEMS = 5;
@@ -20,9 +20,10 @@ function filterItems(items, { q, category, tag, editorial, positive }) {
     .map((item) => enrich(item))
     .filter((item) => {
       if (editorial === '1' || editorial === 'true') {
-        if (!matchesEditorialFocus(item, { preferPositive: positive !== '0' })) return false;
+        if (!matchesEditorialFocus(item, { preferPositive: false })) return false;
       }
-      if (positive === '1' || positive === 'true') {
+      // positive=1 styr bara rankningen (positiva först); negativa göms bara vid positive=only.
+      if (positive === 'only') {
         if (item.sentiment === 'negative') return false;
       }
       if (cat && cat.toLowerCase() !== 'alla' && item.category.toLowerCase() !== cat.toLowerCase()) {
@@ -112,6 +113,7 @@ module.exports = async function handler(req, res) {
     storedCount: stored.length,
     storedUsed: useStored,
     resolve: resolveStats(),
+    summaries: summaryStats(),
     liveError,
     editorialTopics: PRIORITY_TOPICS.map((t) => ({ id: t.id, label: t.label, category: t.category })),
     query: { q, category: category || null, tag: tag || null, sort, editorial, positive, live },
