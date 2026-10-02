@@ -63,11 +63,33 @@ const PRIORITY_TOPICS = [
   },
 ];
 
-const POSITIVE_HINTS =
-  /lanserar|genombrott|rekord|växer|ökar|vinner|godkänd|klarar|förbättrar|billigare|snabbare|ny milstolpe|expand|breakthrough|record|approves|beats|surpasses|opens|launches/i;
+const POSITIVE_HINTS = new RegExp(
+  [
+    'lanserar', 'genombrott', 'rekord', 'växer', 'ökar', 'vinner', 'godkänd', 'klarar', 'förbättrar', 'billigare', 'snabbare',
+    'ny milstolpe', 'expand', 'breakthrough', 'record', 'approves', 'beats', 'surpasses', 'opens', 'launches',
+    '\\bsoars?\\b', '\\bsurg(e|es|ed|ing)\\b', '\\bjumps?\\b', '\\brall(y|ies|ied)\\b', '\\bgains?\\b', 'top pick', 'all-time high',
+    '\\bunveils?\\b', '\\bsecures?\\b', '\\bmilestone', '\\bboosts?\\b', '\\bwins?\\b', '\\bpartner(s|ship)?\\b', '\\bsuccess',
+    '\\bmomentum\\b', '\\bpopped\\b', '\\bhits? record', '\\bsets? (a )?record', '\\brises?\\b',
+  ].join('|'),
+  'i'
+);
 
-const NEGATIVE_HINTS =
-  /krasch|faller|åtal|stämmer|böter|skandal|döds|olycka|recall|ban|banned|lawsuit|crash|plunge|fraud|hack|breach|layoff|varsel|slowdown|weaken|what could go wrong|goes wrong|riskerar|kritisera/i;
+/** Tydligt negativa rubriker (ord med ordgränser så att t.ex. "bank" inte räknas som "ban"). */
+const NEGATIVE_HINTS = new RegExp(
+  [
+    'krasch', '\\bfaller\\b', '\\bföll\\b', '\\brasar\\b', 'åtal', 'stämmer', '\\bstämd', '\\bböter', 'skandal', 'döds', 'olycka',
+    '\\bgripen\\b', '\\bförlust', '\\bkritik', '\\bvarnar\\b', 'fiasko', '\\bkris\\b', 'varsel', 'riskerar', 'kritisera',
+    '\\brecall', '\\bban\\b', '\\bbanned\\b', '\\blawsuits?\\b', '\\bsued\\b', '\\bsues\\b', '\\bcrash(es|ed|ing)?\\b', '\\bplunge[sd]?\\b',
+    '\\bfraud', '\\bhack(ed|ers?|s)?\\b', '\\bbreach', '\\blayoffs?\\b', '\\blays? off\\b', '\\bjob cuts?\\b', '\\bslowdown\\b',
+    '\\bweaken', 'what could go wrong', 'goes wrong',
+    '\\bfalls?\\b', '\\bfell\\b', '\\bfalling\\b', '\\bdrops?\\b', '\\bdropped\\b', '\\bslumps?\\b', '\\btumbles?\\b', '\\bsinks?\\b', '\\bslides?\\b',
+    '\\bdeclines?\\b', '\\bplummets?\\b', '\\barrest', '\\bsmuggl', '\\baccus', '\\bprobe[sd]?\\b', '\\binvestigat', '\\bdeadly\\b', '\\bdeath',
+    '\\bdies\\b', '\\bkilled\\b', '\\bfatal', '\\binjur', '\\bleaks?\\b', '\\bdamages\\b', '\\bpenalt', '\\bfines?d?\\b', '\\bwarns?\\b',
+    '\\bdelays?\\b', '\\bdelayed\\b', '\\bcancel', '\\bshuts? down\\b', '\\bbankrupt', '\\bthreat', '\\bbacklash', '\\boutage', '\\bfails?\\b',
+    '\\bfailed\\b', '\\bfailure', '\\bscandal', '\\bcontrovers', '\\babduct', '\\bkidnap', '\\bscam', '\\btroubles?\\b', '\\bcrisis\\b',
+  ].join('|'),
+  'i'
+);
 
 /** Text för ämnesdetektion: endast titel + sammanfattning (aldrig utgivare/källa). */
 function topicText(item) {
@@ -99,7 +121,7 @@ function detectTags(item) {
   return [...tags];
 }
 
-/** Starka entiteter (vinner över svagare ämnen); vid flera träffar vinner den som står först i titeln. */
+/** Starka entiteter (vinner över svägare ämnen); vid flera träffar vinner den som står först i titeln. */
 const STRONG_TOPICS = new Set(['spacex', 'neuralink', 'nvidia', 'jensen', 'xai', 'tesla', 'aiact']);
 const WEAK_ORDER = ['ev', 'elon', 'ai', 'geopolitics'];
 const AI_ACT_RE = /\bai act\b|export controls?|chip (ban|export)|\bEU\b.{0,40}(regulat|polic|law)|(regulat|polic|law).{0,40}\bEU\b/i;
@@ -141,9 +163,15 @@ function sentimentOf(item) {
   return 'neutral';
 }
 
-function priorityScore(item) {
-  const tags = item.tags || detectTags(item);
-  const sentiment = item.sentiment || sentimentOf(item);
+/** Ämnen där tydligt negativa rubriker prioriteras ner extra hårt (Tesla, elbilar, Musk, NVIDIA, AI). */
+const SENSITIVE_TAGS = ['Tesla', 'Elbilar', 'Elon Musk', 'NVIDIA', 'Jensen Huang', 'AI', 'xAI'];
+
+const POSITIVE_BONUS = 18;
+const NEGATIVE_PENALTY = 30;
+const NEGATIVE_PENALTY_SENSITIVE = 80;
+
+/** Ämnespoäng utan ton. Används för att avgöra om något är redaktionellt relevant alls. */
+function topicScore(item, tags) {
   let score = 0;
 
   for (const topic of PRIORITY_TOPICS) {
@@ -158,12 +186,25 @@ function priorityScore(item) {
   if (tags.includes('Elbilar')) score += 5;
   if (tags.includes('Geopolitik')) score += 5;
 
-  if (sentiment === 'positive') score += 12;
-  else if (sentiment === 'negative') score -= 15;
-  else score += 1;
-
   if (item.priority === true) score += 20;
-  if (typeof item.priorityScore === 'number') score += item.priorityScore;
+  // Manuell bonus på rå (ännu ej berikade) poster; berikade poster räknas om från taggar, annars dubblas poängen vid varje enrich().
+  if (typeof item.priorityScore === 'number' && item.editorialPriority === undefined) score += item.priorityScore;
+
+  return score;
+}
+
+function priorityScore(item) {
+  const tags = item.tags || detectTags(item);
+  const sentiment = item.sentiment || sentimentOf(item);
+  let score = topicScore(item, tags);
+
+  if (sentiment === 'positive') {
+    score += POSITIVE_BONUS;
+  } else if (sentiment === 'negative') {
+    score -= tags.some((t) => SENSITIVE_TAGS.includes(t)) ? NEGATIVE_PENALTY_SENSITIVE : NEGATIVE_PENALTY;
+  } else {
+    score += 1;
+  }
 
   return score;
 }
@@ -189,7 +230,10 @@ function enrich(item) {
   const category = detectCategory(item);
   const tags = uniqueTags(detected, category);
   const sentiment = sentimentOf({ ...item, tags });
-  const score = priorityScore({ ...item, tags, sentiment });
+  // Poängen räknas på alla ämnen inkl. kategorin (uniqueTags tar bort kategorinamnet ur den synliga taggraden).
+  const scoreTags = [...new Set([...detected, category])];
+  const score = priorityScore({ ...item, tags: scoreTags, sentiment });
+  const topic = topicScore(item, scoreTags);
   const editorialPriority = score >= 12;
 
   return {
@@ -198,6 +242,7 @@ function enrich(item) {
     category,
     sentiment,
     priorityScore: score,
+    topicScore: topic,
     editorialPriority,
   };
 }
@@ -212,7 +257,9 @@ function matchesEditorialFocus(item, { preferPositive = true } = {}) {
   if (preferPositive && item.sentiment === 'negative' && (item.priorityScore || 0) < 20) {
     return false;
   }
-  return (item.priorityScore || 0) >= 8;
+  // Relevans avgörs av ämnet, inte tonen: negativa rubriker rankas ned men göms inte.
+  const relevance = typeof item.topicScore === 'number' ? item.topicScore : item.priorityScore || 0;
+  return relevance >= 8;
 }
 
 module.exports = {
