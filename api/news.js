@@ -1,6 +1,9 @@
 const { listNews } = require('./_lib/store');
 const { enrich, compareEditorial, matchesEditorialFocus, PRIORITY_TOPICS } = require('./_lib/editorial');
-const { fetchLiveArticles } = require('./_lib/sources');
+const { fetchLiveArticles, resolveStats, dedupeItems } = require('./_lib/sources');
+
+// Lagrade/seed-nyheter blandas bara in när live-RSS ger färre än så här många nyheter (eller misslyckas).
+const MIN_LIVE_ITEMS = 5;
 
 function cors(res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -96,7 +99,8 @@ module.exports = async function handler(req, res) {
   }
 
   const stored = listNews().map(enrich);
-  const all = mergeItems(liveItems, stored);
+  const useStored = !!liveError || liveItems.length < MIN_LIVE_ITEMS;
+  const all = useStored ? dedupeItems(mergeItems(liveItems, stored)) : mergeItems(liveItems);
   const filtered = filterItems(all, { q, category, tag, editorial, positive });
   const items = sortItems(filtered, sort).slice(0, 50);
 
@@ -106,6 +110,8 @@ module.exports = async function handler(req, res) {
     filtered: items.length,
     liveCount: liveItems.length,
     storedCount: stored.length,
+    storedUsed: useStored,
+    resolve: resolveStats(),
     liveError,
     editorialTopics: PRIORITY_TOPICS.map((t) => ({ id: t.id, label: t.label, category: t.category })),
     query: { q, category: category || null, tag: tag || null, sort, editorial, positive, live },
