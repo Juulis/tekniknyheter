@@ -1,5 +1,6 @@
 const crypto = require('crypto');
 const { enrich, matchesEditorialFocus, compareEditorial } = require('./editorial');
+const { fillSummaries, summaryStats } = require('./summaries');
 
 const FEEDS = [
   {
@@ -429,8 +430,8 @@ async function fetchLiveArticles({ force = false } = {}) {
   const enriched = [];
   for (const raw of collected) {
     const item = enrich({ ...raw, originalUrl: raw.url });
-    if (!matchesEditorialFocus(item, { preferPositive: true })) continue;
-    if (item.sentiment === 'negative') continue;
+    // Negativa rubriker göms inte längre; de rankas ned i editorial.js. Bara NEGATIVE_TITLE (skräp/spam) sorteras bort.
+    if (!matchesEditorialFocus(item, { preferPositive: false })) continue;
     if (NEGATIVE_TITLE.test(item.title || '')) continue;
     enriched.push(item);
   }
@@ -441,7 +442,13 @@ async function fetchLiveArticles({ force = false } = {}) {
   } catch (_) {
     /* behåll Google-länkarna */
   }
-  const items = applyResolved(top).map(({ originalUrl, ...rest }) => rest);
+  let items = applyResolved(top).map(({ originalUrl, ...rest }) => rest);
+  try {
+    // Sammanfattning för toppkorten som saknar en (se summaries.js): utgivarens egen beskrivning eller neutral mall.
+    items = await fillSummaries(items);
+  } catch (_) {
+    /* behåll korten utan sammanfattning */
+  }
   globalThis[cacheKey] = { at: now, items };
   return items;
 }
@@ -451,4 +458,4 @@ function resolveStats() {
   return { cached: st.urls.size, blockedUntil: st.blockedUntil, last: st.lastStats };
 }
 
-module.exports = { fetchLiveArticles, resolveStats, dedupeItems, titleTokens, jaccard, isWeakSource, FEEDS, cleanSummary, normalizeDedupeKey, splitTitleAndPublisher };
+module.exports = { fetchLiveArticles, resolveStats, summaryStats, dedupeItems, titleTokens, jaccard, isWeakSource, FEEDS, cleanSummary, normalizeDedupeKey, splitTitleAndPublisher };
