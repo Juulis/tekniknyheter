@@ -12,9 +12,17 @@ module.exports = async function handler(req, res) {
   }
 
   try {
-    const items = await fetchLiveArticles({ force: true });
+    // Förvärmning: en andra omgång löser upp Google-länkar och sammanfattningar som hann slut på tid/budget i den första.
+    let items = await fetchLiveArticles({ force: true });
+    let passes = 1;
+    if (items.some((i) => /news\.google\.com/i.test(i.url || ''))) {
+      items = await fetchLiveArticles({ force: true });
+      passes = 2;
+    }
     return res.status(200).json({
       ok: true,
+      passes,
+      googleLinksLeft: items.filter((i) => /news\.google\.com/i.test(i.url || '')).length,
       refreshed: items.length,
       feeds: FEEDS.length,
       sample: items.slice(0, 5).map((i) => ({ title: i.title, tags: i.tags, url: i.url })),
