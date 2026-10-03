@@ -258,28 +258,109 @@ async function fetchFeed(feed) {
 }
 
 const JACCARD_THRESHOLD = 0.5;
+// Lägre tröskel gäller bara klustring (aldrig för att tappa en nyhet) och kräver samma kategori, minst tre gemensamma ord och en gemensam nyckelentitet.
+const CLUSTER_THRESHOLD = 0.4;
+const MAX_RELATED = 3;
+const KEY_ENTITY_RE =
+  /\b(tesla|cybertruck|optimus|nvidia|nvda|jensen|huang|musk|spacex|starship|starlink|grok|xai|openai|anthropic|neuralink|maduro|trump|google|alphabet|amd|intel|tsmc|waymo|rivian|byd|ford|gm)\b/gi;
 
+function keyEntities(title) {
+  return new Set((String(title || '').toLowerCase().match(KEY_ENTITY_RE) || []));
+}
+
+function sharedCount(a, b) {
+  let n = 0;
+  for (const x of a) if (b.has(x)) n++;
+  return n;
+}
+
+function sameStory(cand, kept) {
+  const j = jaccard(cand.tokens, kept.tokens);
+  if (j >= JACCARD_THRESHOLD) return true;
+  if (j < CLUSTER_THRESHOLD) return false;
+  if ((cand.item.category || '') !== (kept.item.category || '')) return false;
+  const opposite =
+    (cand.item.sentiment === 'positive' && kept.item.sentiment === 'negative') ||
+    (cand.item.sentiment === 'negative' && kept.item.sentiment === 'positive');
+  if (opposite) return false;
+  if (sharedCount(cand.tokens, kept.tokens) < 3) return false;
+  return sharedCount(keyEntities(cand.item.title), keyEntities(kept.item.title)) > 0;
+}
+
+function toRelated(it) {
+  return { source: it.source, url: it.url, title: it.title, originalUrl: it.originalUrl || it.url };
+}
+
+const byScore = (a, b) => (b.priorityScore || 0) - (a.priorityScore || 0) || new Date(b.publishedAt) - new Date(a.publishedAt);
+
+/**
+ * Slår ihop dubbletter och nära-dubbletter till kluster: en primär nyhet (högst priorityScore) plus
+ * alsoIn: [{ source, url, title }] för övriga utgivare (max 3, en per utgivare). Inget tappas utan spår.
+ */
 function dedupeItems(items) {
-  // 1) exakta nycklar, 2) nära-dubbletter via token-Jaccard (behåll högst priorityScore)
-  const byKey = new Map();
+  const groups = new Map();
   for (const item of items) {
     const key = normalizeDedupeKey(item.title) || (item.url || '').toLowerCase();
     if (!key) continue;
-    const prev = byKey.get(key);
-    if (!prev || (item.priorityScore || 0) > (prev.priorityScore || 0)) {
-      byKey.set(key, item);
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(item);
+  }
+  const heads = [];
+  for (const group of groups.values()) {
+    group.sort(byScore);
+    const [head, ...rest] = group;
+    const extras = [...(head.alsoIn || []), ...rest.map(toRelated), ...rest.flatMap((r) => r.alsoIn || [])];
+    heads.push({ item: head, extras });
+  }
+  heads.sort((a, b) => byScore(a.item, b.item));
+
+  const kept = [];
+  for (const h of heads) {
+    const cand = { item: h.item, tokens: titleTokens(h.item.title), extras: h.extras };
+    const into = kept.find((k) => sameStory(cand, k));
+    if (into) {
+      into.extras.push(toRelated(h.item), ...h.extras);
+    } else {
+      kept.push(cand);
     }
   }
-  const sorted = [...byKey.values()].sort(
-    (a, b) => (b.priorityScore || 0) - (a.priorityScore || 0) || new Date(b.publishedAt) - new Date(a.publishedAt)
-  );
-  const kept = [];
+
+  return kept.map(({ item, extras }) => {
+    const seen = new Set([String(item.source || '').toLowerCase()]);
+    const related = [];
+    for (const r of extras) {
+      const src = String(r.source || '').toLowerCase();
+      if (!r.url || seen.has(src)) continue;
+      seen.add(src);
+      related.push(r);
+      if (related.length >= MAX_RELATED) break;
+    }
+    const { alsoIn, ...rest } = item;
+    return related.length ? { ...rest, alsoIn: related } : rest;
+  });
+}
+
+/** Mjuk kategorikvotering: högst ~25% per kategori först, resten fylls på i poängordning. */
+function diversify(sorted, limit, maxShare = 0.25) {
+  const cap = Math.max(1, Math.ceil(limit * maxShare));
+  const counts = new Map();
+  const picked = [];
+  const deferred = [];
   for (const item of sorted) {
-    const tokens = titleTokens(item.title);
-    const dup = kept.some((k) => jaccard(tokens, k.tokens) >= JACCARD_THRESHOLD);
-    if (!dup) kept.push({ item, tokens });
+    if (picked.length >= limit) break;
+    const cat = item.category || 'Teknik';
+    if ((counts.get(cat) || 0) < cap) {
+      counts.set(cat, (counts.get(cat) || 0) + 1);
+      picked.push(item);
+    } else {
+      deferred.push(item);
+    }
   }
-  return kept.map((k) => k.item);
+  for (const item of deferred) {
+    if (picked.length >= limit) break;
+    picked.push(item);
+  }
+  return picked.sort(compareEditorial);
 }
 
 /* ---------- Google News-länkar -> riktiga utgivar-URL:er ---------- */
@@ -288,9 +369,10 @@ const resolveKey = '__tekniknyheter_gnews_resolved__';
 const BROWSER_UA =
   'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36';
 const RESOLVE_TIMEOUT_MS = 4000;
-const RESOLVE_CONCURRENCY = 2;
-const RESOLVE_MAX_PER_REFRESH = 15;
-const RESOLVE_BUDGET_MS = 6500;
+const RESOLVE_CONCURRENCY = 4;
+const RESOLVE_MAX_PER_REFRESH = 70;
+// Tidsbudgeten ryms inom maxDuration (30 s i vercel.json): flöden ~1-2 s + upplösning 14 s + sammanfattningar ~5,5 s.
+const RESOLVE_BUDGET_MS = 14000;
 const RESOLVE_COOLDOWN_MS = 10 * 60 * 1000;
 
 function resolveState() {
@@ -392,7 +474,7 @@ async function resolveBatch(items) {
           stats.failed++;
         }
       }
-      await new Promise((r) => setTimeout(r, 250));
+      await new Promise((r) => setTimeout(r, 150));
     }
   }
   await Promise.all(Array.from({ length: RESOLVE_CONCURRENCY }, worker));
@@ -413,6 +495,25 @@ function applyResolved(items) {
     }
   }
   return out;
+}
+
+/** Upplösta länkar för "Också i": bara utgivar-URL:er som lyckats lösas upp (aldrig Google-länkar). */
+function applyResolvedRelated(items) {
+  const st = resolveState();
+  return items.map((item) => {
+    if (!Array.isArray(item.alsoIn)) return item;
+    const related = [];
+    for (const r of item.alsoIn) {
+      const gid = googleArticleId(r.originalUrl || r.url);
+      const url = gid ? st.urls.get(gid) : r.url;
+      if (!url || googleArticleId(url) || url === item.url) continue;
+      const next = { source: r.source, url, title: r.title };
+      if (isWeakSource(next)) continue;
+      related.push(next);
+    }
+    const { alsoIn, ...rest } = item;
+    return related.length ? { ...rest, alsoIn: related } : rest;
+  });
 }
 
 async function fetchLiveArticles({ force = false } = {}) {
@@ -436,15 +537,17 @@ async function fetchLiveArticles({ force = false } = {}) {
     enriched.push(item);
   }
 
-  const top = dedupeItems(enriched).sort(compareEditorial).slice(0, 40);
+  const clustered = dedupeItems(enriched).sort(compareEditorial);
+  const top = diversify(clustered, 40);
   try {
-    await resolveBatch(top);
+    // Primära nyheter först, sedan länkarna i "Också i" (så att budgeten räcker till det viktigaste).
+    await resolveBatch([...top, ...top.flatMap((t) => t.alsoIn || [])]);
   } catch (_) {
     /* behåll Google-länkarna */
   }
-  let items = applyResolved(top).map(({ originalUrl, ...rest }) => rest);
+  let items = applyResolvedRelated(applyResolved(top).map(({ originalUrl, ...rest }) => rest));
   try {
-    // Sammanfattning för toppkorten som saknar en (se summaries.js): utgivarens egen beskrivning eller neutral mall.
+    // Sammanfattning för toppkorten som saknar en (se summaries.js): utgivarens egen og:description (annars ingen summary).
     items = await fillSummaries(items);
   } catch (_) {
     /* behåll korten utan sammanfattning */
