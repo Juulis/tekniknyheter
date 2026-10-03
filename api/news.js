@@ -22,9 +22,10 @@ function filterItems(items, { q, category, tag, editorial, positive }) {
       if (editorial === '1' || editorial === 'true') {
         if (!matchesEditorialFocus(item, { preferPositive: false })) return false;
       }
-      // positive=1 styr bara rankningen (positiva först); negativa göms bara vid positive=only.
+      // positive=1 (standard) = "positiv lutning": styr bara rankningen (positiva först, neutrala OK, negativa sist).
+      // positive=only är strikt: returnerar enbart items med sentiment === 'positive'.
       if (positive === 'only') {
-        if (item.sentiment === 'negative') return false;
+        if (item.sentiment !== 'positive') return false;
       }
       if (cat && cat.toLowerCase() !== 'alla' && item.category.toLowerCase() !== cat.toLowerCase()) {
         return false;
