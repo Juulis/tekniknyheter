@@ -55,7 +55,8 @@ const PRIORITY_TOPICS = [
     id: 'geopolitics',
     label: 'Geopolitik',
     category: 'Geopolitik',
-    patterns: [/\bEU\b/, /\bchina\b|\bkina\b/i, /tariff/i, /export control/i, /chip ban/i, /(?<!\b(?:let|lets|to|can|will|would)\s)\bai act\b/i, /lag(ändring|stiftning)/i, /reglering/i, /\b(tech|ai|chip|semiconductor|export|trade|digital) policy\b|policy.{0,30}\b(ai|chips?)\b/i, /sanction/i],
+    // Strikt: bara chip/exportkontroll, AI-lagar och EV-regler/tullar. Bara "EU" eller "Kina" i rubriken räcker inte.
+    patterns: [/export controls?/i, /chip ban/i, /(?<!\b(?:let|lets|to|can|will|would)\s)\bai act\b/i, /(?:ai|chip|semiconductor|export|digital) (?:policy|regulation|legislation|laws?|rules)|regulat\w* (?:of )?(?:frontier )?ai\b/i, /(?:eu|china|kina|us|usa).{0,40}\b(?:chips?|halvledar\w*|ai|elbil\w*|evs?|electric)\b.{0,40}\b(?:tariffs?|tullar?|ban|sanctions?|restrictions?|regler|reglering|lag)\b/i, /\b(?:tariffs?|tullar?)\b.{0,40}\b(?:evs?|electric|elbil\w*|chips?|semiconductors?)\b/i, /\b(?:evs?|electric|elbil\w*|chips?|semiconductors?)\b.{0,40}\b(?:tariffs?|tullar?)\b/i, /sanctions?.{0,40}\b(?:chips?|nvidia|ai)\b/i],
   },
   {
     id: 'ai',
@@ -76,6 +77,21 @@ const POSITIVE_HINTS = new RegExp(
   'i'
 );
 
+/** Tydliga positiva signaler (starka): räcker ensamma. Övriga positiva ord (svaga) räknas bara utan förbehåll. */
+const STRONG_POS = /\brecord\b|\brecords\b|all-time high|record high|breakthrough|\bbeats?\b|\bsurg(e|es|ed|ing)\b|\bsoars?\b|\blaunch(es|ed)?\b|\bwins?\b|\bapprov(al|ed|es)\b|\bunveils?\b|\bmilestone|\bgreen ?light|lanserar|genombrott|\brekord|grönt ljus|godkänd|vinner|nytt rekord|\bdebuts?\b|\bsecures?\b|\brall(y|ies|ied)\b|\bjumps?\b|sänker priset|billigare/i;
+/** Förbehåll: svaga positiva ord räknas inte när rubriken bara spår, tror eller uppskattar. */
+const HEDGE = /\bforecasts?\b|\bpredict|\bcould\b|\bmay\b|\bmight\b|\bexpects?\b|\bexpected to\b|\banalysts?\b|\bseeks?\b|\bplans? to\b|\bwould\b|\bhopes?\b|\bprognos|\bspår\b/i;
+/** Negativa/skeptiska ord i rubriken: aldrig positiv ton, även om ett positivt ord finns. */
+const SKEPTIC = new RegExp(
+  [
+    '\\bprice hikes?\\b', '\\bhikes?\\b', '\\braises? prices?\\b', '\\bprice (up|increase)', '\\bprices? (up|rise|jump)', 'reality check', '\\bskeptic', '\\bdoubts?\\b', '\\bbubble\\b',
+    '\\bwarn(s|ing|ings)?\\b', '\\bconcerns?\\b', '\\brisks?\\b', '\\bprobe[sd]?\\b', '\\blawsuits?\\b', '\\brecall', '\\bcuts?\\b', '\\blayoffs?\\b', '\\bfalls?\\b',
+    '\\bplunge[sd]?\\b', '\\bslump', '\\bdowngrade', '\\bdelay', '\\bshortage', '\\bshocking\\b', '\\bpushback\\b', '\\bscrutiny\\b',
+    '\\bcautions?\\b', '^editorial\\b', '^opinion\\b', 'op-ed', '\\bcase against\\b', '\\bvoluntary\\b', 'prishöj', 'höjer pris', '\\bvarnar\\b', '\\boro\\b', '\\btvivel', '\\bbubbla\\b', '\\bförsening', '\\bnedgång',
+  ].join('|'),
+  'i'
+);
+
 /** Tydligt negativa rubriker (ord med ordgränser så att t.ex. "bank" inte räknas som "ban"). */
 const NEGATIVE_HINTS = new RegExp(
   [
@@ -84,7 +100,7 @@ const NEGATIVE_HINTS = new RegExp(
     '\\brecall', '\\bban\\b', '\\bbanned\\b', '\\blawsuits?\\b', '\\bsued\\b', '\\bsues\\b', '\\bcrash(es|ed|ing)?\\b', '\\bplunge[sd]?\\b',
     '\\bfraud', '\\bhack(ed|ers?|s)?\\b', '\\bbreach', '\\blayoffs?\\b', '\\blays? off\\b', '\\bjob cuts?\\b', '\\bslowdown\\b',
     '\\bweaken', 'what could go wrong', 'goes wrong',
-    '\\bfalls?\\b', '\\bfell\\b', '\\bfalling\\b', '\\bdrops?\\b', '\\bdropped\\b', '\\bslumps?\\b', '\\btumbles?\\b', '\\bsinks?\\b', '\\bslides?\\b',
+    '\\bprice hikes?\\b', '\\braises? prices?\\b', '\\bdowngrade', 'prishöj', '\\bshortage', '\\bfalls?\\b', '\\bfell\\b', '\\bfalling\\b', '\\bdrops?\\b', '\\bdropped\\b', '\\bslumps?\\b', '\\btumbles?\\b', '\\bsinks?\\b', '\\bslides?\\b',
     '\\bdeclines?\\b', '\\bplummets?\\b', '\\barrest', '\\bsmuggl', '\\baccus', '\\bprobe[sd]?\\b', '\\binvestigat', '\\bdeadly\\b', '\\bdeath',
     '\\bdies\\b', '\\bkilled\\b', '\\bfatal', '\\binjur', '\\bleaks?\\b', '\\bdamages\\b', '\\bpenalt', '\\bfines?d?\\b', '\\bwarns?\\b',
     '\\bdelays?\\b', '\\bdelayed\\b', '\\bcancel', '\\bshuts? down\\b', '\\bbankrupt', '\\bthreat', '\\bbacklash', '\\boutage', '\\bfails?\\b',
@@ -224,9 +240,9 @@ function detectTags(item) {
 }
 
 /** Starka entiteter (vinner över svagare ämnen); vid flera träffar vinner den som står först i titeln. */
-const STRONG_TOPICS = new Set(['spacex', 'neuralink', 'nvidia', 'jensen', 'xai', 'tesla', 'aiact']);
-const WEAK_ORDER = ['ev', 'elon', 'ai', 'geopolitics'];
-const AI_ACT_RE = /(?<!\b(?:let|lets|to|can|will|would)\s)\bai act\b|export controls?|chip (ban|export)|\bEU\b.{0,40}(regulat|polic|law)|(regulat|polic|law).{0,40}\bEU\b/i;
+const STRONG_TOPICS = new Set(['spacex', 'neuralink', 'nvidia', 'jensen', 'xai', 'tesla', 'elon', 'aiact']);
+const WEAK_ORDER = ['ev', 'ai', 'geopolitics'];
+const AI_ACT_RE = /(?<!\b(?:let|lets|to|can|will|would)\s)\bai act\b|export controls?|chip (ban|export)|\bEU\b.{0,40}\bai\b.{0,30}(regulat|polic|law)|\bai (regulation|legislation|laws?|rules)\b|regulat\w* (of )?(frontier )?ai\b/i;
 
 function categoryFromText(text) {
   if (!text.trim()) return null;
@@ -262,7 +278,8 @@ function sentimentOf(item) {
   }
   // Positiv ton kräver positiva signalord i rubriken (inte i källa, taggar eller att Musk/Tesla nämns).
   // Frågerubriker ("Is China winning ...?") är aldrig positiva.
-  const pos = POSITIVE_HINTS.test(String(item.title || '')) && !/\?\s*$/.test(String(item.title || ''));
+  const title = String(item.title || '');
+  const pos = POSITIVE_HINTS.test(title) && !/\?\s*$/.test(title) && !SKEPTIC.test(title) && (STRONG_POS.test(title) || !HEDGE.test(title));
   const neg = NEGATIVE_HINTS.test(textOf(item));
   const conflict = CONFLICT_HINTS.test(String(item.title || ''));
   if (neg && !pos) return 'negative';
