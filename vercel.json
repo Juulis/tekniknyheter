@@ -15,5 +15,9 @@
         { "key": "Access-Control-Allow-Headers", "value": "Content-Type, X-Ingest-Key, Authorization" }
       ]
     }
-  ]
+  ],
+  "functions": {
+    "api/news.js": { "maxDuration": 30 },
+    "api/cron/refresh.js": { "maxDuration": 30 }
+  }
 }
