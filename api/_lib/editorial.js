@@ -5,13 +5,13 @@ const PRIORITY_TOPICS = [
     id: 'tesla',
     label: 'Tesla',
     category: 'Tesla',
-    patterns: [/\btesla\b/i, /\bcybertruck\b/i, /\boptimus\b/i, /\bmodel\s*[3syx]\b/i, /\bcrypto?night\b/i, /\bfsd\b/i, /full self[- ]driving/i],
+    patterns: [/\btesla\b/i, /\bcybertruck\b/i, /\boptimus\b/i, /\bmodel (3|s|y|x)\b/i, /\bmodel[3yx]\b/i, /\bcrypto?night\b/i, /\bfsd\b/i, /full self[- ]driving/i],
   },
   {
     id: 'ev',
     label: 'Elbilar',
     category: 'Elbilar',
-    patterns: [/\belbil/i, /\bev\b/i, /electric vehicle/i, /\bbatteri(bil|pack)?\b/i, /charging network/i, /supercharger/i],
+    patterns: [/\belbil/i, /\bevs?\b/i, /electric vehicle/i, /\b(geely|byd|polestar|rivian|lucid|xpeng|zeekr|nio|ioniq|leapmotor)\b/i, /\bladdstolpe|snabbladdning|\bräckvidd/i, /\bbatteri(bil|pack)?\b/i, /charging network/i, /supercharger/i],
   },
   {
     id: 'elon',
@@ -55,7 +55,7 @@ const PRIORITY_TOPICS = [
     id: 'geopolitics',
     label: 'Geopolitik',
     category: 'Geopolitik',
-    patterns: [/\bEU\b/, /\bchina\b|\bkina\b/i, /tariff/i, /export control/i, /chip ban/i, /ai act/i, /lag(ändring|stiftning)/i, /reglering/i, /\b(tech|ai|chip|semiconductor|export|trade|digital) policy\b|policy.{0,30}\b(ai|chips?)\b/i, /sanction/i],
+    patterns: [/\bEU\b/, /\bchina\b|\bkina\b/i, /tariff/i, /export control/i, /chip ban/i, /(?<!\b(?:let|lets|to|can|will|would)\s)\bai act\b/i, /lag(ändring|stiftning)/i, /reglering/i, /\b(tech|ai|chip|semiconductor|export|trade|digital) policy\b|policy.{0,30}\b(ai|chips?)\b/i, /sanction/i],
   },
   {
     id: 'ai',
@@ -67,11 +67,11 @@ const PRIORITY_TOPICS = [
 
 const POSITIVE_HINTS = new RegExp(
   [
-    'lanserar', 'genombrott', 'rekord', 'växer', 'ökar', 'vinner', 'godkänd', 'klarar', 'förbättrar', 'billigare', 'snabbare',
-    'ny milstolpe', 'expand', 'breakthrough', 'record', 'approves', 'beats', 'surpasses', 'opens', 'launches',
+    'lanserar', 'genombrott', '\\brekord(?!er)', 'växer', 'ökar', 'vinner', 'godkänd', 'klarar', 'förbättrar', 'billigare', 'snabbare',
+    'ny milstolpe', 'expand', 'breakthrough', '(?<!off the )(?<!track )(?<!criminal )(?<!voting )(?<!housing )\\brecord\\b', '(breaks?|sets?|shatters?|smash(es)?) (new )?records\\b', 'approves', 'beats', 'surpasses', 'opens', 'launches',
     '\\bsoars?\\b', '\\bsurg(e|es|ed|ing)\\b', '\\bjumps?\\b', '\\brall(y|ies|ied)\\b', '\\bgains?\\b', 'top pick', 'all-time high',
     '\\bunveils?\\b', '\\bsecures?\\b', '\\bmilestone', '\\bboosts?\\b', '\\bwins?\\b', '\\bpartner(s|ship)?\\b', '\\bsuccess',
-    '\\bmomentum\\b', '\\bpopped\\b', '\\bhits? record', '\\bsets? (a )?record', '\\brises?\\b',
+    '\\bmomentum\\b', '\\btops?\\b', '\\bdebuts?\\b', '\\brolls? out\\b', '\\bapproval\\b', '\\bapproved\\b', '\\bgreen ?light', 'grönt ljus', '\\bupgrad', '\\bexpands?\\b', '\\bdoubles?\\b', '\\bclimbs?\\b', '\\bbullish\\b', '\\braises?\\b', '\\blands?\\b', '\\bnow available\\b', '\\bsänker priset\\b', 'nytt rekord', 'ny rekord', '\\bsets? new\\b', '\\bstronger\\b', '\\bstrong (growth|demand|sales|results)\\b', '\\bimpress', '\\bcheaper\\b', '\\bfaster\\b', '\\btriumph', '\\bsurpass', '\\bboom', '\\bpopped\\b', '\\bhits? record', '\\bsets? (a )?record', '\\brises?\\b',
   ].join('|'),
   'i'
 );
@@ -119,6 +119,45 @@ function isPersonalLife(item) {
   return PERSONAL_WEAK.test(text) && PERSON_CUE.test(text);
 }
 
+/** Brus som utesluts ur urvalet: politiskt "slam", eventlistor/webinars och kryptospådomar. */
+const POLITICAL_SLAM =
+  /\b(sanders|warren|ocasio|aoc|schumer|pelosi|democrats?|republicans?|gop|senators?|sen\.|congress(man|woman)?)\b.{0,70}\b(slams?|blasts?|rips?|torch(es)?|attacks?|lash(es)?|rebukes?|takes? aim|bashes?|slammed)\b|\b(slams?|blasts?|rips?|bashes?|slammed)\b.{0,70}\b(trump|biden|oligarchs?|republicans?|democrats?)\b/i;
+const EVENT_LISTING = /\b(daily news rundown|news rundown|webinar|conference agenda|symposium|\[event\]|register now|call for papers|save the date|masterclass|workshop)\b/i;
+const CRYPTO_NOISE = /\b(bitcoin|btc|crypto|ethereum|solana|xrp|dogecoin|memecoin|altcoin|token presale)\b/i;
+/** Spekulation som nedviktas och inte väljs om det finns annat: kursspådomar, "could hit", "forecast: $". */
+const SPECULATION =
+  /price prediction|\bcould (hit|reach|soar|surge|explode|double|triple|skyrocket)\b|\bforecast:? \$|\b(will|to) (hit|reach) \$\d|\bpredicts?\b.{0,40}\b(price|stock|shares)\b|\bstocks? to buy\b|\bbest (ai )?stocks?\b|\bshould you (buy|sell)\b|\b(buy|sell) now\b|\bhere'?s why\b.{0,30}\b(soar|surge|rall(y|ies)|jump)/i;
+
+function isNoise(item) {
+  const title = String(item.title || '');
+  return POLITICAL_SLAM.test(title) || EVENT_LISTING.test(title) || CRYPTO_NOISE.test(title);
+}
+function isSpeculative(item) {
+  return SPECULATION.test(String(item.title || ''));
+}
+
+/** Primärkällor (företagens egna sidor, IR/newsroom, Reuters/AP) får en liten poängbonus och blir primär i kluster. */
+const PRIMARY_HOST_RE =
+  /(^|\.)(tesla\.com|nvidia\.com|spacex\.com|x\.ai|neuralink\.com|reuters\.com|apnews\.com|(ir|investor|investors|newsroom|news)\.[a-z0-9-]+\.[a-z.]+)$/i;
+const PRIMARY_SOURCE_RE = /^(reuters|associated press|ap news|tesla|nvidia|nvidia blog|nvidia newsroom|spacex|neuralink|xai|x\.ai)$|newsroom|investor relations/i;
+
+function hostOfUrl(url) {
+  try {
+    return new URL(url).hostname.toLowerCase();
+  } catch (_) {
+    return '';
+  }
+}
+
+function isPrimarySource(item) {
+  if (PRIMARY_SOURCE_RE.test(String(item.source || '').trim())) return true;
+  for (const u of [item.url, item.sourceUrl]) {
+    const h = hostOfUrl(u);
+    if (h && h !== 'news.google.com' && PRIMARY_HOST_RE.test(h)) return true;
+  }
+  return false;
+}
+
 const KEYWORD_TAGS = [
   ['Aktier', /\b(stocks?|shares|nasdaq|s&p|buyback|price target|market cap|valuation|rally|earnings)\b/i],
   ['Rymden', /\b(rocket|launch(es|ed)?|orbit(al)?|astronauts?|satellites?|space station|iss|starship|falcon)\b/i],
@@ -153,7 +192,7 @@ function textOf(item) {
 
 const MAIN_TOPIC_WINDOW = 30;
 // Börsöversikter ("Stock Market Today: Nike, HPE, Nvidia ...") listar många bolag: då måste varje ämne vara huvudämne.
-const ROUNDUP_RE = /\b(stock market today|stocks? to watch|biggest movers|top movers|pre-?market|market wrap|stocks making|what to watch|dow jones|s&p 500)\b/i;
+const ROUNDUP_RE = /\b(more stocks|stocks that|today'?s market|market movers|stock market today|stocks? to watch|biggest movers|top movers|pre-?market|market wrap|stocks making|what to watch|dow jones|s&p 500)\b/i;
 
 function matchTopic(topic, text) {
   let best = -1;
@@ -167,6 +206,8 @@ function matchTopic(topic, text) {
       if (m[0].length === 0) g.lastIndex++;
     }
   }
+  // Börsöversikt med flera bolag uppräknade ("Nvidia, Tesla, Rivian, Nike ... and more"): ingen enskild post är huvudämne.
+  if (best >= 0 && hits < 3 && ROUNDUP_RE.test(text.slice(0, 120)) && (text.slice(0, 120).split(',').length - 1) >= 2) return -1;
   if (best >= 0 && (topic.mainOnly || ROUNDUP_RE.test(text.slice(0, 120))) && best > MAIN_TOPIC_WINDOW && hits < 2) return -1;
   return best;
 }
@@ -185,7 +226,7 @@ function detectTags(item) {
 /** Starka entiteter (vinner över svagare ämnen); vid flera träffar vinner den som står först i titeln. */
 const STRONG_TOPICS = new Set(['spacex', 'neuralink', 'nvidia', 'jensen', 'xai', 'tesla', 'aiact']);
 const WEAK_ORDER = ['ev', 'elon', 'ai', 'geopolitics'];
-const AI_ACT_RE = /\bai act\b|export controls?|chip (ban|export)|\bEU\b.{0,40}(regulat|polic|law)|(regulat|polic|law).{0,40}\bEU\b/i;
+const AI_ACT_RE = /(?<!\b(?:let|lets|to|can|will|would)\s)\bai act\b|export controls?|chip (ban|export)|\bEU\b.{0,40}(regulat|polic|law)|(regulat|polic|law).{0,40}\bEU\b/i;
 
 function categoryFromText(text) {
   if (!text.trim()) return null;
@@ -213,13 +254,15 @@ function detectCategory(item) {
 }
 
 function sentimentOf(item) {
+  if (isNoise(item) || isSpeculative(item)) return 'neutral';
   // Privatliv/skvaller är alltid neutralt, även om en tidigare ton skulle ha satts.
   if (isPersonalLife(item)) return 'neutral';
   if (item.sentiment === 'positive' || item.sentiment === 'negative' || item.sentiment === 'neutral') {
     return item.sentiment;
   }
   // Positiv ton kräver positiva signalord i rubriken (inte i källa, taggar eller att Musk/Tesla nämns).
-  const pos = POSITIVE_HINTS.test(String(item.title || ''));
+  // Frågerubriker ("Is China winning ...?") är aldrig positiva.
+  const pos = POSITIVE_HINTS.test(String(item.title || '')) && !/\?\s*$/.test(String(item.title || ''));
   const neg = NEGATIVE_HINTS.test(textOf(item));
   const conflict = CONFLICT_HINTS.test(String(item.title || ''));
   if (neg && !pos) return 'negative';
@@ -234,6 +277,14 @@ const POSITIVE_BONUS = 18;
 const NEGATIVE_PENALTY = 30;
 const NEGATIVE_PENALTY_SENSITIVE = 80;
 const PERSONAL_PENALTY = 60;
+const NOISE_PENALTY = 50;
+const SPECULATION_PENALTY = 25;
+const CORE_POSITIVE_BONUS = 10;
+const STRONG_POSITIVE_BONUS = 8;
+const PRIMARY_BONUS = 6;
+const SWEDISH_BONUS = 4;
+const CORE_TAGS = ['Tesla', 'Elbilar', 'Elon Musk', 'xAI', 'SpaceX', 'Neuralink', 'NVIDIA', 'Jensen Huang', 'AI'];
+const STRONG_POSITIVE = /record|all-time high|breakthrough|beats?\b|surpass|milestone|soars?\b|rekord|genombrott|milstolpe|grönt ljus|green ?light/i;
 
 /** Ämnespoäng utan ton. Används för att avgöra om något är redaktionellt relevant alls. */
 function topicScore(item, tags) {
@@ -266,6 +317,11 @@ function priorityScore(item) {
 
   if (sentiment === 'positive') {
     score += POSITIVE_BONUS;
+    // Starka positiva nyheter i kärnämnena (Tesla, elbilar, Musk-bolag, NVIDIA, AI) hamnar överst.
+    if (tags.some((t) => CORE_TAGS.includes(t))) {
+      score += CORE_POSITIVE_BONUS;
+      if (STRONG_POSITIVE.test(String(item.title || ''))) score += STRONG_POSITIVE_BONUS;
+    }
   } else if (sentiment === 'negative') {
     score -= tags.some((t) => SENSITIVE_TAGS.includes(t)) ? NEGATIVE_PENALTY_SENSITIVE : NEGATIVE_PENALTY;
   } else {
@@ -305,7 +361,14 @@ function enrich(item) {
   const topic = topicScore(item, scoreTags);
   // Skvaller om privatliv: kraftigt nedviktad och aldrig redaktionell prio.
   if (personal) score -= PERSONAL_PENALTY;
-  const editorialPriority = !personal && score >= 12;
+  const noise = isNoise(item);
+  const speculative = !noise && isSpeculative(item);
+  if (noise) score -= NOISE_PENALTY;
+  if (speculative) score -= SPECULATION_PENALTY;
+  const primarySource = isPrimarySource(item);
+  if (primarySource) score += PRIMARY_BONUS;
+  if (item.lang === 'sv') score += SWEDISH_BONUS;
+  const editorialPriority = !personal && !noise && !speculative && score >= 12;
 
   return {
     ...item,
@@ -316,6 +379,9 @@ function enrich(item) {
     topicScore: topic,
     editorialPriority,
     ...(personal ? { personalLife: true } : {}),
+    ...(noise ? { noise: true } : {}),
+    ...(speculative ? { speculative: true } : {}),
+    ...(primarySource ? { primarySource: true } : {}),
   };
 }
 
