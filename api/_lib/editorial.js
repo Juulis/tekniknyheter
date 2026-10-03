@@ -71,7 +71,7 @@ const POSITIVE_HINTS = new RegExp(
     'ny milstolpe', 'expand', 'breakthrough', '(?<!off the )(?<!track )(?<!criminal )(?<!voting )(?<!housing )\\brecord\\b', '(breaks?|sets?|shatters?|smash(es)?) (new )?records\\b', 'approves', 'beats', 'surpasses', 'opens', 'launches',
     '\\bsoars?\\b', '\\bsurg(e|es|ed|ing)\\b', '\\bjumps?\\b', '\\brall(y|ies|ied)\\b', '\\bgains?\\b', 'top pick', 'all-time high',
     '\\bunveils?\\b', '\\bsecures?\\b', '\\bmilestone', '\\bboosts?\\b', '\\bwins?\\b', '\\bpartner(s|ship)?\\b', '\\bsuccess',
-    '\\bmomentum\\b', '\\btops?\\b', '\\bdebuts?\\b', '\\brolls? out\\b', '\\bapproval\\b', '\\bapproved\\b', '\\bgreen ?light', 'grönt ljus', '\\bupgrad', '\\bexpands?\\b', '\\bdoubles?\\b', '\\bclimbs?\\b', '\\bbullish\\b', '\\braises?\\b', '\\blands?\\b', '\\bnow available\\b', '\\bsänker priset\\b', 'nytt rekord', 'ny rekord', '\\bsets? new\\b', '\\bstronger\\b', '\\bstrong (growth|demand|sales|results)\\b', '\\bimpress', '\\bcheaper\\b', '\\bfaster\\b', '\\btriumph', '\\bsurpass', '\\bboom', '\\bpopped\\b', '\\bhits? record', '\\bsets? (a )?record', '\\brises?\\b',
+    '\\bmomentum\\b', '\\btops?\\b', '\\bdebuts?\\b', '\\brolls? out\\b', '\\bapproval\\b', '\\bapproved\\b', '\\bgreen ?light', 'grönt ljus', '\\bupgrad', '\\bexpands?\\b', '\\bdoubles?\\b', '\\bclimbs?\\b', '\\bbullish\\b', '\\blands?\\b', '\\bnow available\\b', '\\bsänker priset\\b', 'nytt rekord', 'ny rekord', '\\bsets? new\\b', '\\bstronger\\b', '\\bstrong (growth|demand|sales|results)\\b', '\\bimpress', '\\bcheaper\\b', '\\bfaster\\b', '\\btriumph', '\\bsurpass', '\\bboom', '\\bpopped\\b', '\\bhits? record', '\\bsets? (a )?record', '\\brises?\\b',
   ].join('|'),
   'i'
 );
