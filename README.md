@@ -31,6 +31,16 @@ Negativt brus i samma ämnen har lägre prio.
 
 Ingest-tips till nyhetsboten: skicka gärna `tags`, `sentiment: "positive"` och `priority: true` när det passar.
 
+## Rankning, tonläge och kluster
+
+- **`positive=1` (standard) betyder "positiv lutning", inte filter:** positiva nyheter rankas först, neutrala får finnas kvar och tydligt negativa hamnar sist (de göms inte).
+- **`positive=only` är strikt:** bara nyheter med `sentiment === 'positive'` returneras (neutrala och negativa utesluts).
+- **Positiv ton** kräver positiva signalord i rubriken. Kritik/konflikt ("challenges", "slams" ...) och privatliv/skvaller (separation, dejting m.m.) ger aldrig positiv ton; skvaller får dessutom aldrig `editorialPriority` och viktas kraftigt ned.
+- **Kluster:** nära-dubbletter slås ihop till en primär nyhet med `alsoIn: [{ source, url, title }]` (max 3 andra utgivare, bara upplösta utgivar-URL:er). Frontend visar dem som "Också i: Källa1, Källa2".
+- **Urval av de 40:** mjuk kategorikvotering (högst ~25 % per kategori innan fyllning).
+- **Sammanfattning:** utgivarens egen `og:description`/meta description (ingen LLM, ingen översättning). Hittas ingen lämnas `summary` tom och kortet visas utan sammanfattning.
+- **Google News-länkar** löses upp till utgivar-URL:er vid refresh (cache i serverminnet; `maxDuration` 30 s i `vercel.json`). Cron-jobbet kör upp till två omgångar för att förvärma.
+
 ## API i korthet
 
 ```bash
