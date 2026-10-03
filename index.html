@@ -32,7 +32,7 @@
       content="Positiva tekniknyheter: Tesla, NVIDIA, AI, Elon Musks bolag och geopolitik."
     />
 
-    <link rel="stylesheet" href="styles.css?v=20260913g" />
+    <link rel="stylesheet" href="styles.css?v=20260913h" />
     <script>
       (function () {
         try {
@@ -83,6 +83,10 @@
               <option value="title">Titel A–Ö</option>
             </select>
           </label>
+          <label class="only-positive" for="only-positive" style="display:inline-flex;align-items:center;gap:.4rem;cursor:pointer">
+            <input id="only-positive" type="checkbox" />
+            <span>Bara positiva</span>
+          </label>
           <button id="refresh" type="button">Uppdatera</button>
           <button id="clear-filters" type="button" class="ghost" hidden>Rensa filter</button>
           <span id="count" class="count" hidden aria-live="polite"></span>
@@ -96,8 +100,8 @@
       </footer>
     </div>
 
-    <script src="config.js?v=20260913g"></script>
-    <script src="app-core.js?v=20260913g"></script>
-    <script src="app-ui.js?v=20260913g"></script>
+    <script src="config.js?v=20260913h"></script>
+    <script src="app-core.js?v=20260913h"></script>
+    <script src="app-ui.js?v=20260913h"></script>
   </body>
 </html>
