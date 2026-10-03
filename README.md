@@ -47,6 +47,14 @@ Ingest-tips till nyhetsboten: skicka gärna `tags`, `sentiment: "positive"` och 
 - **Sammanfattning:** utgivarens egen `og:description`/meta description (ingen LLM, ingen översättning). Hittas ingen lämnas `summary` tom och kortet visas utan sammanfattning.
 - **Google News-länkar** löses upp till utgivar-URL:er vid refresh (cache i serverminnet; `maxDuration` 30 s i `vercel.json`). Cron-jobbet kör upp till två omgångar för att förvärma.
 
+## Statistik (besöksräknare utan cookies)
+
+- Frontend anropar `POST /api/hit` en gång per sidvisning (`hit.js`, `fetch` med `keepalive`, ingen cookie/localStorage). Skickas: `utm_source` (sanerad `a-z0-9_-`, max 32), referrer-värdnamn (sökvägen skickas men sparas inte). Ingen IP, ingen User-Agent och inga persondata sparas.
+- Lagring: privat Vercel Blob-store `tekniknyheter-stats` (`BLOB_READ_WRITE_TOKEN` i Vercel). En JSON-fil per dag (`stats/YYYY-MM-DD.json`, dag i Europe/Stockholm) plus `stats/total.json`. Skrivning sker med ETag (`ifMatch`) och upp till 10 omförsök, så samtidiga träffar tappar normalt ingen räkning; vid extrem burst kan enstaka träffar missas.
+- Ignoreras: `DNT: 1`, User-Agent med bot/crawl/spider/headless/preview m.fl., och webbläsar-anrop från annan Origin än `https://juulis.github.io`.
+- Läs siffrorna: `GET https://tekniknyheter.vercel.app/api/stats` (publik, bara aggregerat, CORS `*`) -> `{ total, today, since, days: [{ date, views, bySource, byRef }] (30 dagar), bySourceTotal }`. Länka med `?utm_source=youtube`.
+- Av/på i frontend: `hits: false` i `config.js`. Begränsningar: adblock kan blockera anropet, botar utan bot-UA räknas, och direktanrop utan Origin (t.ex. curl) går att räkna.
+
 ## API i korthet
 
 ```bash
