@@ -35,7 +35,7 @@ function cardHtml(item, index) {
     .filter((r) => r && /^https?:\/\//i.test(r.url || ''))
     .slice(0, 3)
     .map((r) => `<a href="${escapeAttr(r.url)}" target="_blank" rel="noopener noreferrer" title="${escapeAttr(r.title || '')}">${escapeHtml(r.source || 'Källa')}<span class="sr-only"> (öppnas i ny flik)</span></a>`);
-  const also = alsoLinks.length ? `<p class="also-in" style="font-size:.82rem;opacity:.85;margin:6px 0 0">Också i: ${alsoLinks.join(', ')}</p>` : '';
+  const also = alsoLinks.length ? `<p class="also-in" style="flex:none;margin:0;font-size:.82rem;opacity:.85">Också i: ${alsoLinks.join(', ')}</p>` : '';
   const sentiment = item.sentiment && item.sentiment !== 'neutral'
     ? `<span class="chip sentiment ${escapeAttr(item.sentiment)}">${escapeHtml(item.sentiment === 'positive' ? 'Positiv' : 'Negativ')}</span>`
     : '';
@@ -61,7 +61,7 @@ function cardHtml(item, index) {
             <h2>${title}</h2>
             ${summary}
             ${also}
-            <div class="card-footer">
+            <div class="card-footer" style="margin-top:auto">
               <button type="button" class="ghost share-btn" data-share-id="${escapeAttr(item.id || '')}" aria-label="Dela ${escapeAttr(item.title || 'artikel')}">Dela</button>
             </div>
           </div>
@@ -171,7 +171,7 @@ async function loadNews({ force = false } = {}) {
   renderSkeleton();
 
   try {
-    const qs = new URLSearchParams({ editorial: '1', positive: '1', sort: 'priority' });
+    const qs = new URLSearchParams({ editorial: '1', positive: state.onlyPositive ? 'only' : '1', sort: 'priority' });
     if (force) qs.set('refresh', '1');
     const res = await fetch(`${base.replace(/\/$/, '')}/api/news?${qs}`, {
       headers: { Accept: 'application/json' },
@@ -234,10 +234,21 @@ listEl.addEventListener('click', (event) => {
 });
 
 window.addEventListener('popstate', () => {
+  const before = state.onlyPositive;
   readUrlState();
   resetVisible();
-  applyFiltersAndRender();
+  if (before !== state.onlyPositive) loadNews();
+  else applyFiltersAndRender();
 });
+
+if (positiveToggle) {
+  positiveToggle.addEventListener('change', () => {
+    state.onlyPositive = positiveToggle.checked;
+    try { localStorage.setItem(POSITIVE_STORE_KEY, state.onlyPositive ? '1' : '0'); } catch (_) {}
+    resetVisible();
+    loadNews();
+  });
+}
 
 clearFiltersBtn.addEventListener('click', clearFilters);
 themeToggle.addEventListener('click', toggleTheme);
