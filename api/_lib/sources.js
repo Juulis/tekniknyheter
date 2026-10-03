@@ -238,7 +238,8 @@ function parseRssItems(xml, feedLabel, feedLang) {
   const blocks = String(xml).match(/<item[\s\S]*?<\/item>/gi) || [];
   for (const block of blocks) {
     const rawTitle = tagValue(block, 'title');
-    const { title, publisher } = splitTitleAndPublisher(rawTitle);
+    // Egna svenska flöden har ingen "Titel - Utgivare"-form (Google News har det): dela bara Google-titlar.
+    const { title, publisher } = feedLang ? { title: stripHtml(rawTitle), publisher: '' } : splitTitleAndPublisher(rawTitle);
     const link = stripHtml(tagValue(block, 'link'));
     const rawDescription = tagValue(block, 'description');
     const summary = cleanSummary(rawDescription, title, publisher);
