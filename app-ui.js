@@ -213,6 +213,27 @@ categoryFiltersEl.addEventListener('click', (event) => {
   applyFiltersAndRender();
 });
 
+// Bild som inte går att ladda byts mot kategori-placeholdern (error bubblar inte, därför capture).
+listEl.addEventListener(
+  'error',
+  (event) => {
+    const img = event.target;
+    if (!img || img.tagName !== 'IMG') return;
+    const media = img.closest('.card-media');
+    if (!media || media.classList.contains('placeholder')) return;
+    const chip = img.closest('.card') && img.closest('.card').querySelector('.chip.buttonish[data-category]');
+    const cat = (chip && chip.getAttribute('data-category')) || 'Teknik';
+    media.classList.add('placeholder');
+    media.setAttribute('data-cat', cat);
+    media.innerHTML = '';
+    const label = document.createElement('span');
+    label.className = 'ph-label';
+    label.textContent = cat;
+    media.appendChild(label);
+  },
+  true
+);
+
 listEl.addEventListener('click', (event) => {
   if (event.target.closest('.more-btn')) {
     showMore();
