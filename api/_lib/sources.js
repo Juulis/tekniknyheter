@@ -21,7 +21,7 @@ const FEEDS = [
   },
   {
     source: 'Google News',
-    url: 'https://news.google.com/rss/search?q=Neuralink+when:7d&hl=en-US&gl=US&ceid=US:en',
+    url: 'https://news.google.com/rss/search?q=Neuralink+when:14d&hl=en-US&gl=US&ceid=US:en',
   },
   {
     source: 'Google News',
@@ -39,6 +39,18 @@ const FEEDS = [
     source: 'Google News SE',
     url: 'https://news.google.com/rss/search?q=Tesla+OR+elbilar+OR+NVIDIA+OR+AI+when:3d&hl=sv&gl=SE&ceid=SE:sv',
   },
+  {
+    source: 'Google News SE',
+    url: 'https://news.google.com/rss/search?q=site:alltomelbil.se+OR+site:nyteknik.se+OR+site:teknikensvarld.se+OR+site:breakit.se+OR+site:di.se+OR+site:elbilen.se+when:7d&hl=sv&gl=SE&ceid=SE:sv',
+  },
+  // Svenska källor med fungerande flöden (artiklar och sammanfattningar behålls på svenska, ingen översättning).
+  { source: 'Allt om Elbil', lang: 'sv', url: 'https://www.alltomelbil.se/feed/' },
+  { source: 'Elbilen.se', lang: 'sv', url: 'https://elbilen.se/feed/' },
+  { source: 'SweClockers', lang: 'sv', url: 'https://www.sweclockers.com/feeds/nyheter' },
+  { source: 'Computer Sweden', lang: 'sv', url: 'https://computersweden.se/feed/' },
+  { source: 'Feber', lang: 'sv', url: 'https://feber.se/rss/' },
+  { source: 'Breakit', lang: 'sv', url: 'https://www.breakit.se/feed/artiklar' },
+  { source: 'Dagens industri', lang: 'sv', url: 'https://www.di.se/rss' },
 ];
 
 const cacheKey = '__tekniknyheter_sources_cache__';
@@ -49,9 +61,9 @@ const NEGATIVE_TITLE =
 
 /** Svaga/oönskade källor: matchas mot utgivarnamn och mot host (artikel-URL eller utgivarens hemsida). */
 const WEAK_SOURCE_RE =
-  /svt\s?play|shattered(\.io)?\b|off\s?grid\s?survival|offgridsurvival|\bbriefs\.co\b|blogspot|blogger\.com|wordpress\.com|tumblr|pinterest|quora|\bmedium\.com\b|\bprweb\b|\bopenpr\b|einpresswire|\bnewsbreak\b|\bscoop\.it\b/i;
+  /svt\s?play|shattered(\.io)?\b|off\s?grid\s?survival|offgridsurvival|\bbriefs\.co\b|blogspot|blogger\.com|wordpress\.com|tumblr|pinterest|quora|\bmedium\.com\b|\bprweb\b|\bopenpr\b|einpresswire|\bnewsbreak\b|\bscoop\.it\b|\bpr\s?newswire\b|\bbusiness\s?wire\b|\bglobenewswire\b|\baccesswire\b|\bfacebook\b|\bx\.com\b|\btwitter\b|\binstagram\b|\breddit\b/i;
 const WEAK_HOST_RE =
-  /(^|\.)(svtplay\.se|shattered\.io|offgridsurvival\.com|briefs\.co|blogspot\.[a-z.]+|blogger\.com|wordpress\.com|tumblr\.com|pinterest\.[a-z.]+|quora\.com|medium\.com|prweb\.com|openpr\.com|einpresswire\.com|newsbreak\.com|scoop\.it)$/i;
+  /(^|\.)(svtplay\.se|shattered\.io|offgridsurvival\.com|briefs\.co|blogspot\.[a-z.]+|blogger\.com|wordpress\.com|tumblr\.com|pinterest\.[a-z.]+|quora\.com|medium\.com|prweb\.com|openpr\.com|einpresswire\.com|newsbreak\.com|scoop\.it|prnewswire\.com|businesswire\.com|globenewswire\.com|accesswire\.com|facebook\.com|x\.com|twitter\.com|instagram\.com|reddit\.com)$/i;
 
 function hostOf(url) {
   try {
@@ -136,7 +148,10 @@ function splitTitleAndPublisher(rawTitle) {
 }
 
 function cleanSummary(summary, title, publisher) {
-  let text = stripHtml(summary);
+  let text = stripHtml(summary)
+    .replace(/\s*(The post .{0,200} appeared first on .*|Inlägget .{0,200} dök först upp .*)$/i, '')
+    .replace(/\s*\[(…|\.\.\.)\]\s*$/, '…')
+    .trim();
   if (!text) return '';
   const norm = (s) => s.toLowerCase().replace(/[^a-z0-9åäö]+/gi, ' ').trim();
   const nTitle = norm(title);
@@ -208,7 +223,17 @@ function stableId(originalUrl) {
   return `rss-${crypto.createHash('sha1').update(String(originalUrl)).digest('hex').slice(0, 16)}`;
 }
 
-function parseRssItems(xml, feedLabel) {
+const SV_WORDS = /\b(och|att|är|på|för|med|som|inte|till|från|av|om|har|får|nya|ny|vid|kan|ska|blir|efter|men|mer|över|under|elbil|bilen|vill|sig|ett|den|det)\b/gi;
+
+/** Enkel språkheuristik: svenska ord/tecken i rubriken, eller flödets språk för svenska källor. */
+function detectLang(title, feedLang) {
+  if (feedLang === 'sv') return 'sv';
+  const words = (String(title || '').match(SV_WORDS) || []).length;
+  const accents = /[åäö]/i.test(title || '');
+  return words >= 2 || (accents && words >= 1) ? 'sv' : 'en';
+}
+
+function parseRssItems(xml, feedLabel, feedLang) {
   const items = [];
   const blocks = String(xml).match(/<item[\s\S]*?<\/item>/gi) || [];
   for (const block of blocks) {
@@ -236,7 +261,7 @@ function parseRssItems(xml, feedLabel) {
       sourceUrl: sourceUrl || undefined,
       source,
       imageUrl: imageUrl || undefined,
-      lang: /[\u00c0-\u024f]|å|ä|ö/i.test(title) && /\b(och|för|att|är|på)\b/i.test(title) ? 'sv' : 'en',
+      lang: detectLang(title, feedLang),
       publishedAt: pubDate ? new Date(pubDate).toISOString() : new Date().toISOString(),
     });
   }
@@ -249,17 +274,19 @@ async function fetchFeed(feed) {
       'User-Agent': 'TekniknyheterBot/1.0 (+https://juulis.github.io/tekniknyheter/)',
       Accept: 'application/rss+xml, application/xml, text/xml, */*',
     },
+    signal: AbortSignal.timeout(7000),
+    redirect: 'follow',
   });
   if (!res.ok) {
     throw new Error(`${feed.source} ${res.status}`);
   }
   const xml = await res.text();
-  return parseRssItems(xml, feed.source);
+  return parseRssItems(xml, feed.source, feed.lang);
 }
 
 const JACCARD_THRESHOLD = 0.5;
 // Lägre tröskel gäller bara klustring (aldrig för att tappa en nyhet) och kräver samma kategori, minst tre gemensamma ord och en gemensam nyckelentitet.
-const CLUSTER_THRESHOLD = 0.4;
+const CLUSTER_THRESHOLD = 0.35;
 const MAX_RELATED = 3;
 const KEY_ENTITY_RE =
   /\b(tesla|cybertruck|optimus|nvidia|nvda|jensen|huang|musk|spacex|starship|starlink|grok|xai|openai|anthropic|neuralink|maduro|trump|google|alphabet|amd|intel|tsmc|waymo|rivian|byd|ford|gm)\b/gi;
@@ -274,7 +301,38 @@ function sharedCount(a, b) {
   return n;
 }
 
+// Entitet + händelse-nyckel: samma händelse hos flera utgivare blir ett kort även när rubrikerna skiljer sig mycket.
+const EVENT_ENTITIES = [
+  ['tesla', /\btesla\b/],
+  ['nvidia', /\bnvidia\b|\bnvda\b|\bjensen\b/],
+  ['spacex', /\bspacex\b|\bstarship\b|\bstarlink\b/],
+  ['neuralink', /\bneuralink\b/],
+  ['grok', /\bgrok\b|\bxai\b/],
+];
+const EVENT_KINDS = [
+  ['ath', (t) => /all[- ]time high|record high|record close|new high|rekordnivå/.test(t)],
+  [
+    'deliveries',
+    (t) =>
+      (/deliver(y|ies)|leveranser/.test(t) && /\bq[1-4]\b|quarter|kvartal|estimate|beat|record|vehicles|expectations|bilar/.test(t)) ||
+      (/\bsold\b.{0,25}(evs?|vehicles|cars)\b/.test(t) && /expect|estimate/.test(t)) ||
+      (/\bsales\b/.test(t) && /beat|\btops?\b|topped|estimates|expectations|momentum|rebound/.test(t) && /\bq[1-4]\b|quarter|\bev sales\b|vehicle|stock|shares/.test(t)),
+  ],
+  ['driveaway', (t) => /supercharg/.test(t) && /drive[- ]?away|\bflee\b|flyktläge|plugged in|emergency|nödläge/.test(t)],
+  ['venezuela', (t) => /maduro|venezuela/.test(t)],
+];
+
+function eventKey(title) {
+  const t = String(title || '').toLowerCase();
+  const ent = EVENT_ENTITIES.find(([, re]) => re.test(t));
+  if (!ent) return '';
+  const kind = EVENT_KINDS.find(([, test]) => test(t));
+  return kind ? `${ent[0]}:${kind[0]}` : '';
+}
+
 function sameStory(cand, kept) {
+  const ka = eventKey(cand.item.title);
+  if (ka && ka === eventKey(kept.item.title)) return true;
   const j = jaccard(cand.tokens, kept.tokens);
   if (j >= JACCARD_THRESHOLD) return true;
   if (j < CLUSTER_THRESHOLD) return false;
@@ -340,27 +398,50 @@ function dedupeItems(items) {
   });
 }
 
-/** Mjuk kategorikvotering: högst ~25% per kategori först, resten fylls på i poängordning. */
-function diversify(sorted, limit, maxShare = 0.25) {
+const SV_MIN = 4;
+const CORE_CATEGORIES = ['Tesla', 'Elbilar', 'NVIDIA', 'SpaceX', 'Neuralink', 'AI', 'Geopolitik'];
+
+/**
+ * Mjuk kategorikvotering: först minst `minPer` per kärnkategori (om kandidater finns), sedan högst ~25% per kategori,
+ * och till sist fylls det på i poängordning.
+ */
+function diversify(sorted, limit, maxShare = 0.25, minPer = 2) {
   const cap = Math.max(1, Math.ceil(limit * maxShare));
   const counts = new Map();
-  const picked = [];
-  const deferred = [];
-  for (const item of sorted) {
-    if (picked.length >= limit) break;
+  const picked = new Set();
+  const take = (item) => {
+    picked.add(item);
     const cat = item.category || 'Teknik';
-    if ((counts.get(cat) || 0) < cap) {
-      counts.set(cat, (counts.get(cat) || 0) + 1);
-      picked.push(item);
-    } else {
-      deferred.push(item);
+    counts.set(cat, (counts.get(cat) || 0) + 1);
+  };
+  for (const cat of CORE_CATEGORIES) {
+    let n = 0;
+    for (const item of sorted) {
+      if (n >= minPer) break;
+      if (item.category === cat && item.sentiment !== 'negative' && !item.personalLife) {
+        take(item);
+        n++;
+      }
     }
   }
-  for (const item of deferred) {
-    if (picked.length >= limit) break;
-    picked.push(item);
+  // Svenska källor får lite extra plats: minst SV_MIN svenska kort om det finns kandidater.
+  let sv = 0;
+  for (const item of sorted) {
+    if (sv >= SV_MIN) break;
+    if (item.lang === 'sv' && item.sentiment !== 'negative' && !item.personalLife) {
+      if (!picked.has(item)) take(item);
+      sv++;
+    }
   }
-  return picked.sort(compareEditorial);
+  for (const item of sorted) {
+    if (picked.size >= limit) break;
+    if (!picked.has(item) && (counts.get(item.category || 'Teknik') || 0) < cap) take(item);
+  }
+  for (const item of sorted) {
+    if (picked.size >= limit) break;
+    if (!picked.has(item)) take(item);
+  }
+  return [...picked].sort(compareEditorial);
 }
 
 /* ---------- Google News-länkar -> riktiga utgivar-URL:er ---------- */
@@ -516,29 +597,43 @@ function applyResolvedRelated(items) {
   });
 }
 
-async function fetchLiveArticles({ force = false } = {}) {
-  const now = Date.now();
-  if (!force && globalThis[cacheKey] && now - globalThis[cacheKey].at < CACHE_MS) {
-    return globalThis[cacheKey].items;
-  }
+const poolKey = '__tekniknyheter_pool_cache__';
 
+/** Kandidatpoolen (alla flöden, berikade och klustrade). Delas av alla lägen så att positive=only inte hämtar om flödena. */
+async function loadPool(now, force) {
+  const cached = globalThis[poolKey];
+  if (!force && cached && now - cached.at < CACHE_MS) return cached.pool;
   const settled = await Promise.allSettled(FEEDS.map(fetchFeed));
   const collected = [];
   for (const result of settled) {
     if (result.status === 'fulfilled') collected.push(...result.value);
   }
-
   const enriched = [];
   for (const raw of collected) {
     const item = enrich({ ...raw, originalUrl: raw.url });
-    // Negativa rubriker göms inte längre; de rankas ned i editorial.js. Bara NEGATIVE_TITLE (skräp/spam) sorteras bort.
+    // Negativa rubriker göms inte; de rankas ned i editorial.js. Bara NEGATIVE_TITLE (skräp/spam) sorteras bort.
     if (!matchesEditorialFocus(item, { preferPositive: false })) continue;
     if (NEGATIVE_TITLE.test(item.title || '')) continue;
     enriched.push(item);
   }
+  const pool = dedupeItems(enriched).sort(compareEditorial);
+  globalThis[poolKey] = { at: now, pool };
+  return pool;
+}
 
-  const clustered = dedupeItems(enriched).sort(compareEditorial);
-  const top = diversify(clustered, 40);
+async function fetchLiveArticles({ force = false, positiveOnly = false } = {}) {
+  const now = Date.now();
+  const key = `${cacheKey}${positiveOnly ? '_only' : ''}`;
+  if (!force && globalThis[key] && now - globalThis[key].at < CACHE_MS) {
+    return globalThis[key].items;
+  }
+
+  const clustered = await loadPool(now, force);
+  // Brus (politiskt slam, eventlistor, krypto) utesluts alltid; spekulation väljs bara om det inte finns tillräckligt med annat.
+  let candidates = clustered.filter((i) => !i.noise && !i.speculative);
+  if (candidates.length < 40) candidates = clustered.filter((i) => !i.noise);
+  if (positiveOnly) candidates = candidates.filter((i) => i.sentiment === 'positive');
+  const top = diversify(candidates, 40);
   try {
     // Primära nyheter först, sedan länkarna i "Också i" (så att budgeten räcker till det viktigaste).
     await resolveBatch([...top, ...top.flatMap((t) => t.alsoIn || [])]);
@@ -552,7 +647,7 @@ async function fetchLiveArticles({ force = false } = {}) {
   } catch (_) {
     /* behåll korten utan sammanfattning */
   }
-  globalThis[cacheKey] = { at: now, items };
+  globalThis[key] = { at: now, items };
   return items;
 }
 
