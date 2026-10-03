@@ -2,9 +2,8 @@
  * Sammanfattningar för kort utan RSS-beskrivning (Google News upprepar bara rubriken).
  *
  * Ingen LLM används (ingen modellnyckel finns i projektets miljö). Därför översätts inget:
- *  1) hämta utgivarens sida och ta og:description / meta description ordagrant (förkortad vid meningsgräns),
- *  2) annars en neutral mall byggd enbart av utgivare och ämnestagg (som kommer från rubriken).
- * Texten hittas aldrig på: allt kommer från sidans egen beskrivning eller från rubrikens ämne.
+ * hämta utgivarens sida och ta og:description / meta description ordagrant (förkortad vid meningsgräns).
+ * Hittas ingen användbar beskrivning lämnas summary tom (och döljs i UI) – ingen mallfyllnad, inget påhittat.
  */
 
 const https = require('https');
@@ -15,6 +14,7 @@ const cacheKey = '__tekniknyheter_summaries__';
 const FETCH_TIMEOUT_MS = 3000;
 const CONCURRENCY = 4;
 const MAX_PER_REFRESH = 20;
+const MAX_FAILS = 3;
 const BUDGET_MS = 5500;
 const MAX_BYTES = 450 * 1024;
 const MAX_LEN = 240;
@@ -150,7 +150,7 @@ function httpGetHead(url, redirects = 3) {
         const type = String(res.headers['content-type'] || '');
         if (status !== 200 || (type && !/html/i.test(type))) {
           res.resume();
-          return resolve('');
+          return resolve({ status: status === 200 ? 'not_html' : status, html: '' });
         }
         const enc = String(res.headers['content-encoding'] || '').toLowerCase();
         let stream = res;
@@ -165,7 +165,7 @@ function httpGetHead(url, redirects = 3) {
           if (finished) return;
           finished = true;
           req.destroy();
-          resolve(html);
+          resolve({ status: 200, html });
         };
         stream.on('data', (chunk) => {
           bytes += chunk.length;
@@ -183,19 +183,11 @@ function httpGetHead(url, redirects = 3) {
 }
 
 async function fetchDescription(url) {
-  const html = await Promise.race([
+  const res = await Promise.race([
     httpGetHead(url),
     new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), FETCH_TIMEOUT_MS + 500)),
   ]);
-  return extractDescription(html);
-}
-
-/** Neutral mall: bara utgivare + ämne som redan härletts ur rubriken. Annars tomt. */
-function templateSummary(item) {
-  const source = String(item.source || '').trim();
-  const topic = item.category && item.category !== 'Teknik' ? item.category : '';
-  if (!source || !topic) return '';
-  return `Nyhet från ${source} om ${topic}.`;
+  return { status: res.status, desc: extractDescription(res.html || '') };
 }
 
 function isGoogleUrl(url) {
@@ -208,12 +200,15 @@ function isGoogleUrl(url) {
  */
 async function fillSummaries(items, { top = 25 } = {}) {
   const st = state();
-  const stats = { attempted: 0, fromPage: 0, template: 0, failed: 0 };
+  const stats = { attempted: 0, fromPage: 0, failed: 0, reasons: {} };
   st.lastStats = stats;
+  const why = (r) => {
+    stats.reasons[r] = (stats.reasons[r] || 0) + 1;
+  };
 
   const wanted = items.slice(0, top);
   const todo = wanted
-    .filter((it) => !it.summary && !st.byId.has(it.id) && it.url && !isGoogleUrl(it.url) && (st.fails.get(it.id) || 0) < 2)
+    .filter((it) => !it.summary && !st.byId.has(it.id) && it.url && !isGoogleUrl(it.url) && (st.fails.get(it.id) || 0) < MAX_FAILS)
     .slice(0, MAX_PER_REFRESH);
 
   const started = Date.now();
@@ -223,22 +218,25 @@ async function fillSummaries(items, { top = 25 } = {}) {
       const it = todo[cursor++];
       stats.attempted++;
       try {
-        const raw = await fetchDescription(it.url);
-        const text = usableDescription(raw, it);
+        const { status, desc } = await fetchDescription(it.url);
+        const text = usableDescription(desc, it);
         // Samma text på flera kort = sidans generiska beskrivning, inte artikelns.
         const owner = text && st.owners.get(text);
         if (text && owner && owner !== it.id) {
-          st.fails.set(it.id, 2);
+          st.fails.set(it.id, MAX_FAILS);
+          why('generic_description');
         } else if (text) {
           st.owners.set(text, it.id);
           st.byId.set(it.id, { summary: text, summarySource: 'page', summaryLang: it.lang === 'sv' ? 'sv' : 'en' });
           stats.fromPage++;
         } else {
           st.fails.set(it.id, (st.fails.get(it.id) || 0) + 1);
+          why(status === 200 ? (desc ? 'description_rejected' : 'no_description') : `http_${status}`);
         }
-      } catch (_) {
+      } catch (err) {
         st.fails.set(it.id, (st.fails.get(it.id) || 0) + 1);
         stats.failed++;
+        why(String((err && (err.code || err.message)) || 'error').slice(0, 30));
       }
     }
   }
@@ -247,13 +245,7 @@ async function fillSummaries(items, { top = 25 } = {}) {
   return items.map((it, idx) => {
     if (it.summary || idx >= top) return it;
     const hit = st.byId.get(it.id);
-    if (hit) return { ...it, ...hit };
-    // Mallen används när sidan saknar användbar beskrivning (eller länken inte kunnat lösas); en senare refresh kan ersätta den.
-    if (!isGoogleUrl(it.url) && !(st.fails.get(it.id) > 0)) return it;
-    const tpl = templateSummary(it);
-    if (!tpl) return it;
-    stats.template++;
-    return { ...it, summary: tpl, summarySource: 'template', summaryLang: 'sv' };
+    return hit ? { ...it, ...hit } : it;
   });
 }
 
@@ -262,4 +254,4 @@ function summaryStats() {
   return { cached: st.byId.size, last: st.lastStats };
 }
 
-module.exports = { fetchDescription, fillSummaries, summaryStats, usableDescription, extractDescription, templateSummary };
+module.exports = { fetchDescription, fillSummaries, summaryStats, usableDescription, extractDescription };
