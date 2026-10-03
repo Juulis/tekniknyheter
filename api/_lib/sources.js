@@ -128,7 +128,7 @@ function extractImage(block, description) {
   if (imgInDesc) candidates.push(decodeXml(imgInDesc[1]));
 
   for (const url of candidates) {
-    if (/^https?:\/\//i.test(url) && !/\.(mp3|mp4|m4a|aac)(\?|$)/i.test(url)) {
+    if (/^https:\/\//i.test(url) && !/\.(mp3|mp4|m4a|aac)(\?|$)/i.test(url)) {
       return url;
     }
   }
@@ -287,10 +287,10 @@ async function fetchFeed(feed) {
 
 const JACCARD_THRESHOLD = 0.5;
 // Lägre tröskel gäller bara klustring (aldrig för att tappa en nyhet) och kräver samma kategori, minst tre gemensamma ord och en gemensam nyckelentitet.
-const CLUSTER_THRESHOLD = 0.35;
+const CLUSTER_THRESHOLD = 0.3;
 const MAX_RELATED = 3;
 const KEY_ENTITY_RE =
-  /\b(tesla|cybertruck|optimus|nvidia|nvda|jensen|huang|musk|spacex|starship|starlink|grok|xai|openai|anthropic|neuralink|maduro|trump|google|alphabet|amd|intel|tsmc|waymo|rivian|byd|ford|gm)\b/gi;
+  /\b(tesla|cybertruck|optimus|nvidia|nvda|jensen|huang|musk|spacex|starship|starlink|grok|xai|openai|anthropic|neuralink|maduro|trump|google|alphabet|amd|intel|tsmc|waymo|rivian|byd|ford|gm|shield|polestar|honda|storedot|norway|denmark|uk|europe|canada|iss|lockheed|boeing)\b/gi;
 
 function keyEntities(title) {
   return new Set((String(title || '').toLowerCase().match(KEY_ENTITY_RE) || []));
@@ -309,9 +309,16 @@ const EVENT_ENTITIES = [
   ['spacex', /\bspacex\b|\bstarship\b|\bstarlink\b/],
   ['neuralink', /\bneuralink\b/],
   ['grok', /\bgrok\b|\bxai\b/],
+  ['ev', /\bevs?\b|electric (vehicle|car)s?|\belbil/],
 ];
 const EVENT_KINDS = [
-  ['ath', (t) => /all[- ]time high|record high|record close|new high|rekordnivå/.test(t)],
+  ['uk-record', (t) => /\buk\b|britain|british/.test(t) && /record|surge|hit/.test(t) && /sales|registrations?/.test(t)],
+  [
+    'ath',
+    (t) =>
+      /all[- ]time high|record high|record close|new high|rekordnivå/.test(t) ||
+      (/\brecord\b|\brekord/.test(t) && /shares|stock|value|market cap|trillion|nasdaq|aktie|börs|milstolpe|lyft|\$\d/.test(t) && /\bhits?\b|\bnew\b|\bfirst\b|fresh|nytt|rekordlyft|since/.test(t)),
+  ],
   [
     'deliveries',
     (t) =>
@@ -321,6 +328,9 @@ const EVENT_KINDS = [
   ],
   ['driveaway', (t) => /supercharg/.test(t) && /drive[- ]?away|\bflee\b|flyktläge|plugged in|emergency|nödläge/.test(t)],
   ['venezuela', (t) => /maduro|venezuela/.test(t)],
+  ['shield', (t) => /shield tv/.test(t)],
+  ['iss', (t) => /(crew|astronauts?).{0,50}(iss\b|space station)|(iss\b|space station).{0,50}(crew|astronauts?)/.test(t)],
+  ['ai-launch', (t) => /\blaunch(es|ed)?\b/.test(t) && /google/.test(t) && /(satellite|chips?|orbit|data cent)/.test(t)],
 ];
 
 function eventKey(title) {
@@ -400,18 +410,22 @@ function dedupeItems(items) {
 }
 
 const SV_MIN = 4;
-const CORE_CATEGORIES = ['Tesla', 'Elbilar', 'NVIDIA', 'SpaceX', 'Neuralink', 'AI', 'Geopolitik'];
+const CORE_CATEGORIES = ['Tesla', 'Elbilar', 'Elon Musk', 'NVIDIA', 'SpaceX', 'Neuralink', 'AI', 'Geopolitik'];
 
 /**
  * Mjuk kategorikvotering: först minst `minPer` per kärnkategori (om kandidater finns), sedan högst ~25% per kategori,
  * och till sist fylls det på i poängordning.
  */
-function diversify(sorted, limit, maxShare = 0.25, minPer = 2) {
+function diversify(sorted, limit, maxShare = 0.25, minPer = 2, maxPositive = 1) {
   const cap = Math.max(1, Math.ceil(limit * maxShare));
+  // Positiv lutning, inte bara positivt: högst maxPositive av korten är positiva så länge det finns neutrala kandidater.
+  const posCap = Math.ceil(limit * maxPositive);
+  let posCount = 0;
   const counts = new Map();
   const picked = new Set();
   const take = (item) => {
     picked.add(item);
+    if (item.sentiment === 'positive') posCount++;
     const cat = item.category || 'Teknik';
     counts.set(cat, (counts.get(cat) || 0) + 1);
   };
@@ -436,7 +450,9 @@ function diversify(sorted, limit, maxShare = 0.25, minPer = 2) {
   }
   for (const item of sorted) {
     if (picked.size >= limit) break;
-    if (!picked.has(item) && (counts.get(item.category || 'Teknik') || 0) < cap) take(item);
+    // Geopolitik (AI-lagar, exportkontroll, EV-tullar) tar högst 4 platser: mer än så blir politiskt brus.
+    const catCap = item.category === 'Geopolitik' ? Math.min(cap, 4) : cap;
+    if (!picked.has(item) && (counts.get(item.category || 'Teknik') || 0) < catCap && !(item.sentiment === 'positive' && posCount >= posCap)) take(item);
   }
   for (const item of sorted) {
     if (picked.size >= limit) break;
@@ -634,7 +650,7 @@ async function fetchLiveArticles({ force = false, positiveOnly = false } = {}) {
   let candidates = clustered.filter((i) => !i.noise && !i.speculative);
   if (candidates.length < 40) candidates = clustered.filter((i) => !i.noise);
   if (positiveOnly) candidates = candidates.filter((i) => i.sentiment === 'positive');
-  const top = diversify(candidates, 40);
+  const top = diversify(candidates, 40, 0.25, 2, positiveOnly ? 1 : 0.65);
   try {
     // Primära nyheter först, sedan länkarna i "Också i" (så att budgeten räcker till det viktigaste).
     await resolveBatch([...top, ...top.flatMap((t) => t.alsoIn || [])]);
