@@ -12,10 +12,10 @@ const zlib = require('zlib');
 
 const cacheKey = '__tekniknyheter_summaries__';
 const FETCH_TIMEOUT_MS = 3000;
-const CONCURRENCY = 4;
-const MAX_PER_REFRESH = 20;
+const CONCURRENCY = 6;
+const MAX_PER_REFRESH = 40;
 const MAX_FAILS = 3;
-const BUDGET_MS = 5500;
+const BUDGET_MS = 6500;
 const MAX_BYTES = 450 * 1024;
 const MAX_LEN = 240;
 const BROWSER_UA =
@@ -25,7 +25,7 @@ const BOILERPLATE_RE =
   /cookie|javascript|subscribe|sign in|log in|logga in|prenumer|paywall|enable js|captcha|are you a robot|access denied|just a moment|all rights reserved|privacy policy|latest news,? (and|&)|breaking news,? (and|&)|key stats|stock price as of|price change for|your (source|home) for|^welcome to|leading (source|provider)/i;
 
 function state() {
-  if (!globalThis[cacheKey]) globalThis[cacheKey] = { byId: new Map(), fails: new Map(), owners: new Map(), lastStats: null };
+  if (!globalThis[cacheKey]) globalThis[cacheKey] = { byId: new Map(), imgs: new Map(), fails: new Map(), owners: new Map(), lastStats: null };
   return globalThis[cacheKey];
 }
 
@@ -61,6 +61,22 @@ function extractDescription(html) {
     metaContent(html, 'name', 'twitter:description') ||
     metaContent(html, 'name', 'description')
   );
+}
+
+/** og:image (eller twitter:image) som absolut https-URL; relativa URL:er löses mot sidans adress, http och data: förkastas. */
+function extractImage(html, baseUrl) {
+  const raw =
+    metaContent(html, 'property', 'og:image:secure_url') ||
+    metaContent(html, 'property', 'og:image') ||
+    metaContent(html, 'name', 'twitter:image') ||
+    metaContent(html, 'name', 'twitter:image:src');
+  if (!raw) return '';
+  try {
+    const u = new URL(raw, baseUrl);
+    return u.protocol === 'https:' && u.href.length < 600 ? u.href : '';
+  } catch (_) {
+    return '';
+  }
 }
 
 /** Sant när en description-metatagg hunnit läsas in helt (taggen kan ligga efter </head> i t.ex. Next.js). */
@@ -165,12 +181,12 @@ function httpGetHead(url, redirects = 3) {
           if (finished) return;
           finished = true;
           req.destroy();
-          resolve({ status: 200, html });
+          resolve({ status: 200, html, url: u.toString() });
         };
         stream.on('data', (chunk) => {
           bytes += chunk.length;
           html += dec.decode(chunk, { stream: true });
-          if (bytes > MAX_BYTES || (descriptionComplete(html) && extractDescription(html))) done();
+          if (bytes > MAX_BYTES || (descriptionComplete(html) && extractDescription(html) && (extractImage(html, url) || /<\/head>/i.test(html)))) done();
         });
         stream.on('end', done);
         stream.on('error', done);
@@ -187,7 +203,8 @@ async function fetchDescription(url) {
     httpGetHead(url),
     new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), FETCH_TIMEOUT_MS + 500)),
   ]);
-  return { status: res.status, desc: extractDescription(res.html || '') };
+  const html = res.html || '';
+  return { status: res.status, desc: extractDescription(html), image: extractImage(html, res.url || url) };
 }
 
 function isGoogleUrl(url) {
@@ -198,7 +215,7 @@ function isGoogleUrl(url) {
  * Fyller i summary för de första `top` korten som saknar den. Muterar inte indata – returnerar nya objekt.
  * Cache per kort-id i globalThis; max MAX_PER_REFRESH sidhämtningar per anrop.
  */
-async function fillSummaries(items, { top = 25 } = {}) {
+async function fillSummaries(items, { top = 40 } = {}) {
   const st = state();
   const stats = { attempted: 0, fromPage: 0, failed: 0, reasons: {} };
   st.lastStats = stats;
@@ -207,8 +224,14 @@ async function fillSummaries(items, { top = 25 } = {}) {
   };
 
   const wanted = items.slice(0, top);
+  // En sidhämtning ger både beskrivning och bild: hämta för kort som saknar något av dem (cache per id, MAX_FAILS försök).
   const todo = wanted
-    .filter((it) => !it.summary && !st.byId.has(it.id) && it.url && !isGoogleUrl(it.url) && (st.fails.get(it.id) || 0) < MAX_FAILS)
+    .filter((it) => {
+      if (!it.url || isGoogleUrl(it.url) || (st.fails.get(it.id) || 0) >= MAX_FAILS) return false;
+      const needSum = !it.summary && !st.byId.has(it.id);
+      const needImg = !it.imageUrl && !st.imgs.has(it.id);
+      return needSum || needImg;
+    })
     .slice(0, MAX_PER_REFRESH);
 
   const started = Date.now();
@@ -218,7 +241,11 @@ async function fillSummaries(items, { top = 25 } = {}) {
       const it = todo[cursor++];
       stats.attempted++;
       try {
-        const { status, desc } = await fetchDescription(it.url);
+        const { status, desc, image } = await fetchDescription(it.url);
+        if (status === 200) st.imgs.set(it.id, image || '');
+        else st.fails.set(it.id, (st.fails.get(it.id) || 0) + 1);
+        if (image) stats.images = (stats.images || 0) + 1;
+        if (it.summary || st.byId.has(it.id)) continue;
         const text = usableDescription(desc, it);
         // Samma text på flera kort = sidans generiska beskrivning, inte artikelns.
         const owner = text && st.owners.get(text);
@@ -230,7 +257,7 @@ async function fillSummaries(items, { top = 25 } = {}) {
           st.byId.set(it.id, { summary: text, summarySource: 'page', summaryLang: it.lang === 'sv' ? 'sv' : 'en' });
           stats.fromPage++;
         } else {
-          st.fails.set(it.id, (st.fails.get(it.id) || 0) + 1);
+          if (status === 200) st.fails.set(it.id, (st.fails.get(it.id) || 0) + 1);
           why(status === 200 ? (desc ? 'description_rejected' : 'no_description') : `http_${status}`);
         }
       } catch (err) {
@@ -243,9 +270,11 @@ async function fillSummaries(items, { top = 25 } = {}) {
   await Promise.all(Array.from({ length: CONCURRENCY }, worker));
 
   return items.map((it, idx) => {
-    if (it.summary || idx >= top) return it;
-    const hit = st.byId.get(it.id);
-    return hit ? { ...it, ...hit } : it;
+    if (idx >= top) return it;
+    const hit = it.summary ? null : st.byId.get(it.id);
+    const img = !it.imageUrl && st.imgs.get(it.id);
+    if (!hit && !img) return it;
+    return { ...it, ...(hit || {}), ...(img ? { imageUrl: img, imageSource: 'page' } : {}) };
   });
 }
 
@@ -254,4 +283,4 @@ function summaryStats() {
   return { cached: st.byId.size, last: st.lastStats };
 }
 
-module.exports = { fetchDescription, fillSummaries, summaryStats, usableDescription, extractDescription };
+module.exports = { extractImage, fetchDescription, fillSummaries, summaryStats, usableDescription, extractDescription };
