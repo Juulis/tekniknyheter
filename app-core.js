@@ -15,9 +15,11 @@ const searchInput = document.getElementById('search');
 const categoryFiltersEl = document.getElementById('category-filters');
 const clearFiltersBtn = document.getElementById('clear-filters');
 const sortSelect = document.getElementById('sort');
+const positiveToggle = document.getElementById('only-positive');
 
 const SORTS = new Set(['priority', 'newest', 'oldest', 'title']);
 const PAGE_SIZE = 12;
+const POSITIVE_STORE_KEY = 'tn-positive-only';
 
 const state = {
   allItems: [],
@@ -25,6 +27,7 @@ const state = {
   category: 'Alla',
   sort: 'priority',
   visible: PAGE_SIZE,
+  onlyPositive: false,
 };
 
 function hoursAgo(hours) {
@@ -127,8 +130,16 @@ function readUrlState() {
   state.category = params.get('category') || 'Alla';
   const sort = params.get('sort') || 'priority';
   state.sort = SORTS.has(sort) ? sort : 'priority';
+  // Bara positiva: URL-param (?positive=only|1) vinner över localStorage.
+  const pos = params.get('positive');
+  if (pos === 'only') state.onlyPositive = true;
+  else if (pos === '1') state.onlyPositive = false;
+  else {
+    try { state.onlyPositive = localStorage.getItem(POSITIVE_STORE_KEY) === '1'; } catch (_) { state.onlyPositive = false; }
+  }
   searchInput.value = state.query;
   sortSelect.value = state.sort;
+  if (positiveToggle) positiveToggle.checked = state.onlyPositive;
 }
 
 function writeUrlState() {
@@ -136,6 +147,7 @@ function writeUrlState() {
   if (state.query.trim()) params.set('q', state.query.trim());
   if (state.category !== 'Alla') params.set('category', state.category);
   if (state.sort !== 'priority') params.set('sort', state.sort);
+  if (state.onlyPositive) params.set('positive', 'only');
   const next = params.toString();
   const url = next ? `${window.location.pathname}?${next}` : window.location.pathname;
   if (url !== `${window.location.pathname}${window.location.search}`) history.replaceState(null, '', url);
