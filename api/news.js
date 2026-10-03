@@ -94,7 +94,7 @@ module.exports = async function handler(req, res) {
   let liveError = null;
   if (live) {
     try {
-      liveItems = await fetchLiveArticles({ force: url.searchParams.get('refresh') === '1' });
+      liveItems = await fetchLiveArticles({ force: url.searchParams.get('refresh') === '1', positiveOnly: positive === 'only' });
     } catch (err) {
       liveError = err.message || 'live fetch failed';
     }
