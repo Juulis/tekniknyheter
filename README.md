@@ -37,7 +37,10 @@ Ingest-tips till nyhetsboten: skicka gärna `tags`, `sentiment: "positive"` och 
 - **`positive=only` är strikt:** bara nyheter med `sentiment === 'positive'` returneras (neutrala och negativa utesluts).
 - **Positiv ton** kräver positiva signalord i rubriken. Kritik/konflikt ("challenges", "slams" ...) och privatliv/skvaller (separation, dejting m.m.) ger aldrig positiv ton; skvaller får dessutom aldrig `editorialPriority` och viktas kraftigt ned.
 - **Kluster:** nära-dubbletter slås ihop till en primär nyhet med `alsoIn: [{ source, url, title }]` (max 3 andra utgivare, bara upplösta utgivar-URL:er). Frontend visar dem som "Också i: Källa1, Källa2".
-- **Urval av de 40:** mjuk kategorikvotering (högst ~25 % per kategori innan fyllning).
+- **Urval av de 40:** mjuk kategorikvotering: minst 2 per kärnkategori (Tesla, Elbilar, NVIDIA, SpaceX, Neuralink, AI, Geopolitik) och minst 4 svenska kort om kandidater finns, därefter högst ~25 % per kategori innan fyllning.
+- **Rankning:** starka positiva nyheter i kärnämnena får extra poäng; primärkällor (tesla.com, nvidia.com, spacex.com, x.ai, neuralink.com, IR/newsroom, Reuters/AP) och svenska källor får en liten bonus. Politiskt "slam", eventlistor/webinars och kryptospådomar utesluts; kursspekulation ("price prediction", "could hit") väljs bara om det saknas annat.
+- **Kluster:** utöver titellikhet (Jaccard 0,35 med samma kategori och nyckelentitet) slås nyheter ihop på entitet + händelse (t.ex. NVIDIA + all-time high, Tesla + leveranser Q3, Tesla + Supercharger-flyktläge).
+- **Frontend:** reglaget "Bara positiva" byter anropet till `positive=only` (sparas i URL-param `?positive=only` och localStorage); urvalet på 40 görs då bland bara positiva nyheter.
 - **Sammanfattning:** utgivarens egen `og:description`/meta description (ingen LLM, ingen översättning). Hittas ingen lämnas `summary` tom och kortet visas utan sammanfattning.
 - **Google News-länkar** löses upp till utgivar-URL:er vid refresh (cache i serverminnet; `maxDuration` 30 s i `vercel.json`). Cron-jobbet kör upp till två omgångar för att förvärma.
 
