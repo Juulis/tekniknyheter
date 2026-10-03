@@ -53,7 +53,7 @@ function bump(map, key) {
   map[k] = (map[k] || 0) + 1;
 }
 
-/** Räknar en sidvisning (källa och refererande värdnamn är redan saneräde). */
+/** Räknar en sidvisning (källa och refererande värdnamn är redan sanerade). */
 async function record({ source, ref }) {
   const date = dayKey();
   await Promise.all([
