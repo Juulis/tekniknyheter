@@ -28,7 +28,14 @@ function cardHtml(item, index) {
     .slice(0, 3)
     .map((t) => `<span class="chip">${escapeHtml(t)}</span>`)
     .join('');
-  const summary = item.summary ? `<p>${escapeHtml(item.summary)}</p>` : '';
+  // Tom sammanfattning visas aldrig; äldre mallfyllnad ("Nyhet från X om Y.") döljs också.
+  const summaryText = String(item.summary || '').trim();
+  const summary = summaryText && !/^Nyhet från .+ om .+\.$/.test(summaryText) ? `<p>${escapeHtml(summaryText)}</p>` : '';
+  const alsoLinks = (Array.isArray(item.alsoIn) ? item.alsoIn : [])
+    .filter((r) => r && /^https?:\/\//i.test(r.url || ''))
+    .slice(0, 3)
+    .map((r) => `<a href="${escapeAttr(r.url)}" target="_blank" rel="noopener noreferrer" title="${escapeAttr(r.title || '')}">${escapeHtml(r.source || 'Källa')}<span class="sr-only"> (öppnas i ny flik)</span></a>`);
+  const also = alsoLinks.length ? `<p class="also-in" style="font-size:.82rem;opacity:.85;margin:6px 0 0">Också i: ${alsoLinks.join(', ')}</p>` : '';
   const sentiment = item.sentiment && item.sentiment !== 'neutral'
     ? `<span class="chip sentiment ${escapeAttr(item.sentiment)}">${escapeHtml(item.sentiment === 'positive' ? 'Positiv' : 'Negativ')}</span>`
     : '';
@@ -53,6 +60,7 @@ function cardHtml(item, index) {
             </div>
             <h2>${title}</h2>
             ${summary}
+            ${also}
             <div class="card-footer">
               <button type="button" class="ghost share-btn" data-share-id="${escapeAttr(item.id || '')}" aria-label="Dela ${escapeAttr(item.title || 'artikel')}">Dela</button>
             </div>
