@@ -1,6 +1,6 @@
 const crypto = require('crypto');
 const { enrich, matchesEditorialFocus, compareEditorial } = require('./editorial');
-const { fillSummaries, summaryStats } = require('./summaries');
+const { fillSummaries, summaryStats, SPAM_RE } = require('./summaries');
 
 const FEEDS = [
   {
@@ -168,7 +168,7 @@ function cleanSummary(summary, title, publisher) {
     }
   }
   if (!text || (nTitle && norm(text) === nTitle)) return '';
-  if (text.length < 24) return '';
+  if (text.length < 24 || SPAM_RE.test(text)) return '';
   return text.slice(0, 280);
 }
 
@@ -242,9 +242,11 @@ function parseRssItems(xml, feedLabel, feedLang) {
     const { title, publisher } = feedLang ? { title: stripHtml(rawTitle), publisher: '' } : splitTitleAndPublisher(rawTitle);
     const link = stripHtml(tagValue(block, 'link'));
     const rawDescription = tagValue(block, 'description');
-    const summary = cleanSummary(rawDescription, title, publisher);
+    // RSS-beskrivning, annars content:encoded (om flödet har den).
+    const rawContent = tagValue(block, 'content:encoded');
+    const summary = cleanSummary(rawDescription, title, publisher) || cleanSummary(rawContent, title, publisher);
     const pubDate = stripHtml(tagValue(block, 'pubDate'));
-    const imageUrl = extractImage(block, rawDescription);
+    const imageUrl = extractImage(block, rawDescription + rawContent);
     const sourceFromXml = stripHtml(tagValue(block, 'source'));
     const url = pickBestUrl(block, link);
     const sourceUrl = attrValue(block, 'source', 'url');
@@ -316,7 +318,7 @@ const EVENT_KINDS = [
   [
     'ath',
     (t) =>
-      /all[- ]time high|record high|record close|new high|rekordnivå/.test(t) ||
+      /all[- ]time high|record high|record close|new high|rekordnivå|stock milestone/.test(t) ||
       (/\brecord\b|\brekord/.test(t) && /shares|stock|value|market cap|trillion|nasdaq|aktie|börs|milstolpe|lyft|\$\d/.test(t) && /\bhits?\b|\bnew\b|\bfirst\b|fresh|nytt|rekordlyft|since/.test(t)),
   ],
   [
@@ -357,7 +359,8 @@ function sameStory(cand, kept) {
 }
 
 function toRelated(it) {
-  return { source: it.source, url: it.url, title: it.title, originalUrl: it.originalUrl || it.url };
+  // summary/imageUrl (om flödet gav dem) används som reserv för primärkortet och tas bort ur den publika alsoIn.
+  return { source: it.source, url: it.url, title: it.title, originalUrl: it.originalUrl || it.url, summary: it.summary || undefined, imageUrl: it.imageUrl || undefined };
 }
 
 const byScore = (a, b) => (b.priorityScore || 0) - (a.priorityScore || 0) || new Date(b.publishedAt) - new Date(a.publishedAt);
@@ -405,7 +408,15 @@ function dedupeItems(items) {
       if (related.length >= MAX_RELATED) break;
     }
     const { alsoIn, ...rest } = item;
-    return related.length ? { ...rest, alsoIn: related } : rest;
+    // Reserv från samma story: summary/bild från ett alsoIn-kort (utgivarens RSS) om primärkortet saknar dem.
+    const fb = extras.find((r) => r.summary);
+    if (!rest.summary && fb) {
+      rest.summary = fb.summary;
+      rest.summarySource = 'related';
+    }
+    if (!rest.imageUrl) rest.imageUrl = (extras.find((r) => r.imageUrl) || {}).imageUrl || rest.imageUrl;
+    const clean = related.map(({ summary, imageUrl, ...r }) => r);
+    return clean.length ? { ...rest, alsoIn: clean } : rest;
   });
 }
 
