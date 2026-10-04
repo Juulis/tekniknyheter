@@ -24,8 +24,16 @@ const BROWSER_UA =
 const BOILERPLATE_RE =
   /cookie|javascript|subscribe|sign in|log in|logga in|prenumer|paywall|enable js|captcha|are you a robot|access denied|just a moment|all rights reserved|privacy policy|latest news,? (and|&)|breaking news,? (and|&)|key stats|stock price as of|price change for|your (source|home) for|^welcome to|leading (source|provider)/i;
 
+// Insamlings-/prenumerationstext (t.ex. CleanTechnica: "Support our work ... Patreon") är aldrig en sammanfattning.
+const SPAM_RE =
+  /patreon|donat(e|ion)|fundrais|become a (member|supporter|patron)|\bsupport\b[^.]{0,40}\b(work|us|our|journalism|mission|independent)\b|\bsubscribe\b|substack/i;
+
+const THIN_LEN = 60;
+const REL_BUDGET_MS = 3000;
+const REL_MAX_FETCH = 12;
+
 function state() {
-  if (!globalThis[cacheKey]) globalThis[cacheKey] = { byId: new Map(), imgs: new Map(), fails: new Map(), owners: new Map(), lastStats: null };
+  if (!globalThis[cacheKey]) globalThis[cacheKey] = { byId: new Map(), imgs: new Map(), fails: new Map(), owners: new Map(), rel: new Map(), relFails: new Map(), lastStats: null };
   return globalThis[cacheKey];
 }
 
@@ -126,7 +134,7 @@ function shorten(text) {
 function usableDescription(desc, item) {
   const text = cleanDescription(desc, item);
   if (text.length < 40) return '';
-  if (BOILERPLATE_RE.test(text)) return '';
+  if (BOILERPLATE_RE.test(text) || SPAM_RE.test(text)) return '';
   const wt = words(item.title);
   const wd = words(text);
   // Hela beskrivningen får inte bara vara rubriken igen.
@@ -211,6 +219,69 @@ function isGoogleUrl(url) {
   return /^https?:\/\/news\.google\.com\//i.test(String(url || ''));
 }
 
+const relHost = (url) => {
+  try {
+    return new URL(url).hostname;
+  } catch (_) {
+    return '';
+  }
+};
+
+/**
+ * Reserv via "Också i"-länkarna (samma story hos andra utgivare): saknad eller tunn (<60 tecken) summary
+ * ersätts av utgivarens egen beskrivning därifrån, och saknad bild av deras bild. Ingen LLM, inget påhittat.
+ */
+async function fillFromRelated(wanted, st, stats) {
+  const curSummary = (it) => (st.byId.get(it.id) || {}).summary || it.summary || '';
+  const urlsOf = (it) => (it.alsoIn || []).map((r) => r.url).filter((u) => u && !isGoogleUrl(u) && (st.relFails.get(u) || 0) < 2).slice(0, 3);
+  const needs = (it) => curSummary(it).length < THIN_LEN || (!it.imageUrl && !st.imgs.get(it.id));
+  const cands = wanted.filter((it) => needs(it) && urlsOf(it).length);
+
+  const todo = [];
+  for (const it of cands) for (const u of urlsOf(it)) if (!st.rel.has(u) && !todo.includes(u)) todo.push(u);
+  const queue = todo.slice(0, REL_MAX_FETCH);
+  const started = Date.now();
+  let cursor = 0;
+  async function worker() {
+    while (cursor < queue.length && Date.now() - started < REL_BUDGET_MS) {
+      const u = queue[cursor++];
+      try {
+        const r = await fetchDescription(u);
+        if (r.status === 200) st.rel.set(u, { desc: r.desc, image: r.image });
+        else st.relFails.set(u, (st.relFails.get(u) || 0) + 1);
+      } catch (_) {
+        st.relFails.set(u, (st.relFails.get(u) || 0) + 1);
+      }
+    }
+  }
+  await Promise.all(Array.from({ length: CONCURRENCY }, worker));
+  stats.relFetched = cursor;
+
+  for (const it of cands) {
+    const pages = urlsOf(it).map((u) => ({ u, p: st.rel.get(u) })).filter((x) => x.p);
+    const old = curSummary(it);
+    if (old.length < THIN_LEN) {
+      for (const { u, p } of pages) {
+        const text = usableDescription(p.desc, it);
+        if (!text || text.length < THIN_LEN || text.length <= old.length + 15) continue;
+        const owner = st.owners.get(text);
+        if (owner && owner !== it.id) continue;
+        st.owners.set(text, it.id);
+        st.byId.set(it.id, { summary: text, summarySource: 'related', summaryLang: /\.se$/i.test(relHost(u)) ? 'sv' : 'en', upgraded: true });
+        stats[old ? 'upgradedThin' : 'fromRelated'] = (stats[old ? 'upgradedThin' : 'fromRelated'] || 0) + 1;
+        break;
+      }
+    }
+    if (!it.imageUrl && !st.imgs.get(it.id)) {
+      const withImg = pages.find((x) => x.p.image);
+      if (withImg) {
+        st.imgs.set(it.id, withImg.p.image);
+        stats.imagesFromRelated = (stats.imagesFromRelated || 0) + 1;
+      }
+    }
+  }
+}
+
 /**
  * Fyller i summary för de första `top` korten som saknar den. Muterar inte indata – returnerar nya objekt.
  * Cache per kort-id i globalThis; max MAX_PER_REFRESH sidhämtningar per anrop.
@@ -268,10 +339,16 @@ async function fillSummaries(items, { top = 40 } = {}) {
     }
   }
   await Promise.all(Array.from({ length: CONCURRENCY }, worker));
+  try {
+    await fillFromRelated(wanted, st, stats);
+  } catch (_) {
+    /* behåll det som redan finns */
+  }
 
   return items.map((it, idx) => {
     if (idx >= top) return it;
-    const hit = it.summary ? null : st.byId.get(it.id);
+    const found = st.byId.get(it.id);
+    const hit = found && (!it.summary || found.upgraded) ? found : null;
     const img = !it.imageUrl && st.imgs.get(it.id);
     if (!hit && !img) return it;
     return { ...it, ...(hit || {}), ...(img ? { imageUrl: img, imageSource: 'page' } : {}) };
@@ -283,4 +360,4 @@ function summaryStats() {
   return { cached: st.byId.size, last: st.lastStats };
 }
 
-module.exports = { extractImage, fetchDescription, fillSummaries, summaryStats, usableDescription, extractDescription };
+module.exports = { SPAM_RE, extractImage, fetchDescription, fillSummaries, summaryStats, usableDescription, extractDescription };
