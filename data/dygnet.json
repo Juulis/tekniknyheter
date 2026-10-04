@@ -1,0 +1,37 @@
+[
+  {
+    "date": "2026-10-04",
+    "title": "TEST: Tesla visar ny funktion i senaste uppdateringen",
+    "summary": "Testpost för att verifiera Dygnet-flödet. Ska tas bort.",
+    "sourceUrl": "https://example.com/dygnet-test-1",
+    "category": "Tesla"
+  },
+  {
+    "date": "2026-10-03",
+    "title": "TEST: Ny AI-modell lanseras",
+    "summary": "Testpost från gårdagen med okänd kategori, ska bli Teknik.",
+    "sourceUrl": "https://example.com/dygnet-test-2",
+    "category": "Okänd kategori"
+  },
+  {
+    "date": "2026-10-04",
+    "title": "TEST: Starship närmar sig nästa flygning",
+    "summary": "Testpost med datum och kategori SpaceX.",
+    "sourceUrl": "https://example.com/dygnet-test-3",
+    "category": "SpaceX"
+  },
+  {
+    "date": "2026-10-04",
+    "title": "TEST: Ogiltig post med http-länk",
+    "summary": "Ska ignoreras eftersom länken inte är https.",
+    "sourceUrl": "http://example.com/dygnet-test-4",
+    "category": "AI"
+  },
+  {
+    "date": "2026-10-04",
+    "title": "TEST: Ogiltig post med för lång sammanfattning",
+    "summary": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor.",
+    "sourceUrl": "https://example.com/dygnet-test-5",
+    "category": "AI"
+  }
+]
