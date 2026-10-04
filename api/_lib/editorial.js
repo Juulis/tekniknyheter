@@ -77,9 +77,9 @@ const POSITIVE_HINTS = new RegExp(
   'i'
 );
 
-/** Tydliga positiva signaler (starka): räcker ensamma. Övriga positiva ord (svaga) räknas bara utan förbehåll. */
+/** Tydliga positiva signaler (starka): räcker ensamma. Övriga positiva ord (svaga) räknas bara utan förbehall. */
 const STRONG_POS = /\brecord\b|\brecords\b|all-time high|record high|breakthrough|\bbeats?\b|\bsurg(e|es|ed|ing)\b|\bsoars?\b|\blaunch(es|ed)?\b|\bwins?\b|\bapprov(al|ed|es)\b|\bunveils?\b|\bmilestone|\bgreen ?light|lanserar|genombrott|\brekord|grönt ljus|godkänd|vinner|nytt rekord|\bdebuts?\b|\bsecures?\b|\brall(y|ies|ied)\b|\bjumps?\b|sänker priset|billigare/i;
-/** Förbehåll: svaga positiva ord räknas inte när rubriken bara spår, tror eller uppskattar. */
+/** Förbehall: svaga positiva ord räknas inte när rubriken bara spår, tror eller uppskattar. */
 const HEDGE = /\bforecasts?\b|\bpredict|\bcould\b|\bmay\b|\bmight\b|\bexpects?\b|\bexpected to\b|\banalysts?\b|\bseeks?\b|\bplans? to\b|\bwould\b|\bhopes?\b|\bprognos|\bspår\b/i;
 /** Negativa/skeptiska ord i rubriken: aldrig positiv ton, även om ett positivt ord finns. */
 const SKEPTIC = new RegExp(
@@ -153,9 +153,14 @@ const SPECULATION =
 const SOFT_SPECULATION =
   /\b(could|might|may|what if|predict\w*|speculat\w*|rumou?rs?|reportedly|allegedly)\b|\bkan bli\b|\benligt uppgift\b|\bryktas\b|\bspekulera/i;
 const SOFT_SPECULATION_PENALTY = 40;
-/** Åldersavdrag: nyheter äldre än 4 dygn viktas kraftigt ned (äldre än 7 dygn filtreras bort i sources.js när färskare finns). */
-const OLD_DAYS = 4;
-const OLD_PENALTY = 40;
+// Åldersavdrag i trappa (timmar): >48 h -15, >72 h -60, >96 h -90, så att färska kort alltid rankar före gamla (äldre än 7 dygn filtreras bort i sources.js när färskare finns).
+const AGE_STEPS = [[96, 90], [72, 60], [48, 15]];
+
+function agePenalty(item) {
+  const hours = ageDays(item) * 24;
+  for (const [limit, penalty] of AGE_STEPS) if (hours > limit) return penalty;
+  return 0;
+}
 
 function ageDays(item) {
   const t = Date.parse(item.publishedAt || '');
@@ -192,7 +197,12 @@ function isPrimarySource(item) {
   return false;
 }
 
+// Politik utan tekniskt ämne (val, regering, protester m.m.). Används som tagg och av Dygnet-kategorin.
+const POLITICS_RE =
+  /\b(trump|biden|harris|vance|macron|president\w*|election\w*|midterms?|senators?|governors?|republicans?|democrats?|white house|parliament|prime minister|government|protest\w*|frankrike|france|val(et|kampanj\w*)?|mellanval|regering\w*|riksdag\w*|statsminister\w*|inrikesminister\w*|gripna)\b/i;
+
 const KEYWORD_TAGS = [
+  ['Politik', POLITICS_RE],
   ['Aktier', /\b(stocks?|shares|nasdaq|s&p|buyback|price target|market cap|valuation|rally|earnings)\b/i],
   ['Rymden', /\b(rocket|launch(es|ed)?|orbit(al)?|astronauts?|satellites?|space station|iss|starship|falcon)\b/i],
   ['Robotar', /\b(robots?|robotics|humanoids?|robotaxis?|optimus)\b/i],
@@ -207,6 +217,7 @@ function fallbackTags(item, category) {
   const text = topicText(item);
   const out = [];
   for (const [label, re] of KEYWORD_TAGS) {
+    if (label === 'Aktier' && out.includes('Politik')) continue;
     if (re.test(text)) out.push(label);
     if (out.length >= 2) break;
   }
@@ -403,7 +414,7 @@ function enrich(item) {
   if (speculative) score -= SPECULATION_PENALTY;
   const softSpec = !noise && !speculative && sentiment === 'neutral' && SOFT_SPECULATION.test(String(item.title || ''));
   if (softSpec) score -= SOFT_SPECULATION_PENALTY;
-  if (ageDays(item) > OLD_DAYS) score -= OLD_PENALTY;
+  score -= agePenalty(item);
   const primarySource = isPrimarySource(item);
   if (primarySource) score += PRIMARY_BONUS;
   if (item.lang === 'sv') score += SWEDISH_BONUS;
@@ -448,4 +459,5 @@ module.exports = {
   matchesEditorialFocus,
   priorityScore,
   ageDays,
+  POLITICS_RE,
 };
