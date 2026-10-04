@@ -36,9 +36,6 @@ function cardHtml(item, index) {
     .slice(0, 3)
     .map((r) => `<a href="${escapeAttr(r.url)}" target="_blank" rel="noopener noreferrer" title="${escapeAttr(r.title || '')}">${escapeHtml(r.source || 'Källa')}<span class="sr-only"> (öppnas i ny flik)</span></a>`);
   const also = alsoLinks.length ? `<p class="also-in" style="flex:none;margin:0;font-size:.82rem;opacity:.85">Också i: ${alsoLinks.join(', ')}</p>` : '';
-  const sentiment = item.sentiment && item.sentiment !== 'neutral'
-    ? `<span class="chip sentiment ${escapeAttr(item.sentiment)}">${escapeHtml(item.sentiment === 'positive' ? 'Positiv' : 'Negativ')}</span>`
-    : '';
   const lang = item.lang === 'sv' ? 'sv' : 'en';
   const title = item.url
     ? `<a href="${escapeAttr(item.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(item.title)}<span class="sr-only"> (öppnas i ny flik)</span></a>`
@@ -54,7 +51,6 @@ function cardHtml(item, index) {
             <div class="meta">
               <button type="button" class="chip buttonish" data-category="${escapeAttr(cat)}" aria-label="Filtrera på ${escapeAttr(cat)}">${escapeHtml(cat)}</button>
               ${tags}
-              ${sentiment}
               <span class="source">${escapeHtml(item.source || 'Okänd källa')}</span>
               <time class="time" datetime="${escapeAttr(item.publishedAt)}">${escapeHtml(formatRelative(item.publishedAt))}</time>
             </div>
@@ -171,7 +167,7 @@ async function loadNews({ force = false } = {}) {
   renderSkeleton();
 
   try {
-    const qs = new URLSearchParams({ editorial: '1', positive: state.onlyPositive ? 'only' : '1', sort: 'priority' });
+    const qs = new URLSearchParams({ editorial: '1', positive: state.onlyTop ? 'only' : '1', sort: 'priority' });
     if (force) qs.set('refresh', '1');
     const res = await fetch(`${base.replace(/\/$/, '')}/api/news?${qs}`, {
       headers: { Accept: 'application/json' },
@@ -255,17 +251,17 @@ listEl.addEventListener('click', (event) => {
 });
 
 window.addEventListener('popstate', () => {
-  const before = state.onlyPositive;
+  const before = state.onlyTop;
   readUrlState();
   resetVisible();
-  if (before !== state.onlyPositive) loadNews();
+  if (before !== state.onlyTop) loadNews();
   else applyFiltersAndRender();
 });
 
-if (positiveToggle) {
-  positiveToggle.addEventListener('change', () => {
-    state.onlyPositive = positiveToggle.checked;
-    try { localStorage.setItem(POSITIVE_STORE_KEY, state.onlyPositive ? '1' : '0'); } catch (_) {}
+if (topToggle) {
+  topToggle.addEventListener('change', () => {
+    state.onlyTop = topToggle.checked;
+    try { localStorage.setItem(TOP_STORE_KEY, state.onlyTop ? '1' : '0'); } catch (_) {}
     resetVisible();
     loadNews();
   });
