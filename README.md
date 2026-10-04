@@ -6,9 +6,9 @@ Bot-driven tekniknyhetssida med **redaktionell prioritering**.
 - **API:** https://tekniknyheter.vercel.app
 - **Repo:** https://github.com/Juulis/tekniknyheter
 
-## Redaktionell prio (Juulis)
+## Prioriterade ämnen
 
-Prioritera **positiva** nyheter inom:
+Redaktionell prio ligger på:
 
 - Tesla
 - Elbilar
@@ -18,32 +18,30 @@ Prioritera **positiva** nyheter inom:
 - Geopolitiska tekniknyheter (lag/AI-regler m.m.)
 - AI
 
-Negativt brus i samma ämnen har lägre prio.
+Brus i samma ämnen (skvaller, eventlistor, kursspekulation) har lägre prio.
 
 ### Hur det är implementerat
 
 | Lager | Beteende |
 | --- | --- |
-| `api/_lib/editorial.js` | Tags, sentiment-heuristik, `priorityScore`, topic-lista |
+| `api/_lib/editorial.js` | Tags, rankningsregler, `priorityScore`, topic-lista |
 | `GET /api/news` | Default `editorial=1&positive=1&sort=priority` |
-| `POST /api/ingest` | Auto-taggar; `strictEditorial: true` eller header `X-Strict-Editorial: 1` avvisar lågprio/negativt |
+| `POST /api/ingest` | Auto-taggar; `strictEditorial: true` eller header `X-Strict-Editorial: 1` avvisar lågprio |
 | Frontend | Visar tags, sorterar på redaktionell prio, kategorier från prio-ämnen |
 
-Ingest-tips till nyhetsboten: skicka gärna `tags`, `sentiment: "positive"` och `priority: true` när det passar.
+Ingest-tips till nyhetsboten: skicka gärna `tags` och `priority: true` när det passar.
 
-## Rankning, tonläge och kluster
+## Rankning och kluster
 
-- **`positive=1` (standard) betyder "positiv lutning", inte filter:** positiva nyheter rankas först, neutrala får finnas kvar och tydligt negativa hamnar sist (de göms inte).
-- **`positive=only` är strikt:** bara nyheter med `sentiment === 'positive'` returneras (neutrala och negativa utesluts).
-- **Positiv ton** kräver positiva signalord i rubriken. Kritik/konflikt ("challenges", "slams" ...) och privatliv/skvaller (separation, dejting m.m.) ger aldrig positiv ton; skvaller får dessutom aldrig `editorialPriority` och viktas kraftigt ned.
+- **Standardläge (`positive=1`):** urvalet rankas efter redaktionell prio; lågprioriterat hamnar sist men göms inte.
+- **Toppnyheter-läge (`positive=only`):** strikt urval, bara de högst prioriterade nyheterna returneras.
 - **Kluster:** nära-dubbletter slås ihop till en primär nyhet med `alsoIn: [{ source, url, title }]` (max 3 andra utgivare, bara upplösta utgivar-URL:er). Frontend visar dem som "Också i: Källa1, Källa2".
 - **Urval av de 40:** mjuk kategorikvotering: minst 2 per kärnkategori (Tesla, Elbilar, NVIDIA, SpaceX, Neuralink, AI, Geopolitik) och minst 4 svenska kort om kandidater finns, därefter högst ~25 % per kategori innan fyllning.
-- **Rankning:** starka positiva nyheter i kärnämnena får extra poäng; primärkällor (tesla.com, nvidia.com, spacex.com, x.ai, neuralink.com, IR/newsroom, Reuters/AP) och svenska källor får en liten bonus. Politiskt "slam", eventlistor/webinars och kryptospådomar utesluts; kursspekulation ("price prediction", "could hit") väljs bara om det saknas annat.
+- **Rankning:** starka nyheter i kärnämnena får extra poäng; primärkällor (tesla.com, nvidia.com, spacex.com, x.ai, neuralink.com, IR/newsroom, Reuters/AP) och svenska källor får en liten bonus. Politiskt "slam", eventlistor/webinars och kryptospådomar utesluts; kursspekulation ("price prediction", "could hit") väljs bara om det saknas annat. Privatliv/skvaller viktas kraftigt ned.
 - **Kluster:** utöver titellikhet (Jaccard 0,3 med samma kategori och nyckelentitet) slås nyheter ihop på entitet + händelse (t.ex. NVIDIA + all-time high, Tesla + leveranser Q3, Tesla + Supercharger-flyktläge).
-- **Ton:** negativa/skeptiska ord i rubriken (price hike, reality check, bubble, warning, risk, probe, cuts, delay ...) ger aldrig positiv ton; svaga positiva ord räknas inte när rubriken spår eller förbehåller (forecast, could, expects). Positiv lutning (`positive=1`) tar högst ~65 % positiva av de 40 om neutrala kandidater finns; `positive=only` är strikt.
 - **Geopolitik:** bara chip/exportkontroll, AI-lagar och EV-regler/tullar (högst 4 kort); övrig EU/Kina-politik får ingen Geopolitik-tagg och faller bort.
 - **Bilder:** samma sidhämtning som ger og:description ger og:image (absolut https, cache per id); frontend byter trasiga bilder mot kategori-placeholder.
-- **Frontend:** reglaget "Bara positiva" byter anropet till `positive=only` (sparas i URL-param `?positive=only` och localStorage); urvalet på 40 görs då bland bara positiva nyheter.
+- **Frontend:** reglaget "Toppnyheter" byter anropet till toppnyheter-läge (`positive=only`) och sparas i URL-param `?top=1` och localStorage (äldre länkar fungerar också); urvalet på 40 görs då bland de högst prioriterade nyheterna.
 - **Sammanfattning:** utgivarens egen `og:description`/meta description (ingen LLM, ingen översättning). Hittas ingen lämnas `summary` tom och kortet visas utan sammanfattning.
 - **Google News-länkar** löses upp till utgivar-URL:er vid refresh (cache i serverminnet; `maxDuration` 30 s i `vercel.json`). Cron-jobbet kör upp till två omgångar för att förvärma.
 
@@ -66,7 +64,7 @@ curl -X POST "https://tekniknyheter.vercel.app/api/ingest" \
   -H "Content-Type: application/json" \
   -H "X-Ingest-Key: $INGEST_API_KEY" \
   -H "X-Strict-Editorial: 1" \
-  -d '{"title":"Tesla ...","summary":"...","source":"Bot","sentiment":"positive"}'
+  -d '{"title":"Tesla ...","summary":"...","source":"Bot","tags":["Tesla"]}'
 ```
 
 ## Deploy
