@@ -63,12 +63,65 @@ function metaContent(html, keyAttr, key) {
   return '';
 }
 
+/** JSON-LD-noder (inkl. @graph) från sidan; trasig JSON hoppas över. */
+function ldNodes(html) {
+  const out = [];
+  const scripts = html.match(/<script[^>]*application\/ld\+json[^>]*>[\s\S]*?<\/script>/gi) || [];
+  const walk = (n, depth) => {
+    if (!n || typeof n !== 'object' || depth > 3) return;
+    if (Array.isArray(n)) return n.forEach((x) => walk(x, depth + 1));
+    out.push(n);
+    if (n['@graph']) walk(n['@graph'], depth + 1);
+  };
+  for (const sc of scripts) {
+    try {
+      walk(JSON.parse(sc.replace(/^<script[^>]*>/i, '').replace(/<\/script>$/i, '')), 0);
+    } catch (_) {
+      /* hoppa över */
+    }
+  }
+  // Bara artikeltyper: Organization/WebSite-beskrivningar är sidans, inte artikelns.
+  return out.filter((n) => /Article|Posting|Report/i.test(JSON.stringify(n['@type'] || '')));
+}
+
+/** Första stycket i artikeln (minst 80 tecken, utan länk-/menytext). */
+function firstParagraph(html) {
+  const ps = html.match(/<p\b[^>]*>[\s\S]*?<\/p>/gi) || [];
+  for (const p of ps.slice(0, 15)) {
+    const t = decodeEntities(p);
+    if (t.length >= 80 && !BOILERPLATE_RE.test(t) && !SPAM_RE.test(t)) return t;
+  }
+  return '';
+}
+
+/** Beskrivning och vilken metod som gav den: og, twitter, meta, jsonld eller p (första stycket). */
+function descriptionVia(html) {
+  const tries = [
+    ['og', () => metaContent(html, 'property', 'og:description')],
+    ['twitter', () => metaContent(html, 'name', 'twitter:description')],
+    ['meta', () => metaContent(html, 'name', 'description')],
+    ['jsonld', () => decodeEntities((ldNodes(html).find((n) => typeof n.description === 'string' && n.description) || {}).description)],
+    ['p', () => firstParagraph(html)],
+  ];
+  for (const [via, fn] of tries) {
+    const text = fn();
+    if (text) return { text, via };
+  }
+  return { text: '', via: '' };
+}
+
 function extractDescription(html) {
-  return (
-    metaContent(html, 'property', 'og:description') ||
-    metaContent(html, 'name', 'twitter:description') ||
-    metaContent(html, 'name', 'description')
-  );
+  return descriptionVia(html).text;
+}
+
+/** image ur JSON-LD (sträng, {url} eller lista). */
+function ldImage(html) {
+  for (const n of ldNodes(html)) {
+    const im = Array.isArray(n.image) ? n.image[0] : n.image;
+    const u = typeof im === 'string' ? im : im && im.url;
+    if (typeof u === 'string' && u) return u;
+  }
+  return '';
 }
 
 /** og:image (eller twitter:image) som absolut https-URL; relativa URL:er löses mot sidans adress, http och data: förkastas. */
@@ -77,7 +130,8 @@ function extractImage(html, baseUrl) {
     metaContent(html, 'property', 'og:image:secure_url') ||
     metaContent(html, 'property', 'og:image') ||
     metaContent(html, 'name', 'twitter:image') ||
-    metaContent(html, 'name', 'twitter:image:src');
+    metaContent(html, 'name', 'twitter:image:src') ||
+    ldImage(html);
   if (!raw) return '';
   try {
     const u = new URL(raw, baseUrl);
@@ -206,13 +260,16 @@ function httpGetHead(url, redirects = 3) {
   });
 }
 
-async function fetchDescription(url) {
+async function fetchDescription(url, title) {
   const res = await Promise.race([
     httpGetHead(url),
     new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), FETCH_TIMEOUT_MS + 500)),
   ]);
   const html = res.html || '';
-  return { status: res.status, desc: extractDescription(html), image: extractImage(html, res.url || url) };
+  let { text: desc, via } = descriptionVia(html);
+  // JSON-LD och första stycket måste dela minst ett ord med rubriken (annars kan det vara fel text).
+  if ((via === 'p' || via === 'jsonld') && title && !overlap(words(title), words(desc))) desc = '';
+  return { status: res.status, desc, via: desc ? via : '', image: extractImage(html, res.url || url) };
 }
 
 function isGoogleUrl(url) {
@@ -238,7 +295,13 @@ async function fillFromRelated(wanted, st, stats) {
   const cands = wanted.filter((it) => needs(it) && urlsOf(it).length);
 
   const todo = [];
-  for (const it of cands) for (const u of urlsOf(it)) if (!st.rel.has(u) && !todo.includes(u)) todo.push(u);
+  const titleOf = new Map();
+  for (const it of cands) {
+    for (const u of urlsOf(it)) {
+      if (!titleOf.has(u)) titleOf.set(u, it.title);
+      if (!st.rel.has(u) && !todo.includes(u)) todo.push(u);
+    }
+  }
   const queue = todo.slice(0, REL_MAX_FETCH);
   const started = Date.now();
   let cursor = 0;
@@ -246,8 +309,8 @@ async function fillFromRelated(wanted, st, stats) {
     while (cursor < queue.length && Date.now() - started < REL_BUDGET_MS) {
       const u = queue[cursor++];
       try {
-        const r = await fetchDescription(u);
-        if (r.status === 200) st.rel.set(u, { desc: r.desc, image: r.image });
+        const r = await fetchDescription(u, titleOf.get(u));
+        if (r.status === 200) st.rel.set(u, { desc: r.desc, via: r.via, image: r.image });
         else st.relFails.set(u, (st.relFails.get(u) || 0) + 1);
       } catch (_) {
         st.relFails.set(u, (st.relFails.get(u) || 0) + 1);
@@ -267,7 +330,7 @@ async function fillFromRelated(wanted, st, stats) {
         const owner = st.owners.get(text);
         if (owner && owner !== it.id) continue;
         st.owners.set(text, it.id);
-        st.byId.set(it.id, { summary: text, summarySource: 'related', summaryLang: /\.se$/i.test(relHost(u)) ? 'sv' : 'en', upgraded: true });
+        st.byId.set(it.id, { summary: text, summarySource: 'related', summaryVia: p.via, summaryLang: /\.se$/i.test(relHost(u)) ? 'sv' : 'en', upgraded: true });
         stats[old ? 'upgradedThin' : 'fromRelated'] = (stats[old ? 'upgradedThin' : 'fromRelated'] || 0) + 1;
         break;
       }
@@ -312,7 +375,7 @@ async function fillSummaries(items, { top = 40 } = {}) {
       const it = todo[cursor++];
       stats.attempted++;
       try {
-        const { status, desc, image } = await fetchDescription(it.url);
+        const { status, desc, via, image } = await fetchDescription(it.url, it.title);
         if (status === 200) st.imgs.set(it.id, image || '');
         else st.fails.set(it.id, (st.fails.get(it.id) || 0) + 1);
         if (image) stats.images = (stats.images || 0) + 1;
@@ -325,7 +388,7 @@ async function fillSummaries(items, { top = 40 } = {}) {
           why('generic_description');
         } else if (text) {
           st.owners.set(text, it.id);
-          st.byId.set(it.id, { summary: text, summarySource: 'page', summaryLang: it.lang === 'sv' ? 'sv' : 'en' });
+          st.byId.set(it.id, { summary: text, summarySource: 'page', summaryVia: via, summaryLang: it.lang === 'sv' ? 'sv' : 'en' });
           stats.fromPage++;
         } else {
           if (status === 200) st.fails.set(it.id, (st.fails.get(it.id) || 0) + 1);
@@ -348,11 +411,26 @@ async function fillSummaries(items, { top = 40 } = {}) {
   return items.map((it, idx) => {
     if (idx >= top) return it;
     const found = st.byId.get(it.id);
-    const hit = found && (!it.summary || found.upgraded) ? found : null;
+    let hit = found && (!it.summary || found.upgraded) ? found : null;
+    if (!hit && !it.summary) {
+      const teaser = titleTeaser(it.title);
+      if (teaser) hit = { summary: teaser, summarySource: 'title', summaryLang: it.lang === 'sv' ? 'sv' : 'en' };
+    }
     const img = !it.imageUrl && st.imgs.get(it.id);
     if (!hit && !img) return it;
     return { ...it, ...(hit || {}), ...(img ? { imageUrl: img, imageSource: 'page' } : {}) };
   });
+}
+
+/**
+ * Sista utväg: delen efter första kolon/tankstreck/streck i rubriken (rubrikens egna ord, inga nya påståenden).
+ * Returnerar '' om rubriken saknar sådan del eller om den är för kort.
+ */
+function titleTeaser(title) {
+  const m = String(title || '').match(/^.{3,}?(?::\s+|\s[\u2013\u2014-]\s|\s\|\s)(.+)$/);
+  if (!m) return '';
+  const t = m[1].trim().replace(/^\S/, (c) => c.toUpperCase());
+  return t.length >= 25 && t.length <= MAX_LEN ? t : '';
 }
 
 function summaryStats() {
