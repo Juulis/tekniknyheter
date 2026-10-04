@@ -574,16 +574,6 @@ footer code {
 }
 
 
-.chip.sentiment.positive {
-  color: var(--ok);
-  background: color-mix(in srgb, var(--ok) 16%, transparent);
-}
-
-.chip.sentiment.negative {
-  color: var(--danger);
-  background: color-mix(in srgb, var(--danger) 14%, transparent);
-}
-
 .card.skeleton {
   min-height: 16rem;
 }
