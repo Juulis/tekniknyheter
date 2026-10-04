@@ -1,6 +1,6 @@
 const { record } = require('./_lib/stats');
 
-// Frontend på GitHub Pages. Andra webbläsar-Origins räknas inte (anrop utan Origin, t.ex. curl, tillåts för test).
+// Frontend på GitHub Pages. Andra webbläsar-Origins räknas inte (POST utan Origin, t.ex. curl, går att räkna).
 const ALLOWED_ORIGIN = 'https://juulis.github.io';
 const OWN_HOSTS = new Set(['juulis.github.io', 'tekniknyheter.vercel.app']);
 const BOT_RE = /bot|crawl|spider|headless|preview|lighthouse|slurp|monitor|uptime/i;
@@ -17,15 +17,14 @@ function readInput(req) {
   if (typeof b === 'string') {
     try { b = JSON.parse(b); } catch (_) { b = {}; }
   }
-  if (b && typeof b === 'object' && Object.keys(b).length) return b;
-  const q = new URL(req.url, 'http://localhost').searchParams;
-  return { utm_source: q.get('utm_source'), ref: q.get('ref') };
+  return b && typeof b === 'object' ? b : {};
 }
 
 module.exports = async function handler(req, res) {
   res.setHeader('Cache-Control', 'no-store');
   if (req.method === 'OPTIONS') return res.status(204).end();
-  if (req.method !== 'POST' && req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
+  // Endast POST (från hit.js) räknar. GET är read-only och räknar aldrig.
+  if (req.method !== 'POST') return res.status(405).json({ counted: false, reason: 'method' });
 
   const origin = req.headers.origin;
   if (origin && origin !== ALLOWED_ORIGIN) return res.status(403).json({ counted: false, reason: 'origin' });
