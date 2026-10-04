@@ -73,6 +73,22 @@ async function record({ source, ref }) {
 
 const cacheKey = '__tekniknyheter_stats_cache__';
 
+// Testträffar (utm_source=test) lagras men visas aldrig i siffrorna: de dras bort vid läsning.
+const HIDDEN_SOURCE = 'test';
+
+function withoutHidden(d) {
+  const { [HIDDEN_SOURCE]: hidden = 0, ...bySource } = d.bySource || {};
+  const out = { ...d, views: Math.max(0, d.views - hidden), bySource };
+  if (hidden && d.byRef) {
+    // Testträffarnas referrer vet vi inte säkert: antas vara 'direct' (så görs testanropen).
+    const byRef = { ...d.byRef };
+    if (byRef.direct) byRef.direct = Math.max(0, byRef.direct - hidden);
+    if (!byRef.direct) delete byRef.direct;
+    out.byRef = byRef;
+  }
+  return out;
+}
+
 /** Sammanställning för /api/stats (cachas 20 s i serverminnet för att spara Blob-anrop). */
 async function summary() {
   const c = globalThis[cacheKey];
@@ -80,10 +96,10 @@ async function summary() {
   const keys = lastDays(30);
   const [total, ...days] = await Promise.all([readJson('stats/total.json'), ...keys.map((k) => readJson(`stats/${k}.json`))]);
   const list = keys.map((date, i) => {
-    const d = days[i].data;
+    const d = days[i].data ? withoutHidden(days[i].data) : null;
     return { date, views: d ? d.views : 0, bySource: d ? d.bySource : {}, byRef: d ? d.byRef : {} };
   });
-  const t = total.data || { since: null, views: 0, bySource: {} };
+  const t = withoutHidden(total.data || { since: null, views: 0, bySource: {} });
   const value = {
     total: t.views,
     today: list[list.length - 1].views,
