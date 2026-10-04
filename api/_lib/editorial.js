@@ -149,6 +149,19 @@ const CRYPTO_NOISE = /\b(bitcoin|btc|crypto|ethereum|solana|xrp|dogecoin|memecoi
 const SPECULATION =
   /price prediction|\bcould (hit|reach|soar|surge|explode|double|triple|skyrocket)\b|\bforecast:? \$|\b(will|to) (hit|reach) \$\d|\bpredicts?\b.{0,40}\b(price|stock|shares)\b|\bstocks? to buy\b|\bbest (ai )?stocks?\b|\bshould you (buy|sell)\b|\b(buy|sell) now\b|\bhere'?s why\b.{0,30}\b(soar|surge|rall(y|ies)|jump)/i;
 
+/** Neutrala spekulativa/ryktesrubriker ("could", "reportedly", "kan bli" ...): kraftigt nedviktade, aldrig i positive=only. */
+const SOFT_SPECULATION =
+  /\b(could|might|may|what if|predict\w*|speculat\w*|rumou?rs?|reportedly|allegedly)\b|\bkan bli\b|\benligt uppgift\b|\bryktas\b|\bspekulera/i;
+const SOFT_SPECULATION_PENALTY = 40;
+/** Åldersavdrag: nyheter äldre än 4 dygn viktas kraftigt ned (äldre än 7 dygn filtreras bort i sources.js när färskare finns). */
+const OLD_DAYS = 4;
+const OLD_PENALTY = 40;
+
+function ageDays(item) {
+  const t = Date.parse(item.publishedAt || '');
+  return Number.isFinite(t) ? Math.max(0, (Date.now() - t) / 86400000) : 0;
+}
+
 function isNoise(item) {
   const title = String(item.title || '');
   return POLITICAL_SLAM.test(title) || EVENT_LISTING.test(title) || CRYPTO_NOISE.test(title);
@@ -244,7 +257,7 @@ function detectTags(item) {
   return [...tags];
 }
 
-/** Starka entiteter (vinner över svågare ämnen); vid flera träffar vinner den som står först i titeln. */
+/** Starka entiteter (vinner över svagare ämnen); vid flera träffar vinner den som står först i titeln. */
 const STRONG_TOPICS = new Set(['spacex', 'neuralink', 'nvidia', 'jensen', 'xai', 'tesla', 'elon', 'aiact']);
 const WEAK_ORDER = ['ev', 'ai', 'geopolitics'];
 const AI_ACT_RE = /(?<!\b(?:let|lets|to|can|will|would)\s)\bai act\b|export controls?|chip (ban|export)|\bEU\b.{0,40}\bai\b.{0,30}(regulat|polic|law)|\bai (regulation|legislation|laws?|rules)\b|regulat\w* (of )?(frontier )?ai\b/i;
@@ -388,6 +401,9 @@ function enrich(item) {
   const speculative = !noise && isSpeculative(item);
   if (noise) score -= NOISE_PENALTY;
   if (speculative) score -= SPECULATION_PENALTY;
+  const softSpec = !noise && !speculative && sentiment === 'neutral' && SOFT_SPECULATION.test(String(item.title || ''));
+  if (softSpec) score -= SOFT_SPECULATION_PENALTY;
+  if (ageDays(item) > OLD_DAYS) score -= OLD_PENALTY;
   const primarySource = isPrimarySource(item);
   if (primarySource) score += PRIMARY_BONUS;
   if (item.lang === 'sv') score += SWEDISH_BONUS;
@@ -404,6 +420,7 @@ function enrich(item) {
     ...(personal ? { personalLife: true } : {}),
     ...(noise ? { noise: true } : {}),
     ...(speculative ? { speculative: true } : {}),
+    ...(softSpec ? { speculativeSoft: true } : {}),
     ...(primarySource ? { primarySource: true } : {}),
   };
 }
@@ -430,4 +447,5 @@ module.exports = {
   compareEditorial,
   matchesEditorialFocus,
   priorityScore,
+  ageDays,
 };
