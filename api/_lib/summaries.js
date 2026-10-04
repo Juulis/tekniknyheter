@@ -427,7 +427,9 @@ async function fillSummaries(items, { top = 40 } = {}) {
  * Returnerar '' om rubriken saknar sådan del eller om den är för kort.
  */
 function titleTeaser(title) {
-  const m = String(title || '').match(/^.{3,}?(?::\s+|\s[\u2013\u2014-]\s|\s\|\s)(.+)$/);
+  const str = String(title || '');
+  // Fallback: del efter ett bindeord (amid/after/while/despite ...), rubrikens egna ord.
+  const m = str.match(/^.{3,}?(?::\s+|\s[\u2013\u2014-]\s|\s\|\s)(.+)$/) || str.match(/^.{12,}?\s(?:amid|after|while|despite|following|by)\s(.+)$/i);
   if (!m) return '';
   const t = m[1].trim().replace(/^\S/, (c) => c.toUpperCase());
   return t.length >= 25 && t.length <= MAX_LEN ? t : '';
