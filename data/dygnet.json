@@ -1,1 +1,30 @@
-[]
+[
+  {
+    "date": "2026-10-04",
+    "title": "Frankrike: cirka 5 000 gripna när skolprotesterna sprider sig",
+    "summary": "Över 5 000 personer, mestadels tonåringar, har gripits när elevprotester mot överfulla klassrum, lärarbrist och slitna skolbyggnader spridit sig över Frankrike. Inrikesministern uppger att 1 747 greps under fredagen.",
+    "sourceUrl": "https://www.npr.org/2026/10/03/nx-s1-5989532/france-arrests-5-000-people-mostly-teens-as-school-protests-spread",
+    "category": "Geopolitik"
+  },
+  {
+    "date": "2026-10-04",
+    "title": "Tesla levererade 486 532 bilar i tredje kvartalet och slog förväntningarna",
+    "summary": "Tesla levererade 486 532 fordon under Q3 2026, ned 2,1 % från rekordkvartalet året före men upp 1,3 % från Q2. Analytikernas konsensus låg på cirka 462 000 leveranser.",
+    "sourceUrl": "https://electrek.co/2026/10/02/tesla-q3-2026-deliveries-486532/",
+    "category": "Tesla"
+  },
+  {
+    "date": "2026-10-04",
+    "title": "Jensen Huangs förmögenhet över 200 miljarder dollar när Nvidia noterar rekord",
+    "summary": "Enligt Forbes uppskattning är Nvidia-chefen Jensen Huang värd över 200 miljarder dollar efter att Nvidias aktie nådde ett nytt rekord. Det gör honom till världens sjunde rikaste person.",
+    "sourceUrl": "https://uk.finance.yahoo.com/news/jensen-huang-fortune-breaks-200-160035180.html",
+    "category": "NVIDIA"
+  },
+  {
+    "date": "2026-10-04",
+    "title": "Trump höll midterm-rally i Ohio och stödde Husted och Ramaswamy",
+    "summary": "Under lördagens rally i Vandalia, Ohio, stödde Trump senator Jon Husted och guvernörskandidaten Vivek Ramaswamy. Han sade att republikanerna kommer att överraska i mellanvalet den 3 november.",
+    "sourceUrl": "https://www.nbcnews.com/politics/2026-election/trump-campaigning-ohio-says-midterms-will-bring-big-surprise-rcna601150",
+    "category": "Geopolitik"
+  }
+]
