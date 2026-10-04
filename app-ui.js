@@ -50,6 +50,7 @@ function cardHtml(item, index) {
           <div class="card-body">
             <div class="meta">
               <button type="button" class="chip buttonish" data-category="${escapeAttr(cat)}" aria-label="Filtrera på ${escapeAttr(cat)}">${escapeHtml(cat)}</button>
+              ${item.dygnet ? '<span class="chip" title="Från Dygnet på 60 sekunder">Dygnet</span>' : ''}
               ${tags}
               <span class="source">${escapeHtml(item.source || 'Okänd källa')}</span>
               <time class="time" datetime="${escapeAttr(item.publishedAt)}">${escapeHtml(formatRelative(item.publishedAt))}</time>
