@@ -3,7 +3,8 @@
  * Läses från raw.githubusercontent.com med kort cache i globalThis; fel ignoreras tyst.
  */
 const crypto = require('crypto');
-const { PRIORITY_TOPICS } = require('./editorial');
+const { PRIORITY_TOPICS, detectTags, POLITICS_RE } = require('./editorial');
+const { fetchDescription } = require('./summaries');
 
 const RAW_URL = 'https://raw.githubusercontent.com/Juulis/tekniknyheter/main/data/dygnet.json';
 const CACHE_MS = 5 * 60 * 1000;
@@ -12,7 +13,11 @@ const MAX_POSTS = 20;
 const MAX_AGE_DAYS = 7;
 const SOURCE_NAME = 'Dygnet på 60 sekunder';
 const TZ = 'Europe/Stockholm';
-const CATEGORIES = new Map([...PRIORITY_TOPICS.map((t) => t.category), 'Teknik'].map((c) => [c.toLowerCase(), c]));
+const CATEGORIES = new Map([...PRIORITY_TOPICS.map((t) => t.category), 'Teknik', 'Politik'].map((c) => [c.toLowerCase(), c]));
+// Kategorier som räknas som tekniskt ämne (Geopolitik/Teknik/Politik avgörs av texten).
+const TECH_CATEGORIES = new Set(['Tesla', 'Elbilar', 'Elon Musk', 'NVIDIA', 'SpaceX', 'Neuralink', 'AI']);
+const IMG_BUDGET_MS = 3500;
+const IMG_MAX_TRIES = 3;
 
 function ymdInStockholm(date) {
   return new Intl.DateTimeFormat('sv-SE', { timeZone: TZ, year: 'numeric', month: '2-digit', day: '2-digit' }).format(date);
@@ -80,7 +85,11 @@ function parseDygnet(raw, now = new Date()) {
     const id = 'dygnet-' + crypto.createHash('sha1').update(when.ymd + title).digest('hex').slice(0, 10);
     if (seen.has(id)) continue;
     seen.add(id);
-    const cat = CATEGORIES.get(String(r.category || '').trim().toLowerCase()) || 'Teknik';
+    let cat = CATEGORIES.get(String(r.category || '').trim().toLowerCase()) || 'Teknik';
+    // Tekniskt ämne: kategori, annars ämnesträff i title+summary (inkl. chip/exportkontroll och AI-lagar).
+    const tech = TECH_CATEGORIES.has(cat) || detectTags({ title, summary }).length > 0;
+    // Politik utan tekniskt ämne ligger under Politik, inte Geopolitik (som är chip/exportkontroll/AI-lagar).
+    if (!tech && (cat === 'Geopolitik' || cat === 'Politik' || (cat === 'Teknik' && POLITICS_RE.test(`${title} ${summary}`)))) cat = 'Politik';
     out.push({
       id,
       title,
@@ -92,17 +101,54 @@ function parseDygnet(raw, now = new Date()) {
       publishedAt: (when.at > now ? now : when.at).toISOString(),
       dygnet: true,
       dygnetAge: age,
+      dygnetTech: tech,
     });
   }
   out.sort((a, b) => a.dygnetAge - b.dygnetAge || a.title.localeCompare(b.title, 'sv'));
   return out.slice(0, MAX_POSTS);
 }
 
-/** Bonus på prioritetspoängen: dagens +100, gårdagens +70, övriga får vanlig rankning. */
+/** Bonus på prioritetspoängen: tekniskt ämne dagens +100 / gårdagens +70, övriga +25 / +15; äldre får vanlig rankning. */
 function dygnetBonus(item) {
-  if (item.dygnetAge === 0) return 100;
-  if (item.dygnetAge === 1) return 70;
+  const tech = item.dygnetTech !== false;
+  if (item.dygnetAge === 0) return tech ? 100 : 25;
+  if (item.dygnetAge === 1) return tech ? 70 : 15;
   return 0;
+}
+
+/** og:image/twitter:image från sourceUrl (https), cache per id i globalThis. Saknas bild visas kategori-placeholder. */
+async function addImages(items) {
+  const cache = globalThis.__dygnetImgs || (globalThis.__dygnetImgs = new Map());
+  const todo = items.filter((i) => {
+    const c = cache.get(i.id);
+    return !c || (!c.done && c.tries < IMG_MAX_TRIES);
+  });
+  const started = Date.now();
+  let cursor = 0;
+  async function worker() {
+    while (cursor < todo.length && Date.now() - started < IMG_BUDGET_MS) {
+      const it = todo[cursor++];
+      const c = cache.get(it.id) || { image: '', done: false, tries: 0 };
+      try {
+        const r = await fetchDescription(it.url, it.title);
+        if (r.status === 200) {
+          c.image = r.image || '';
+          c.done = true;
+        } else c.tries++;
+      } catch (_) {
+        c.tries++;
+      }
+      cache.set(it.id, c);
+    }
+  }
+  await Promise.all(Array.from({ length: 4 }, worker));
+  for (const it of items) {
+    const c = cache.get(it.id);
+    if (c && c.image) {
+      it.imageUrl = c.image;
+      it.imageSource = 'page';
+    }
+  }
 }
 
 async function fetchDygnet({ force = false } = {}) {
@@ -114,6 +160,11 @@ async function fetchDygnet({ force = false } = {}) {
     const res = await fetch(force ? `${RAW_URL}?cb=${Date.now()}` : RAW_URL, { signal: ctrl.signal, headers: { Accept: 'application/json' } });
     if (!res.ok) throw new Error(`status ${res.status}`);
     const items = parseDygnet(JSON.parse(await res.text()));
+    try {
+      await addImages(items);
+    } catch (_) {
+      /* kort utan bild får kategori-placeholder */
+    }
     globalThis.__dygnetCache = { at: Date.now(), items };
     return items;
   } catch (_) {
