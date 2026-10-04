@@ -120,6 +120,11 @@ const CONFLICT_HINTS = new RegExp(
   'i'
 );
 
+/** Militär/våld i rubriken: aldrig positiv ton (neutral), även om ett positivt ord finns. */
+const MILITARY_HINTS = /\bmissiles?\b|\bmissil|\bweapons?\b|\bwarheads?\b|\bwarfare\b|\bwar\b|\bmilitary\b|\b(missile|military|drone|air) strikes?\b|\bairstrikes?\b|\bbombs?\b|\bvapen\b|\bkrig\b|\bmilitär/i;
+/** "X needs/should/must ... regulation": en åsikt/krav, inte en positiv nyhet. */
+const REGULATION_DEMAND = /\b(needs?|should|must|has to|have to|calls? for|urges?|demands?)\b[^.]{0,40}\bregulat|\bregulat\w*\b[^.]{0,30}\b(needs?|should|must)\b/i;
+
 /**
  * Privatliv/skvaller (separationer, relationer, dejting m.m.) ska aldrig få editorialPriority eller positiv ton.
  * Svaga ord (split, partner, relationship) räknas bara tillsammans med en personsignal, så att "stock split" och "partnership" inte slår fel.
@@ -239,7 +244,7 @@ function detectTags(item) {
   return [...tags];
 }
 
-/** Starka entiteter (vinner över svagare ämnen); vid flera träffar vinner den som står först i titeln. */
+/** Starka entiteter (vinner över svågare ämnen); vid flera träffar vinner den som står först i titeln. */
 const STRONG_TOPICS = new Set(['spacex', 'neuralink', 'nvidia', 'jensen', 'xai', 'tesla', 'elon', 'aiact']);
 const WEAK_ORDER = ['ev', 'ai', 'geopolitics'];
 const AI_ACT_RE = /(?<!\b(?:let|lets|to|can|will|would)\s)\bai act\b|export controls?|chip (ban|export)|\bEU\b.{0,40}\bai\b.{0,30}(regulat|polic|law)|\bai (regulation|legislation|laws?|rules)\b|regulat\w* (of )?(frontier )?ai\b/i;
@@ -283,7 +288,8 @@ function sentimentOf(item) {
   const neg = NEGATIVE_HINTS.test(textOf(item));
   const conflict = CONFLICT_HINTS.test(String(item.title || ''));
   if (neg && !pos) return 'negative';
-  if (pos && !neg && !conflict) return 'positive';
+  const hard = MILITARY_HINTS.test(title) || REGULATION_DEMAND.test(title);
+  if (pos && !neg && !conflict && !hard) return 'positive';
   return 'neutral';
 }
 
