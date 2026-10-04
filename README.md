@@ -45,6 +45,29 @@ Ingest-tips till nyhetsboten: skicka gärna `tags` och `priority: true` när det
 - **Sammanfattning:** utgivarens egen `og:description`/meta description (ingen LLM, ingen översättning). Hittas ingen lämnas `summary` tom och kortet visas utan sammanfattning.
 - **Google News-länkar** löses upp till utgivar-URL:er vid refresh (cache i serverminnet; `maxDuration` 30 s i `vercel.json`). Cron-jobbet kör upp till två omgångar för att förvärma.
 
+## Dygnet på 60 sekunder
+
+Dagens nyhetspunkter från Shorts-serien visas som kort på sajten. Källan är filen **`data/dygnet.json`** på `main`, som uppdateras via GitHub vid varje publicering.
+
+Format (lista, nyast först rekommenderas):
+
+```json
+[
+  {
+    "date": "2026-10-04",
+    "title": "Rubrik, högst 160 tecken",
+    "summary": "En till två meningar på svenska, högst 300 tecken.",
+    "sourceUrl": "https://example.com/artikel",
+    "category": "Tesla"
+  }
+]
+```
+
+- `date`: `YYYY-MM-DD` (visas som 12:00 svensk tid) eller full ISO-tid. Dagens och gårdagens poster rankas högst; poster äldre än 7 dygn och framtida datum ignoreras.
+- `category`: Tesla, Elbilar, Elon Musk, NVIDIA, SpaceX, Neuralink, AI, Geopolitik eller Teknik. Okänd kategori blir Teknik.
+- `sourceUrl`: måste vara `https`. Ogiltiga poster (fel format, för långa texter, saknade fält) hoppas över tyst; högst 20 poster läses per gång.
+- API:t läser filen med ca 5 minuters cache (`refresh=1` hoppar över cachen), så ändringar syns inom några minuter. Finns samma länk i flödet behålls Dygnet-kortet. Korten får etiketten "Dygnet" och räknas utanför kvoteringen. En tom lista (`[]`) betyder inga Dygnet-kort.
+
 ## Statistik (besöksräknare utan cookies)
 
 - Frontend anropar `POST /api/hit` en gång per sidvisning (`hit.js`, `fetch` med `keepalive`, ingen cookie/localStorage). Skickas: `utm_source` (sanerad `a-z0-9_-`, max 32), referrer-värdnamn (sökvägen skickas men sparas inte). Ingen IP, ingen User-Agent och inga persondata sparas.
