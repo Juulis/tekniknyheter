@@ -328,6 +328,8 @@ const EVENT_KINDS = [
       (/\bsold\b.{0,25}(evs?|vehicles|cars)\b/.test(t) && /expect|estimate/.test(t)) ||
       (/\bsales\b/.test(t) && /beat|\btops?\b|topped|estimates|expectations|momentum|rebound/.test(t) && /\bq[1-4]\b|quarter|\bev sales\b|vehicle|stock|shares/.test(t)),
   ],
+  ['stock-move', (t) => /\b(stock|shares)\b/.test(t) && /\b(jumps?|surges?|popped|pops|crosses|soars?|climbs?)\b/.test(t) && /launch|milestone|friday|key level|lockup|resistance/.test(t)],
+  ['europe-sales', (t) => /registrations?|\bsales\b/.test(t) && /\b(europe|european|norway|france|spain|sweden|denmark|germany)\b/.test(t) && /\b(rise|rises|rose|growth|streak|recovery|breaks?|rebound|up)\b/.test(t)],
   ['driveaway', (t) => /supercharg/.test(t) && /drive[- ]?away|\bflee\b|flyktläge|plugged in|emergency|nödläge/.test(t)],
   ['venezuela', (t) => /maduro|venezuela/.test(t)],
   ['shield', (t) => /shield tv/.test(t)],
@@ -630,7 +632,6 @@ function applyResolvedRelated(items) {
 
 const poolKey = '__tekniknyheter_pool_cache__';
 
-/** Kandidatpoolen (alla flöden, berikade och klustrade). Delas av alla lägen så att positive=only inte hämtar om flödena. */
 async function loadPool(now, force) {
   const cached = globalThis[poolKey];
   if (!force && cached && now - cached.at < CACHE_MS) return cached.pool;
