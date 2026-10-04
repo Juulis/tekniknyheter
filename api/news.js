@@ -1,6 +1,7 @@
 const { listNews } = require('./_lib/store');
 const { enrich, compareEditorial, matchesEditorialFocus, PRIORITY_TOPICS } = require('./_lib/editorial');
 const { fetchLiveArticles, resolveStats, summaryStats, dedupeItems } = require('./_lib/sources');
+const { fetchDygnet, dygnetBonus } = require('./_lib/dygnet');
 
 // Lagrade/seed-nyheter blandas bara in när live-RSS ger färre än så här många nyheter (eller misslyckas).
 const MIN_LIVE_ITEMS = 5;
@@ -17,14 +18,19 @@ function filterItems(items, { q, category, tag, editorial, positive }) {
   const tagFilter = (tag || '').trim().toLowerCase();
 
   return items
-    .map((item) => enrich(item))
+    .map((item) => {
+      const e = enrich(item);
+      // Dygnet-kort är redaktionellt utvalda: bonus efter enrich (som räknar om basen varje gång).
+      return e.dygnet ? { ...e, priorityScore: (e.priorityScore || 0) + dygnetBonus(e), editorialPriority: true } : e;
+    })
     .filter((item) => {
-      if (editorial === '1' || editorial === 'true') {
+      // Dygnet-kort kringgår ämnes- och toppnyhetsfiltren men följer kategori-, tagg- och sökfilter.
+      if (!item.dygnet && (editorial === '1' || editorial === 'true')) {
         if (!matchesEditorialFocus(item, { preferPositive: false })) return false;
       }
       // positive=1 (standard) = "positiv lutning": styr bara rankningen (positiva först, neutrala OK, negativa sist).
       // positive=only är strikt: returnerar enbart items med sentiment === 'positive'.
-      if (positive === 'only') {
+      if (positive === 'only' && !item.dygnet) {
         if (item.sentiment !== 'positive') return false;
       }
       if (cat && cat.toLowerCase() !== 'alla' && item.category.toLowerCase() !== cat.toLowerCase()) {
@@ -100,9 +106,15 @@ module.exports = async function handler(req, res) {
     }
   }
 
+  // Dygnet-poster (data/dygnet.json): läses med kort cache, fel ger tom lista.
+  const dygnet = (await fetchDygnet({ force: url.searchParams.get('refresh') === '1' })).map(enrich);
+  const dygnetUrls = new Set(dygnet.map((d) => d.url.toLowerCase()));
+
   const stored = listNews().map(enrich);
   const useStored = !!liveError || liveItems.length < MIN_LIVE_ITEMS;
-  const all = useStored ? dedupeItems(mergeItems(liveItems, stored)) : mergeItems(liveItems);
+  const base = useStored ? dedupeItems(mergeItems(liveItems, stored)) : mergeItems(liveItems);
+  // Samma sourceUrl i live och Dygnet: behåll Dygnet-kortet. Dygnet läggs till efter dedupe/kluster.
+  const all = [...base.filter((i) => !dygnetUrls.has(String(i.url || '').toLowerCase())), ...dygnet];
   const filtered = filterItems(all, { q, category, tag, editorial, positive });
   const items = sortItems(filtered, sort).slice(0, 50);
 
@@ -112,6 +124,7 @@ module.exports = async function handler(req, res) {
     filtered: items.length,
     liveCount: liveItems.length,
     storedCount: stored.length,
+    dygnetCount: dygnet.length,
     storedUsed: useStored,
     resolve: resolveStats(),
     summaries: summaryStats(),
