@@ -1,9 +1,9 @@
 const EDITORIAL_FALLBACK = [
-  {id:'local-1',title:'Tesla levererar rekordmånga bilar i kvartalet',summary:'Leveranserna ökar i flera marknader samtidigt som Supercharger-nätet växer.',url:'https://www.tesla.com',source:'EV Desk',category:'Tesla',tags:['Tesla','Elbilar'],sentiment:'positive',priorityScore:40,publishedAt:hoursAgo(2)},
-  {id:'local-2',title:'NVIDIA och Jensen Huang visar nästa AI-GPU-generation',summary:'Nya chips lovar högre träningseffektivitet för LLM:er.',url:'https://www.nvidia.com',source:'Chip Wire',category:'NVIDIA',tags:['NVIDIA','Jensen Huang','AI'],sentiment:'positive',priorityScore:42,publishedAt:hoursAgo(5)},
-  {id:'local-3',title:'xAI öppnar nya kapaciteter i Grok för utvecklare',summary:'API-utökningen gör det enklare att bygga produktivitetsverktyg.',url:'https://x.ai',source:'AI Brief',category:'AI',tags:['xAI','AI','Elon Musk'],sentiment:'positive',priorityScore:38,publishedAt:hoursAgo(9)},
-  {id:'local-4',title:'SpaceX Starship klarar ny testmilstolpe',summary:'Lyckad flygsekvens stärker tidplanen för frekventa uppskjutningar.',url:'https://www.spacex.com',source:'Orbit Daily',category:'SpaceX',tags:['SpaceX','Elon Musk'],sentiment:'positive',priorityScore:35,publishedAt:hoursAgo(14)},
-  {id:'local-5',title:'EU:s AI Act får tydligare vägledning för innovation',summary:'Riktlinjer ska göra det enklare att följa reglerna utan att bromsa utveckling.',url:'https://digital-strategy.ec.europa.eu',source:'Policy Watch',category:'Geopolitik',tags:['Geopolitik','AI'],sentiment:'positive',priorityScore:30,publishedAt:hoursAgo(20)},
+  {id:'local-1',title:'Tesla levererar rekordmånga bilar i kvartalet',summary:'Leveranserna ökar i flera marknader samtidigt som Supercharger-nätet växer.',url:'https://www.tesla.com',source:'EV Desk',category:'Tesla',tags:['Tesla','Elbilar'],priorityScore:40,publishedAt:hoursAgo(2)},
+  {id:'local-2',title:'NVIDIA och Jensen Huang visar nästa AI-GPU-generation',summary:'Nya chips lovar högre träningseffektivitet för LLM:er.',url:'https://www.nvidia.com',source:'Chip Wire',category:'NVIDIA',tags:['NVIDIA','Jensen Huang','AI'],priorityScore:42,publishedAt:hoursAgo(5)},
+  {id:'local-3',title:'xAI öppnar nya kapaciteter i Grok för utvecklare',summary:'API-utökningen gör det enklare att bygga produktivitetsverktyg.',url:'https://x.ai',source:'AI Brief',category:'AI',tags:['xAI','AI','Elon Musk'],priorityScore:38,publishedAt:hoursAgo(9)},
+  {id:'local-4',title:'SpaceX Starship klarar ny testmilstolpe',summary:'Lyckad flygsekvens stärker tidplanen för frekventa uppskjutningar.',url:'https://www.spacex.com',source:'Orbit Daily',category:'SpaceX',tags:['SpaceX','Elon Musk'],priorityScore:35,publishedAt:hoursAgo(14)},
+  {id:'local-5',title:'EU:s AI Act får tydligare vägledning för innovation',summary:'Riktlinjer ska göra det enklare att följa reglerna utan att bromsa utveckling.',url:'https://digital-strategy.ec.europa.eu',source:'Policy Watch',category:'Geopolitik',tags:['Geopolitik','AI'],priorityScore:30,publishedAt:hoursAgo(20)},
 ];
 
 const statusEl = document.getElementById('status');
@@ -15,11 +15,12 @@ const searchInput = document.getElementById('search');
 const categoryFiltersEl = document.getElementById('category-filters');
 const clearFiltersBtn = document.getElementById('clear-filters');
 const sortSelect = document.getElementById('sort');
-const positiveToggle = document.getElementById('only-positive');
+const topToggle = document.getElementById('top-only');
 
 const SORTS = new Set(['priority', 'newest', 'oldest', 'title']);
 const PAGE_SIZE = 12;
-const POSITIVE_STORE_KEY = 'tn-positive-only';
+const TOP_STORE_KEY = 'tn-top-only';
+const OLD_STORE_KEY = 'tn-positive-only';
 
 const state = {
   allItems: [],
@@ -27,7 +28,7 @@ const state = {
   category: 'Alla',
   sort: 'priority',
   visible: PAGE_SIZE,
-  onlyPositive: false,
+  onlyTop: false,
 };
 
 function hoursAgo(hours) {
@@ -130,16 +131,17 @@ function readUrlState() {
   state.category = params.get('category') || 'Alla';
   const sort = params.get('sort') || 'priority';
   state.sort = SORTS.has(sort) ? sort : 'priority';
-  // Bara positiva: URL-param (?positive=only|1) vinner över localStorage.
-  const pos = params.get('positive');
-  if (pos === 'only') state.onlyPositive = true;
-  else if (pos === '1') state.onlyPositive = false;
+  // Toppnyheter: ?top=1 (äldre länkar stöds också) vinner över localStorage.
+  const top = params.get('top');
+  const legacy = params.get('positive');
+  if (top === '1' || legacy === 'only') state.onlyTop = true;
+  else if (top === '0' || legacy === '1') state.onlyTop = false;
   else {
-    try { state.onlyPositive = localStorage.getItem(POSITIVE_STORE_KEY) === '1'; } catch (_) { state.onlyPositive = false; }
+    try { state.onlyTop = (localStorage.getItem(TOP_STORE_KEY) || localStorage.getItem(OLD_STORE_KEY)) === '1'; } catch (_) { state.onlyTop = false; }
   }
   searchInput.value = state.query;
   sortSelect.value = state.sort;
-  if (positiveToggle) positiveToggle.checked = state.onlyPositive;
+  if (topToggle) topToggle.checked = state.onlyTop;
 }
 
 function writeUrlState() {
@@ -147,7 +149,7 @@ function writeUrlState() {
   if (state.query.trim()) params.set('q', state.query.trim());
   if (state.category !== 'Alla') params.set('category', state.category);
   if (state.sort !== 'priority') params.set('sort', state.sort);
-  if (state.onlyPositive) params.set('positive', 'only');
+  if (state.onlyTop) params.set('top', '1');
   const next = params.toString();
   const url = next ? `${window.location.pathname}?${next}` : window.location.pathname;
   if (url !== `${window.location.pathname}${window.location.search}`) history.replaceState(null, '', url);
@@ -162,4 +164,3 @@ function renderCategoryFilters() {
     )
     .join('');
 }
-
