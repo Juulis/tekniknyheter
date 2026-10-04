@@ -1,5 +1,5 @@
 const crypto = require('crypto');
-const { enrich, matchesEditorialFocus, compareEditorial } = require('./editorial');
+const { enrich, matchesEditorialFocus, compareEditorial, ageDays } = require('./editorial');
 const { fillSummaries, summaryStats, SPAM_RE } = require('./summaries');
 
 const FEEDS = [
@@ -421,6 +421,9 @@ function dedupeItems(items) {
 }
 
 const SV_MIN = 4;
+// Minikvoter (kärnkategorier, svenska) får bara fyllas med färska kort; äldre än MAX_AGE_DAYS filtreras bort när det finns nog färska.
+const QUOTA_MAX_DAYS = 4;
+const MAX_AGE_DAYS = 7;
 const CORE_CATEGORIES = ['Tesla', 'Elbilar', 'Elon Musk', 'NVIDIA', 'SpaceX', 'Neuralink', 'AI', 'Geopolitik'];
 
 /**
@@ -444,7 +447,7 @@ function diversify(sorted, limit, maxShare = 0.25, minPer = 2, maxPositive = 1) 
     let n = 0;
     for (const item of sorted) {
       if (n >= minPer) break;
-      if (item.category === cat && item.sentiment !== 'negative' && !item.personalLife) {
+      if (item.category === cat && item.sentiment !== 'negative' && !item.personalLife && !item.speculativeSoft && ageDays(item) <= QUOTA_MAX_DAYS) {
         take(item);
         n++;
       }
@@ -454,7 +457,7 @@ function diversify(sorted, limit, maxShare = 0.25, minPer = 2, maxPositive = 1) 
   let sv = 0;
   for (const item of sorted) {
     if (sv >= SV_MIN) break;
-    if (item.lang === 'sv' && item.sentiment !== 'negative' && !item.personalLife) {
+    if (item.lang === 'sv' && item.sentiment !== 'negative' && !item.personalLife && !item.speculativeSoft && ageDays(item) <= QUOTA_MAX_DAYS) {
       if (!picked.has(item)) take(item);
       sv++;
     }
@@ -660,6 +663,9 @@ async function fetchLiveArticles({ force = false, positiveOnly = false } = {}) {
   // Brus (politiskt slam, eventlistor, krypto) utesluts alltid; spekulation väljs bara om det inte finns tillräckligt med annat.
   let candidates = clustered.filter((i) => !i.noise && !i.speculative);
   if (candidates.length < 40) candidates = clustered.filter((i) => !i.noise);
+  // Åldersfilter: äldre än 7 dygn bort om det finns minst 40 färska, annars fylls det upp med de nyaste av de äldre.
+  const fresh = candidates.filter((i) => ageDays(i) <= MAX_AGE_DAYS);
+  candidates = fresh.length >= 40 ? fresh : [...fresh, ...candidates.filter((i) => ageDays(i) > MAX_AGE_DAYS).sort((a, b) => new Date(b.publishedAt) - new Date(a.publishedAt))];
   if (positiveOnly) candidates = candidates.filter((i) => i.sentiment === 'positive');
   const top = diversify(candidates, 40, 0.25, 2, positiveOnly ? 1 : 0.65);
   try {
