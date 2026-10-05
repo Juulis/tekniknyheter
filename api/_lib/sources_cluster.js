@@ -1,4 +1,4 @@
-const { enrich } = require('./editorial');
+const { enrich } = require('./editorial_boost');
 const { titleTokens, jaccard, normalizeDedupeKey } = require('./sources_rss');
 const {
   JACCARD_THRESHOLD,
