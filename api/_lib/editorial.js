@@ -153,7 +153,7 @@ const SPECULATION =
 const SOFT_SPECULATION =
   /\b(could|might|may|what if|predict\w*|speculat\w*|rumou?rs?|reportedly|allegedly)\b|\bkan bli\b|\benligt uppgift\b|\bryktas\b|\bspekulera/i;
 const SOFT_SPECULATION_PENALTY = 40;
-// Åldersavdrag i trappa (timmar): >48 h -15, >72 h -60, >96 h -90, så att färska kort alltid rankar före gamla (äldre än 7 dygn filtreras bort i sources.js när färskare finns).
+// Åldersavdrag i trappa (timmar): >48 h -15, >72 h -60, >96 h -90, så att färska kort alltid rankar före gamla (äldre än 7 dygn filtreras bort i sources.js när det finns färskare).
 const AGE_STEPS = [[96, 90], [72, 60], [48, 15]];
 
 function agePenalty(item) {
@@ -173,6 +173,48 @@ function isNoise(item) {
 }
 function isSpeculative(item) {
   return SPECULATION.test(String(item.title || ''));
+}
+
+/** Kursnyheter (aktiekurs, riktkurs, börsvärde ...): högst två per bolag i urvalet, övriga nedviktade (se sources.js). */
+const PRICE_RE =
+  /\b(stocks?|price targets?|rall(y|ies|ied)|slides?|slumps?|record highs?|all-time highs?|market cap|buybacks?|analysts?|nasdaq|s&p|ath|stock price|nvda|tsla|spcx|valuation)\b|\bshares\b(?!\s+(?:first|a|an|the|new|his|her|its|their|details|photos?|video|images?|plans?|insight|update|how|why|what|that|this))/i;
+const PRICE_COMPANIES = [
+  ['nvidia', /\bnvidia\b|\bnvda\b|\bjensen\b/i],
+  ['tesla', /\btesla\b|\btsla\b/i],
+  ['spacex', /\bspacex\b|\bspcx\b/i],
+];
+const PRICE_CAPPED_PENALTY = 40;
+
+/** Bolaget en kursnyhet gäller (nvidia/tesla/spacex, det som står först i rubriken) eller '' om rubriken inte är en kursnyhet. */
+function priceCompany(item) {
+  const t = String(item.title || '');
+  if (!PRICE_RE.test(t)) return '';
+  let best = '';
+  let idx = Infinity;
+  for (const [co, re] of PRICE_COMPANIES) {
+    const m = re.exec(t);
+    if (m && m.index < idx) {
+      idx = m.index;
+      best = co;
+    }
+  }
+  return best;
+}
+
+/** Lågvärdiga/annonsliknande rubriker: starkt nedviktade och bortsorterade när det finns annat. */
+const LOW_VALUE_RE =
+  /\bhow to (invest|buy)\b|before the ipo|\bbest\b.{0,25}\bstocks?\b|\bstocks? to buy\b|price prediction|open letter|\bsponsored\b|\bpromoted\b|\bpromo\b|sign up (now|today|here)|sign up for (our|the) (newsletter|webinar)|\bwebinar\b|\breview\b.{0,40}\bdeals?\b|\bdeals?\b.{0,40}\breview\b/i;
+const LOW_VALUE_PENALTY = 70;
+
+/** Geopolitik: konkreta beslut väger upp, åsikts-/debatttexter väger ned. */
+const GEO_DECISION = /\b(signed|signs|passes|passed|approves|approved|bans?|banned|fines?d?|ruling|ruled|export controls?|executive order|takes? effect|enacts?|enacted|tariffs?|blocks?)\b/i;
+const GEO_DEBATE = /\b(opinion|op-ed|editorial|why|should|weigh in|weighs in|needs?|debate|must|argues?|commentary|column)\b|^\s*['\u2018\u201c\"]|\?\s*$/i;
+const GEO_DECISION_BONUS = 10;
+const GEO_DEBATE_PENALTY = 25;
+
+function geoAdjust(title) {
+  if (GEO_DEBATE.test(title)) return -GEO_DEBATE_PENALTY;
+  return GEO_DECISION.test(title) ? GEO_DECISION_BONUS : 0;
 }
 
 /** Primärkällor (företagens egna sidor, IR/newsroom, Reuters/AP) får en liten poängbonus och blir primär i kluster. */
@@ -268,7 +310,7 @@ function detectTags(item) {
   return [...tags];
 }
 
-/** Starka entiteter (vinner över svagare ämnen); vid flera träffar vinner den som står först i titeln. */
+/** Starka entiteter (vinner över svägare ämnen); vid flera träffar vinner den som står först i titeln. */
 const STRONG_TOPICS = new Set(['spacex', 'neuralink', 'nvidia', 'jensen', 'xai', 'tesla', 'elon', 'aiact']);
 const WEAK_ORDER = ['ev', 'ai', 'geopolitics'];
 const AI_ACT_RE = /(?<!\b(?:let|lets|to|can|will|would)\s)\bai act\b|export controls?|chip (ban|export)|\bEU\b.{0,40}\bai\b.{0,30}(regulat|polic|law)|\bai (regulation|legislation|laws?|rules)\b|regulat\w* (of )?(frontier )?ai\b/i;
@@ -415,6 +457,12 @@ function enrich(item) {
   const softSpec = !noise && !speculative && sentiment === 'neutral' && SOFT_SPECULATION.test(String(item.title || ''));
   if (softSpec) score -= SOFT_SPECULATION_PENALTY;
   score -= agePenalty(item);
+  const title = String(item.title || '');
+  const priceCo = priceCompany(item);
+  if (priceCo && item.priceCapped) score -= PRICE_CAPPED_PENALTY;
+  const lowValue = LOW_VALUE_RE.test(title);
+  if (lowValue) score -= LOW_VALUE_PENALTY;
+  if (category === 'Geopolitik' || scoreTags.includes('Geopolitik')) score += geoAdjust(title);
   const primarySource = isPrimarySource(item);
   if (primarySource) score += PRIMARY_BONUS;
   if (item.lang === 'sv') score += SWEDISH_BONUS;
@@ -433,6 +481,8 @@ function enrich(item) {
     ...(speculative ? { speculative: true } : {}),
     ...(softSpec ? { speculativeSoft: true } : {}),
     ...(primarySource ? { primarySource: true } : {}),
+    ...(priceCo ? { priceNews: priceCo } : {}),
+    ...(lowValue ? { lowValue: true } : {}),
   };
 }
 
@@ -458,6 +508,7 @@ module.exports = {
   compareEditorial,
   matchesEditorialFocus,
   priorityScore,
+  priceCompany,
   ageDays,
   POLITICS_RE,
 };
