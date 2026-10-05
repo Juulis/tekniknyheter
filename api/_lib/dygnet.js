@@ -23,15 +23,18 @@ function ymdInStockholm(date) {
   return new Intl.DateTimeFormat('sv-SE', { timeZone: TZ, year: 'numeric', month: '2-digit', day: '2-digit' }).format(date);
 }
 
-// 12:00 svensk tid för ett YYYY-MM-DD (sommar-/vintertid avgörs genom att prova UTC 10 och 11).
-function noonStockholm(ymd) {
+// 00:00 svensk tid för ett YYYY-MM-DD (ingen fake 10:00Z). Sommar-/vintertid provas via UTC-offset.
+function midnightStockholm(ymd) {
   const [y, m, d] = ymd.split('-').map(Number);
-  for (const h of [10, 11]) {
-    const cand = new Date(Date.UTC(y, m - 1, d, h));
-    const hour = Number(new Intl.DateTimeFormat('en-GB', { timeZone: TZ, hour: '2-digit', hour12: false }).format(cand));
-    if (hour === 12) return cand;
+  const fmt = new Intl.DateTimeFormat('en-GB', { timeZone: TZ, year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', hour12: false });
+  const partsOf = (dt) => Object.fromEntries(fmt.formatToParts(dt).filter((x) => x.type !== 'literal').map((x) => [x.type, x.value]));
+  // 00:00 Stockholm infaller typiskt 22:00 eller 23:00 UTC dagen före.
+  for (const h of [21, 22, 23]) {
+    const cand = new Date(Date.UTC(y, m - 1, d - 1, h));
+    const p = partsOf(cand);
+    if (`${p.year}-${p.month}-${p.day}` === ymd && p.hour === '00') return cand;
   }
-  return new Date(Date.UTC(y, m - 1, d, 11));
+  return new Date(Date.UTC(y, m - 1, d, 0));
 }
 
 function dayNumber(ymd) {
@@ -45,7 +48,7 @@ function validDate(value) {
     const [y, m, d] = s.split('-').map(Number);
     const t = new Date(Date.UTC(y, m - 1, d));
     if (t.getUTCFullYear() !== y || t.getUTCMonth() !== m - 1 || t.getUTCDate() !== d) return null;
-    return { ymd: s, at: noonStockholm(s) };
+    return { ymd: s, at: midnightStockholm(s) };
   }
   if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(s)) {
     const at = new Date(s);
@@ -86,10 +89,14 @@ function parseDygnet(raw, now = new Date()) {
     if (seen.has(id)) continue;
     seen.add(id);
     let cat = CATEGORIES.get(String(r.category || '').trim().toLowerCase()) || 'Teknik';
+    // Kärnkraftslån/Vistra hör till Geopolitik/energi, inte allmän Teknik.
+    if (/vistra|kärnkraftslån|kärnkraft/i.test(`${title} ${summary}`)) cat = 'Geopolitik';
     // Tekniskt ämne: kategori, annars ämnesträff i title+summary (inkl. chip/exportkontroll och AI-lagar).
     const tech = TECH_CATEGORIES.has(cat) || detectTags({ title, summary }).length > 0;
-    // Politik utan tekniskt ämne ligger under Politik, inte Geopolitik (som är chip/exportkontroll/AI-lagar).
-    if (!tech && (cat === 'Geopolitik' || cat === 'Politik' || (cat === 'Teknik' && POLITICS_RE.test(`${title} ${summary}`)))) cat = 'Politik';
+    // Politik utan tekniskt ämne ligger under Politik, inte Geopolitik (chip/exportkontroll/AI-lagar).
+    // Undantag: Vistra/kärnkraftslån ska stanna i Geopolitik.
+    const keepGeo = /vistra|kärnkraft/i.test(`${title} ${summary}`);
+    if (!tech && !keepGeo && (cat === 'Geopolitik' || cat === 'Politik' || (cat === 'Teknik' && POLITICS_RE.test(`${title} ${summary}`)))) cat = 'Politik';
     out.push({
       id,
       title,
