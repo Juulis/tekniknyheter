@@ -1,5 +1,5 @@
 const { listNews } = require('./_lib/store');
-const { enrich, compareEditorial, matchesEditorialFocus, PRIORITY_TOPICS } = require('./_lib/editorial');
+const { enrich, compareEditorial, matchesEditorialFocus, PRIORITY_TOPICS } = require('./_lib/editorial_boost');
 const { fetchLiveArticles, resolveStats, summaryStats, dedupeItems, isSoftDrop, isTopCritic } = require('./_lib/sources');
 const { fetchDygnet, dygnetBonus } = require('./_lib/dygnet');
 const { FRESH_MS, snapshotKey, readSnapshot, writeSnapshot } = require('./_lib/news_snapshot');
