@@ -1,4 +1,4 @@
-const { enrich, compareEditorial, ageDays, priceCompany } = require('./editorial');
+const { enrich, compareEditorial, ageDays, priceCompany } = require('./editorial_boost');
 
 const SV_MIN = 4;
 // Minikvoter (kärnkategorier, svenska) får bara fyllas med färska kort; äldre än MAX_AGE_DAYS filtreras bort när det finns nog färska.
