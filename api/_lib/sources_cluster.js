@@ -18,7 +18,10 @@ function distinctNumbers(title) {
 }
 
 function eventKey(title) {
-  const t = String(title || '').toLowerCase();
+  // Alias: Hon Hai = Foxconn så samma intäktsnyhet klustras.
+  const t = String(title || '')
+    .toLowerCase()
+    .replace(/\bhon\s*hai\b/g, 'foxconn');
   const g = GLOBAL_KINDS.find(([, test]) => test(t));
   if (g) return `any:${g[0]}`;
   const ent = EVENT_ENTITIES.find(([, re]) => re.test(t));
