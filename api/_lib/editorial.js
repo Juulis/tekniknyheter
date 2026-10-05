@@ -153,7 +153,7 @@ const SPECULATION =
 const SOFT_SPECULATION =
   /\b(could|might|may|what if|predict\w*|speculat\w*|rumou?rs?|reportedly|allegedly)\b|\bkan bli\b|\benligt uppgift\b|\bryktas\b|\bspekulera/i;
 const SOFT_SPECULATION_PENALTY = 40;
-// Åldersavdrag i trappa (timmar): >48 h -15, >72 h -60, >96 h -90, så att färska kort alltid rankar före gamla (äldre än 7 dygn filtreras bort i sources.js när det finns färskare).
+// Åldersavdrag i trappa (timmar): >48 h -15, >72 h -60, >96 h -90, så att färska kort alltid rankar före gamla (äldre än 7 dygn filtreras bort i sources.js när färskare finns).
 const AGE_STEPS = [[96, 90], [72, 60], [48, 15]];
 
 function agePenalty(item) {
@@ -208,7 +208,7 @@ const LOW_VALUE_PENALTY = 70;
 
 /** Geopolitik: konkreta beslut väger upp, åsikts-/debatttexter väger ned. */
 const GEO_DECISION = /\b(signed|signs|passes|passed|approves|approved|bans?|banned|fines?d?|ruling|ruled|export controls?|executive order|takes? effect|enacts?|enacted|tariffs?|blocks?)\b/i;
-const GEO_DEBATE = /\b(opinion|op-ed|editorial|why|should|weigh in|weighs in|needs?|debate|must|argues?|commentary|column)\b|^\s*['\u2018\u201c\"]|\?\s*$/i;
+const GEO_DEBATE = /\b(opinion|op-ed|editorial|why|should|weigh in|weighs in|needs?|debate|must|argues?|commentary|column|pro\/con|let'?s|calls? for|urges?|demands?|perspective|viewpoint|guest)\b|^\s*['\u2018\u201c\"]|\?\s*$/i;
 const GEO_DECISION_BONUS = 10;
 const GEO_DEBATE_PENALTY = 25;
 
@@ -310,7 +310,7 @@ function detectTags(item) {
   return [...tags];
 }
 
-/** Starka entiteter (vinner över svägare ämnen); vid flera träffar vinner den som står först i titeln. */
+/** Starka entiteter (vinner över svagare ämnen); vid flera träffar vinner den som står först i titeln. */
 const STRONG_TOPICS = new Set(['spacex', 'neuralink', 'nvidia', 'jensen', 'xai', 'tesla', 'elon', 'aiact']);
 const WEAK_ORDER = ['ev', 'ai', 'geopolitics'];
 const AI_ACT_RE = /(?<!\b(?:let|lets|to|can|will|would)\s)\bai act\b|export controls?|chip (ban|export)|\bEU\b.{0,40}\bai\b.{0,30}(regulat|polic|law)|\bai (regulation|legislation|laws?|rules)\b|regulat\w* (of )?(frontier )?ai\b/i;
