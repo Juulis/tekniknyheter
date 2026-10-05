@@ -1,5 +1,33 @@
 [
   {
+    "date": "2026-10-05",
+    "title": "Teslas Robotaxi-app går nu att ladda ner i Sverige",
+    "summary": "Teslas Robotaxi-app finns nu i App Store i Sverige och flera andra europeiska länder. Själva resorna körs än så länge bara i amerikanska städer som Austin och Dallas.",
+    "sourceUrl": "https://apps.apple.com/se/app/tesla-robotaxi/id6744257048",
+    "category": "Tesla"
+  },
+  {
+    "date": "2026-10-05",
+    "title": "Nvidias partner Foxconn ökade intäkterna med 47 procent",
+    "summary": "Foxconn ökade intäkterna med 47 procent i tredje kvartalet till 3,03 biljoner taiwanesiska dollar, över förväntningarna. September blev bolagets bästa månad någonsin, driven av AI-efterfrågan.",
+    "sourceUrl": "https://www.thestar.com.my/tech/tech-news/2026/10/05/foxconn-third-quarter-revenue-jumps-47-yy-beats-market-forecast",
+    "category": "NVIDIA"
+  },
+  {
+    "date": "2026-10-05",
+    "title": "Neuralink uppger nytt rekord: 11,32 bitar per sekund",
+    "summary": "Neuralink uppger ett rekord på 11,32 bitar per sekund i tankestyrd markörkontroll, med en modell tränad på över 50 000 timmar hjärndata. För vissa deltagare räcker nu kalibrering en gång i veckan.",
+    "sourceUrl": "https://interestingengineering.com/innovation/neuralink-brain-chip-cursor-control",
+    "category": "Neuralink"
+  },
+  {
+    "date": "2026-10-05",
+    "title": "Trumpadministrationen väntas ge Vistra kärnkraftslån på runt 4 miljarder dollar",
+    "summary": "USA väntas presentera ett lån på cirka 4 miljarder dollar till Vistra för att öka effekten i tre kärnkraftverk, när AI-datacenter kräver mer el. Trump vill fyrdubbla USA:s kärnkraft till 2050.",
+    "sourceUrl": "https://www.mining.com/web/us-to-lend-4-2-billion-to-vistra-to-boost-nuclear-power-output-source-says/",
+    "category": "Teknik"
+  },
+  {
     "date": "2026-10-04",
     "title": "Frankrike: cirka 5 000 gripna när skolprotesterna sprider sig",
     "summary": "Över 5 000 personer, mestadels tonåringar, har gripits när elevprotester mot överfulla klassrum, lärarbrist och slitna skolbyggnader spridit sig över Frankrike. Inrikesministern uppger att 1 747 greps under fredagen.",
