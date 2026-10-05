@@ -104,7 +104,7 @@ function renderList() {
   }
   if (!items.length) {
     const qLabel = state.query.trim() ? `«${escapeHtml(state.query.trim())}»` : 'filtret';
-    listEl.innerHTML = `<div class="empty" role="status">Inga träffar för ${qLabel}.</div>';
+    listEl.innerHTML = '<div class="empty" role="status">Inga träffar för ' + qLabel + '.</div>';
     return;
   }
 
