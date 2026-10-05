@@ -48,7 +48,11 @@ function parseRssItems(xml, feedLabel, feedLang) {
   for (const block of blocks) {
     const rawTitle = tagValue(block, 'title');
     // Egna svenska flöden har ingen "Titel - Utgivare"-form (Google News har det): dela bara Google-titlar.
-    const { title, publisher } = feedLang ? { title: stripHtml(rawTitle), publisher: '' } : splitTitleAndPublisher(rawTitle);
+    let { title, publisher } = feedLang ? { title: stripHtml(rawTitle), publisher: '' } : splitTitleAndPublisher(rawTitle);
+    // "… av Investing.com" i rubriken är utgivare, inte nyhetstext.
+    title = String(title || '')
+      .replace(/\s+av\s+[A-Za-z0-9][\w .]{1,40}\.(?:com|se|org|net)\s*$/i, '')
+      .trim();
     const link = stripHtml(tagValue(block, 'link'));
     const rawDescription = tagValue(block, 'description');
     // RSS-beskrivning, annars content:encoded (om flödet har den).
