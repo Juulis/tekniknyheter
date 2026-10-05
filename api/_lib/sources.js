@@ -1,5 +1,5 @@
 const crypto = require('crypto');
-const { enrich, matchesEditorialFocus, compareEditorial, ageDays } = require('./editorial');
+const { enrich, matchesEditorialFocus, compareEditorial, ageDays, priceCompany } = require('./editorial');
 const { fillSummaries, summaryStats, SPAM_RE } = require('./summaries');
 
 const FEEDS = [
@@ -674,6 +674,18 @@ async function loadPool(now, force) {
   return pool;
 }
 
+// Kursnyheter: de två bästa per bolag (nvidia/tesla/spacex) behåller sin poäng, övriga får priceCapped (-40 i enrich).
+const MAX_PRICE_PER_COMPANY = 2;
+function capPriceCards(sorted) {
+  const seen = {};
+  return sorted.map((it) => {
+    const co = it.priceNews || priceCompany(it);
+    if (!co) return it;
+    seen[co] = (seen[co] || 0) + 1;
+    return seen[co] > MAX_PRICE_PER_COMPANY ? enrich({ ...it, priceCapped: true }) : it;
+  });
+}
+
 async function fetchLiveArticles({ force = false, positiveOnly = false } = {}) {
   const now = Date.now();
   const key = `${cacheKey}${positiveOnly ? '_only' : ''}`;
@@ -688,6 +700,10 @@ async function fetchLiveArticles({ force = false, positiveOnly = false } = {}) {
   // Åldersfilter: äldre än 7 dygn bort om det finns minst 40 färska, annars fylls det upp med de nyaste av de äldre.
   const fresh = candidates.filter((i) => ageDays(i) <= MAX_AGE_DAYS);
   candidates = fresh.length >= 40 ? fresh : [...fresh, ...candidates.filter((i) => ageDays(i) > MAX_AGE_DAYS).sort((a, b) => new Date(b.publishedAt) - new Date(a.publishedAt))];
+  // Lågvärdiga poster och överskjutande kursnyheter sorteras bort så länge det finns minst 40 andra.
+  candidates = capPriceCards(candidates).sort(compareEditorial);
+  const useful = candidates.filter((i) => !i.lowValue && !i.priceCapped);
+  if (useful.length >= 40) candidates = useful;
   if (positiveOnly) candidates = candidates.filter((i) => i.sentiment === 'positive');
   const top = diversify(candidates, 40, 0.25, 2, positiveOnly ? 1 : 0.65);
   try {
