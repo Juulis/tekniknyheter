@@ -54,7 +54,14 @@ function toRelated(it) {
   return { source: it.source, url: it.url, title: it.title, originalUrl: it.originalUrl || it.url, summary: it.summary || undefined, imageUrl: it.imageUrl || undefined };
 }
 
-const byScore = (a, b) => (b.priorityScore || 0) - (a.priorityScore || 0) || new Date(b.publishedAt) - new Date(a.publishedAt);
+// Dygnet (sv) vinner som primärkort när samma händelse finns på EN live.
+const byScore = (a, b) => {
+  const dyg = (b.dygnet ? 1 : 0) - (a.dygnet ? 1 : 0);
+  if (dyg) return dyg;
+  const sv = (b.lang === 'sv' ? 1 : 0) - (a.lang === 'sv' ? 1 : 0);
+  if (sv) return sv;
+  return (b.priorityScore || 0) - (a.priorityScore || 0) || new Date(b.publishedAt) - new Date(a.publishedAt);
+};
 
 /**
  * Slår ihop dubbletter och nära-dubbletter till kluster: en primär nyhet (högst priorityScore) plus
@@ -82,7 +89,17 @@ function dedupeItems(items) {
     const cand = { item: h.item, tokens: titleTokens(h.item.title), extras: h.extras };
     const into = kept.find((k) => sameStory(cand, k));
     if (into) {
-      into.extras.push(toRelated(h.item), ...h.extras);
+      const preferCand =
+        (cand.item.dygnet && !into.item.dygnet) ||
+        (cand.item.lang === 'sv' && into.item.lang !== 'sv' && !into.item.dygnet);
+      if (preferCand) {
+        into.extras.unshift(toRelated(into.item));
+        into.extras.push(...h.extras);
+        into.item = cand.item;
+        into.tokens = cand.tokens;
+      } else {
+        into.extras.push(toRelated(h.item), ...h.extras);
+      }
     } else {
       kept.push(cand);
     }
