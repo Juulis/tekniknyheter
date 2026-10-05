@@ -19,6 +19,25 @@ async function shareItem(item) {
   }
 }
 
+// Kategori-platshållare för kort utan bild: färg och ikon per kategori (fast 16/9-yta, inget layout-hopp).
+const CAT_LOOK = {
+  Tesla: ['#e82127', '\u26a1'],
+  Elbilar: ['#e82127', '\ud83d\udd0b'],
+  NVIDIA: ['#76b900', '\ud83d\udda5\ufe0f'],
+  AI: ['#7c5cff', '\ud83e\udd16'],
+  xAI: ['#7c5cff', '\ud83e\udd16'],
+  SpaceX: ['#2a7fc1', '\ud83d\ude80'],
+  Neuralink: ['#00c2a8', '\ud83e\udde0'],
+  Geopolitik: ['#d4a017', '\u2696\ufe0f'],
+  'Elon Musk': ['#ff6b3d', '\u2728'],
+  Politik: ['#8a6bd1', '\ud83c\udfdb\ufe0f'],
+  Teknik: ['#6ea8ff', '\ud83d\udca1'],
+};
+
+function catLook(cat) {
+  return CAT_LOOK[cat] || ['#6ea8ff', '\ud83d\udcf0'];
+}
+
 function cardHtml(item, index) {
   const featured = index === 0 && state.category === 'Alla' && !state.query.trim() ? ' featured' : '';
   const cat = item.category || 'Teknik';
@@ -42,7 +61,7 @@ function cardHtml(item, index) {
     : escapeHtml(item.title);
   const media = item.imageUrl
     ? `<div class="card-media" aria-hidden="true"><img src="${escapeAttr(item.imageUrl)}" alt="" width="640" height="360" loading="lazy" decoding="async" referrerpolicy="no-referrer" /></div>`
-    : `<div class="card-media placeholder" data-cat="${escapeAttr(cat)}" aria-hidden="true"><span class="ph-label">${escapeHtml(cat)}</span></div>`;
+    : `<div class="card-media placeholder" data-cat="${escapeAttr(cat)}" style="--ph:${catLook(cat)[0]}" aria-hidden="true"><span class="ph-label">${catLook(cat)[1]} ${escapeHtml(cat)}</span></div>`;
 
   return `
         <article class="card${featured} has-image" lang="${lang}">
@@ -161,11 +180,47 @@ function clearFilters() {
   applyFiltersAndRender();
 }
 
+// Senast lyckade svar sparas lokalt (bara standardvyn, första ~40 korten, max ~200 kB) och visas direkt vid nästa laddning.
+const SAVED_KEY = 'tn-news-v20260913m';
+const SAVED_MAX_CHARS = 200000;
+const SAVED_MAX_AGE_MS = 12 * 60 * 60 * 1000;
+
+function readSaved() {
+  try {
+    const o = JSON.parse(localStorage.getItem(SAVED_KEY) || 'null');
+    if (!o || !Array.isArray(o.items) || !o.items.length || Date.now() - o.t > SAVED_MAX_AGE_MS) return null;
+    return o.items;
+  } catch (_) {
+    return null;
+  }
+}
+
+function writeSaved(items) {
+  try {
+    let list = items.slice(0, 40);
+    let text = JSON.stringify({ t: Date.now(), items: list });
+    while (text.length > SAVED_MAX_CHARS && list.length > 5) {
+      list = list.slice(0, list.length - 5);
+      text = JSON.stringify({ t: Date.now(), items: list });
+    }
+    if (text.length <= SAVED_MAX_CHARS) localStorage.setItem(SAVED_KEY, text);
+  } catch (_) {
+    /* lagring är bara en bonus */
+  }
+}
+
 async function loadNews({ force = false } = {}) {
   const base = (window.TEKNIKNYHETER_CONFIG && window.TEKNIKNYHETER_CONFIG.apiBaseUrl) || '';
-  setStatus('loading', 'Hämtar nyheter…');
   refreshBtn.disabled = true;
-  renderSkeleton();
+  // Sparad data renderas direkt i standardvyn; skelettet visas bara om inget finns att visa.
+  const saved = !force && !state.onlyTop ? readSaved() : null;
+  if (saved) {
+    setItems(saved);
+    setStatus('loading', 'Visar sparade nyheter · uppdaterar…');
+  } else {
+    setStatus('loading', 'Hämtar nyheter…');
+    if (state.onlyTop || !state.allItems.length) renderSkeleton();
+  }
 
   try {
     const qs = new URLSearchParams({ editorial: '1', positive: state.onlyTop ? 'only' : '1', sort: 'priority' });
@@ -175,12 +230,24 @@ async function loadNews({ force = false } = {}) {
     });
     if (!res.ok) throw new Error(`API svarade ${res.status}`);
     const data = await res.json();
-    setItems(Array.isArray(data.items) ? data.items : []);
+    const items = Array.isArray(data.items) ? data.items : [];
+    if (saved || (state.allItems.length && !state.onlyTop)) {
+      // Tyst byte: behåll hur många kort som visas.
+      state.allItems = items;
+      applyFiltersAndRender();
+    } else {
+      setItems(items);
+    }
+    if (!state.onlyTop && items.length) writeSaved(items);
     setStatus('live', 'Live · redaktionell prio');
   } catch (err) {
     console.warn(err);
-    setItems(EDITORIAL_FALLBACK);
-    setStatus('fallback', 'Visar lokal exempeldata');
+    if (saved || (force && state.allItems.length && !state.onlyTop)) {
+      setStatus('fallback', 'Visar tidigare hämtade nyheter');
+    } else {
+      setItems(EDITORIAL_FALLBACK);
+      setStatus('fallback', 'Visar lokal exempeldata');
+    }
   } finally {
     refreshBtn.disabled = false;
   }
@@ -222,10 +289,11 @@ listEl.addEventListener(
     const cat = (chip && chip.getAttribute('data-category')) || 'Teknik';
     media.classList.add('placeholder');
     media.setAttribute('data-cat', cat);
+    media.style.setProperty('--ph', catLook(cat)[0]);
     media.innerHTML = '';
     const label = document.createElement('span');
     label.className = 'ph-label';
-    label.textContent = cat;
+    label.textContent = `${catLook(cat)[1]} ${cat}`;
     media.appendChild(label);
   },
   true
