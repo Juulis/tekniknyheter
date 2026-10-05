@@ -1,0 +1,23 @@
+name: Värm upp API
+
+# Anropar det publika /api/news var 10:e minut så att Vercels edge och funktionen är varma.
+# Hobby-planen tillåter bara dagliga crons på Vercel, därför körs uppvärmningen härifrån. Inga secrets behövs.
+# Obs: GitHub kan försena schemalagda körningar och stänger av dem efter 60 dagars inaktivitet i repot.
+
+on:
+  schedule:
+    - cron: '*/10 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  warm:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Anropa /api/news (standardvy och toppnyheter)
+        run: |
+          curl -sS --max-time 40 -o /dev/null -w "standard: %{http_code} %{time_total}s\n" "https://tekniknyheter.vercel.app/api/news?editorial=1&positive=1&sort=priority" || echo "standard: misslyckades"
+          curl -sS --max-time 40 -o /dev/null -w "toppnyheter: %{http_code} %{time_total}s\n" "https://tekniknyheter.vercel.app/api/news?editorial=1&positive=only&sort=priority" || echo "toppnyheter: misslyckades"
