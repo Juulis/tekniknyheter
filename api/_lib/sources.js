@@ -290,6 +290,7 @@ async function fetchFeed(feed) {
 const JACCARD_THRESHOLD = 0.5;
 // Lägre tröskel gäller bara klustring (aldrig för att tappa en nyhet) och kräver samma kategori, minst tre gemensamma ord och en gemensam nyckelentitet.
 const CLUSTER_THRESHOLD = 0.3;
+const LOOSE_THRESHOLD = 0.15;
 const MAX_RELATED = 3;
 const KEY_ENTITY_RE =
   /\b(tesla|cybertruck|optimus|nvidia|nvda|jensen|huang|musk|spacex|starship|starlink|grok|xai|openai|anthropic|neuralink|maduro|trump|google|alphabet|amd|intel|tsmc|waymo|rivian|byd|ford|gm|shield|polestar|honda|storedot|norway|denmark|uk|europe|canada|iss|lockheed|boeing)\b/gi;
@@ -337,8 +338,23 @@ const EVENT_KINDS = [
   ['ai-launch', (t) => /\blaunch(es|ed)?\b/.test(t) && /google/.test(t) && /(satellite|chips?|orbit|data cent)/.test(t)],
 ];
 
+// Händelser som nämner flera bolag/personer: nyckeln gäller oavsett entitet.
+const GLOBAL_KINDS = [
+  ['si-rebrand', (t) => /(spacex|musk|grok).{0,80}(rebrand|name change|rename)|(rebrand|rename).{0,60}(spacex|musk)|spacexsi|\bsi\b.{0,25}\bai\b|\bai\b.{0,30}\bsi\b|(spacex|musk).{0,60}super ?intelligence|super ?intelligence.{0,60}(spacex|musk)/.test(t)],
+  ['altucher-experts', (t) => /altucher/.test(t)],
+  ['launches-13h', (t) => /\b13 hours\b/.test(t) && /launch|rockets?/.test(t)],
+];
+
+// Distinkta tal ("50,000 hours", "13 hours"): samma tal i två rubriker är en stark same-story-signal.
+function distinctNumbers(title) {
+  const m = String(title || '').toLowerCase().match(/\d[\d.,]*\s?(?:hours?|minutes?|days?|gigawatts?|gw|mw|kw|billion|million|trillion)?/g) || [];
+  return new Set(m.map((x) => x.replace(/\s+/g, '')).filter((x) => !/^(19|20)\d\d$/.test(x) && (x.length >= 4 || /[a-z]$/.test(x))));
+}
+
 function eventKey(title) {
   const t = String(title || '').toLowerCase();
+  const g = GLOBAL_KINDS.find(([, test]) => test(t));
+  if (g) return `any:${g[0]}`;
   const ent = EVENT_ENTITIES.find(([, re]) => re.test(t));
   if (!ent) return '';
   const kind = EVENT_KINDS.find(([, test]) => test(t));
@@ -350,14 +366,18 @@ function sameStory(cand, kept) {
   if (ka && ka === eventKey(kept.item.title)) return true;
   const j = jaccard(cand.tokens, kept.tokens);
   if (j >= JACCARD_THRESHOLD) return true;
-  if (j < CLUSTER_THRESHOLD) return false;
+  if (j < LOOSE_THRESHOLD) return false;
   if ((cand.item.category || '') !== (kept.item.category || '')) return false;
   const opposite =
     (cand.item.sentiment === 'positive' && kept.item.sentiment === 'negative') ||
     (cand.item.sentiment === 'negative' && kept.item.sentiment === 'positive');
   if (opposite) return false;
-  if (sharedCount(cand.tokens, kept.tokens) < 3) return false;
-  return sharedCount(keyEntities(cand.item.title), keyEntities(kept.item.title)) > 0;
+  const ents = sharedCount(keyEntities(cand.item.title), keyEntities(kept.item.title));
+  if (ents === 0) return false;
+  // Försiktig breddning: J >= 0,15 men bara med samma distinkta tal (t.ex. "50,000 hours").
+  const sameNumber = sharedCount(distinctNumbers(cand.item.title), distinctNumbers(kept.item.title)) > 0;
+  if (j < CLUSTER_THRESHOLD) return sameNumber && sharedCount(cand.tokens, kept.tokens) >= 2;
+  return sharedCount(cand.tokens, kept.tokens) >= 3;
 }
 
 function toRelated(it) {
@@ -412,7 +432,8 @@ function dedupeItems(items) {
     const { alsoIn, ...rest } = item;
     // Reserv från samma story: summary/bild från ett alsoIn-kort (utgivarens RSS) om primärkortet saknar dem.
     const fb = extras.find((r) => r.summary);
-    if (!rest.summary && fb) {
+    // Tunn summary (<60 tecken) byts mot en längre från ett alsoIn-kort (utgivarens RSS).
+    if (fb && (!rest.summary || (rest.summary.length < 60 && fb.summary.length >= 60 && fb.summary.length > rest.summary.length + 15))) {
       rest.summary = fb.summary;
       rest.summarySource = 'related';
     }
