@@ -115,7 +115,11 @@ async function buildNewsPayload(url) {
   const stored = listNews().map(enrich);
   const useStored = !!liveError || liveItems.length < MIN_LIVE_ITEMS;
   const base = useStored ? dedupeItems(mergeItems(liveItems, stored)) : mergeItems(liveItems);
-  const all = [...base.filter((i) => !dygnetUrls.has(String(i.url || '').toLowerCase())), ...dygnet];
+  // Dygnet + live i samma dedupe så SV/EN-samma händelse blir ett kort (Dygnet prioriteras i cluster).
+  const all = dedupeItems([
+    ...base.filter((i) => !dygnetUrls.has(String(i.url || '').toLowerCase())),
+    ...dygnet,
+  ]);
   const filtered = filterItems(all, { q, category, tag, editorial, positive });
   const items = sortItems(filtered, sort).slice(0, 50);
 
