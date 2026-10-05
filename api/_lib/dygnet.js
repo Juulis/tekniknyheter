@@ -108,11 +108,12 @@ function parseDygnet(raw, now = new Date()) {
   return out.slice(0, MAX_POSTS);
 }
 
-/** Bonus: dagens Dygnet behåller stark boost; gårdagens (≥1) demotas under färska morgonnyheter. */
+/** Bonus: dagens Dygnet behåller stark boost. Gårdagens tech får aldrig minus; bara icke-tech demotas. */
 function dygnetBonus(item) {
   const tech = item.dygnetTech !== false;
   if (item.dygnetAge === 0) return tech ? 100 : 25;
-  if (item.dygnetAge >= 1) return tech ? -35 : -10;
+  // Ålderssteg −10 gäller bara Dygnet som inte är tech (t.ex. ren politik). Tech behåller 0.
+  if (item.dygnetAge >= 1) return tech ? 0 : -10;
   return 0;
 }
 
