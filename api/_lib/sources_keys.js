@@ -55,6 +55,10 @@ const EVENT_KINDS = [
 const GLOBAL_KINDS = [
   // Foxconn/Hon Hai-intäkter (och Nvidia-"key supplier"-vinkling av samma händelse).
   ['foxconn-sales', (t) => (/\bfoxconn\b|\bhon\s*hai\b/.test(t) && /intäk|sales|beats?|estimates|revenue|ökade|47\s*%|47\s*procent/.test(t)) || (/\bnvidia\b/.test(t) && /key supplier/.test(t) && /booming|celebrates/.test(t))],
+  // Samma händelse på SV/EN (Dygnet + live).
+  ['jensen-200b', (t) => /(jensen|huang).{0,50}(200\s*(b|billion|miljard)|förmögenhet)|200\s*(b|billion|miljard).{0,50}(jensen|huang|nvidia|förmögenhet)/.test(t)],
+  ['nvidia-ath', (t) => /\bnvidia\b|\bnvda\b/.test(t) && /(all[- ]time high|record (high|close)|stock record|rekordnivå|noterar rekord|stock briefly tops|key level)/.test(t)],
+  ['tesla-q-deliveries', (t) => /\btesla\b/.test(t) && /(deliver(y|ies)|levererade|486\s*532|third quarter|tredje kvartalet|\bq3\b)/.test(t)],
   ['si-rebrand', (t) => /(spacex|musk|grok).{0,80}(rebrand|name change|rename)|(rebrand|rename).{0,60}(spacex|musk)|spacexsi|\bsi\b.{0,25}\bai\b|\bai\b.{0,30}\bsi\b|(spacex|musk).{0,60}super ?intelligence|super ?intelligence.{0,60}(spacex|musk)/.test(t)],
   ['altucher-experts', (t) => /altucher/.test(t)],
   ['launches-13h', (t) => /\b13 hours\b/.test(t) && /launch|rockets?/.test(t)],
