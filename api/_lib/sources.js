@@ -1,4 +1,4 @@
-const { enrich, matchesEditorialFocus, compareEditorial, ageDays } = require('./editorial');
+const { enrich, matchesEditorialFocus, compareEditorial, ageDays } = require('./editorial_boost');
 const { fillSummaries, summaryStats } = require('./summaries');
 const {
   FEEDS,
