@@ -66,14 +66,17 @@ function stableId(originalUrl) {
   return `rss-${crypto.createHash('sha1').update(String(originalUrl)).digest('hex').slice(0, 16)}`;
 }
 
-const SV_WORDS = /\b(och|att|är|på|för|med|som|inte|till|från|av|om|har|får|nya|ny|vid|kan|ska|blir|efter|men|mer|över|under|elbil|bilen|vill|sig|ett|den|det)\b/gi;
+const SV_WORDS = /\b(och|att|är|på|för|med|som|inte|till|från|om|har|får|nya|ny|vid|kan|ska|blir|efter|men|mer|över|under|elbil|elbilar|bilen|vill|sig|ett|den|det|procent|andelen|hittills|utökar|laddtjänst|laddning|högsta|näst|nästa)\b/gi;
+const SV_STRONG = /\b(procent|andelen|hittills|utökar|laddtjänst|elbilar|kärnkraft|rekordfart)\b/i;
 
 /** Enkel språkheuristik: svenska ord/tecken i rubriken, eller flödets språk för svenska källor. */
 function detectLang(title, feedLang) {
   if (feedLang === 'sv') return 'sv';
-  const words = (String(title || '').match(SV_WORDS) || []).length;
-  const accents = /[åäö]/i.test(title || '');
-  return words >= 2 || (accents && words >= 1) ? 'sv' : 'en';
+  const t = String(title || '');
+  const words = (t.match(SV_WORDS) || []).length;
+  const accents = /[åäö]/i.test(t);
+  if (accents || words >= 2 || SV_STRONG.test(t)) return 'sv';
+  return 'en';
 }
 
 
