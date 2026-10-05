@@ -57,7 +57,7 @@ function diversify(sorted, limit, maxShare = 0.25, minPer = 2, maxPositive = 1) 
 
 /** Brus att ranka bort/ned: BNPL/konsumentkredit, lokala laddare, hävstångs-ETF. */
 const SOFT_DROP_RE =
-  /\bbnpl\b|buy[- ]?now[- ]?pay[- ]?later|\bklarna\b|done\.ai|aspentimes|\bmoomoo\b|\bleveraged?\s+etf\b|\b3x\s+(bull|bear)\b|hävstångs?-?etf|2x\s+(bull|bear|long)|two\s+times\s+long|times\s+long\s+tesla|inverse\s+etf|local\s+(ev\s+)?charg|ev\s+charg(er|ing).{0,40}\b(aspen|town|county|city|municipal)\b|laddstation.{0,30}\b(kommun|stad|aspen)\b/i;
+  /\bbnpl\b|buy[- ]?now[- ]?pay[- ]?later|\bklarna\b|done\.ai|aspentimes|\bmoomoo\b|\bleveraged?\s+etf\b|\b3x\s+(bull|bear)\b|hävstångs?-?etf|2x\s+(bull|bear|long)|two\s+times\s+long|times\s+long\s+tesla|inverse\s+etf|local\s+(ev\s+)?charg|ev\s+charg(er|ing).{0,40}\b(aspen|town|county|city|municipal)\b|laddstation.{0,30}\b(kommun|stad|aspen)\b|ai.{0,50}gör bara.{0,25}(elon )?musk rikare|gör bara elon musk rikare|\bcollege sports?\b|\bncaa\b|collegesport|big win on college sports/i;
 
 /** Rubriker som är kritiska mot Musk/Tesla/NVIDIA – filtreras i toppnyheter (positive=only). */
 const TOP_CRITIC_RE =
