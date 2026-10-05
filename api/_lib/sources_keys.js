@@ -4,7 +4,7 @@ const CLUSTER_THRESHOLD = 0.3;
 const LOOSE_THRESHOLD = 0.15;
 const MAX_RELATED = 3;
 const KEY_ENTITY_RE =
-  /\b(tesla|cybertruck|optimus|nvidia|nvda|jensen|huang|musk|spacex|starship|starlink|grok|xai|openai|anthropic|neuralink|maduro|trump|google|alphabet|amd|intel|tsmc|waymo|rivian|byd|ford|gm|shield|polestar|honda|storedot|norway|denmark|uk|europe|canada|china|kina|spain|spanien|iss|lockheed|boeing)\b/gi;
+  /\b(tesla|cybertruck|optimus|nvidia|nvda|jensen|huang|musk|spacex|starship|starlink|grok|xai|openai|anthropic|neuralink|maduro|trump|google|alphabet|amd|intel|tsmc|waymo|rivian|byd|ford|gm|shield|polestar|honda|storedot|norway|denmark|uk|europe|canada|china|kina|spain|spanien|iss|lockheed|boeing|foxconn|hon\s*hai)\b/gi;
 
 function keyEntities(title) {
   return new Set((String(title || '').toLowerCase().match(KEY_ENTITY_RE) || []));
@@ -23,7 +23,8 @@ const EVENT_ENTITIES = [
   ['spacex', /\bspacex\b|\bstarship\b|\bstarlink\b/],
   ['neuralink', /\bneuralink\b/],
   ['grok', /\bgrok\b|\bxai\b/],
-  ['ev', /\bevs?\b|electric (vehicle|car)s?|\belbil/],
+  ['foxconn', /\bfoxconn\b|\bhon\s*hai\b/],
+  ['ev', /\bevs?\b|electric (vehicle|car)s?|\belbilar?\b/],
 ];
 const EVENT_KINDS = [
   ['uk-record', (t) => /\buk\b|britain|british/.test(t) && /record|surge|hit/.test(t) && /sales|registrations?/.test(t)],
@@ -41,7 +42,8 @@ const EVENT_KINDS = [
       (/\bsales\b/.test(t) && /beat|\btops?\b|topped|estimates|expectations|momentum|rebound/.test(t) && /\bq[1-4]\b|quarter|\bev sales\b|vehicle|stock|shares/.test(t)),
   ],
   ['stock-move', (t) => /\b(stock|shares)\b/.test(t) && /\b(jumps?|surges?|popped|pops|crosses|soars?|climbs?)\b/.test(t) && /launch|milestone|friday|key level|lockup|resistance/.test(t)],
-  ['europe-sales', (t) => /registrations?|\bsales\b|market share/.test(t) && /\b(europe|european|norway|france|spain|sweden|denmark|germany)\b/.test(t) && /\b(rise|rises|rose|growth|streak|recovery|breaks?|rebound|up|record|hit|surge|share)\b/.test(t)],
+  ['europe-sales', (t) => (/registrations?|\bsales\b|market share|försäljning|rekordår|elbilar/.test(t) && /\b(europe|european|europa|norway|france|spain|sweden|denmark|germany|tyskland)\b/.test(t) && /\b(rise|rises|rose|growth|streak|recovery|breaks?|rebound|up|record|hit|surge|share|rekord|billigare|pivotal|affordable)\b/.test(t))],
+  ['revenue', (t) => (/beats?|beat |ökade|intäkterna|sales estimates|revenue|estimates due/.test(t) && /sales|intäk|revenue|estimates|47\s*procent|47%/.test(t)) || (/key supplier/.test(t) && /booming ai|celebrates/.test(t))],
   ['driveaway', (t) => /supercharg/.test(t) && /drive[- ]?away|\bflee\b|flyktläge|plugged in|emergency|nödläge/.test(t)],
   ['venezuela', (t) => /maduro|venezuela/.test(t)],
   ['shield', (t) => /shield tv/.test(t)],
@@ -51,6 +53,8 @@ const EVENT_KINDS = [
 
 // Händelser som nämner flera bolag/personer: nyckeln gäller oavsett entitet.
 const GLOBAL_KINDS = [
+  // Foxconn/Hon Hai-intäkter (och Nvidia-"key supplier"-vinkling av samma händelse).
+  ['foxconn-sales', (t) => (/\bfoxconn\b|\bhon\s*hai\b/.test(t) && /intäk|sales|beats?|estimates|revenue|ökade|47\s*%|47\s*procent/.test(t)) || (/\bnvidia\b/.test(t) && /key supplier/.test(t) && /booming|celebrates/.test(t))],
   ['si-rebrand', (t) => /(spacex|musk|grok).{0,80}(rebrand|name change|rename)|(rebrand|rename).{0,60}(spacex|musk)|spacexsi|\bsi\b.{0,25}\bai\b|\bai\b.{0,30}\bsi\b|(spacex|musk).{0,60}super ?intelligence|super ?intelligence.{0,60}(spacex|musk)/.test(t)],
   ['altucher-experts', (t) => /altucher/.test(t)],
   ['launches-13h', (t) => /\b13 hours\b/.test(t) && /launch|rockets?/.test(t)],
