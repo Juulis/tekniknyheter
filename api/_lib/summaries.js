@@ -17,6 +17,8 @@ const MAX_PER_REFRESH = 40;
 const MAX_FAILS = 3;
 const BUDGET_MS = 6500;
 const MAX_BYTES = 450 * 1024;
+// Saknas bild i <head> läser vi vidare (samma request) till så här många byte och letar första stora <img>.
+const IMG_SCAN_BYTES = 150 * 1024;
 const MAX_LEN = 240;
 const BROWSER_UA =
   'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36';
@@ -124,6 +126,26 @@ function ldImage(html) {
   return '';
 }
 
+/** Reservbild ur sidans HTML: <link rel="image_src">, annars första stora <img> (ej ikon/logga/spårpixel/avatar/svg/gif). */
+function linkOrImgImage(html) {
+  const link = html.match(/<link\b[^>]*rel=["']image_src["'][^>]*>/i);
+  const href = link && link[0].match(/href=["']([^"']+)["']/i);
+  if (href) return decodeEntities(href[1]);
+  const tags = html.match(/<img\b[^>]*>/gi) || [];
+  for (const tag of tags.slice(0, 40)) {
+    const m = tag.match(/\s(?:data-src|src)=["']([^"']+)["']/i);
+    if (!m) continue;
+    const src = decodeEntities(m[1]);
+    if (/^data:|\.(svg|gif)(\?|$)|icon|logo|sprite|avatar|pixel|badge|banner-ad|placeholder|blank/i.test(src)) continue;
+    if (!/\.(jpe?g|png|webp)(\?|$)/i.test(src) && !/\/(images?|media|uploads?|photos?)\//i.test(src)) continue;
+    const w = tag.match(/\swidth=["']?(\d+)/i);
+    const h = tag.match(/\sheight=["']?(\d+)/i);
+    if ((w && Number(w[1]) < 300) || (h && Number(h[1]) < 160)) continue;
+    return src;
+  }
+  return '';
+}
+
 /** og:image (eller twitter:image) som absolut https-URL; relativa URL:er löses mot sidans adress, http och data: förkastas. */
 function extractImage(html, baseUrl) {
   const raw =
@@ -131,7 +153,8 @@ function extractImage(html, baseUrl) {
     metaContent(html, 'property', 'og:image') ||
     metaContent(html, 'name', 'twitter:image') ||
     metaContent(html, 'name', 'twitter:image:src') ||
-    ldImage(html);
+    ldImage(html) ||
+    linkOrImgImage(html);
   if (!raw) return '';
   try {
     const u = new URL(raw, baseUrl);
@@ -248,7 +271,7 @@ function httpGetHead(url, redirects = 3) {
         stream.on('data', (chunk) => {
           bytes += chunk.length;
           html += dec.decode(chunk, { stream: true });
-          if (bytes > MAX_BYTES || (descriptionComplete(html) && extractDescription(html) && (extractImage(html, url) || /<\/head>/i.test(html)))) done();
+          if (bytes > MAX_BYTES || (descriptionComplete(html) && extractDescription(html) && (extractImage(html, url) || bytes > IMG_SCAN_BYTES))) done();
         });
         stream.on('end', done);
         stream.on('error', done);
@@ -429,10 +452,16 @@ async function fillSummaries(items, { top = 40 } = {}) {
 function titleTeaser(title) {
   const str = String(title || '');
   // Fallback: del efter ett bindeord (amid/after/while/despite ...), rubrikens egna ord.
-  const m = str.match(/^.{3,}?(?::\s+|\s[\u2013\u2014-]\s|\s\|\s)(.+)$/) || str.match(/^.{12,}?\s(?:amid|after|while|despite|following|by)\s(.+)$/i);
+  const m =
+    str.match(/^.{3,}?(?::\s+|\s[\u2013\u2014-]\s|\s\|\s)(.+)$/) ||
+    str.match(/^.{12,}?\s(?:amid|after|while|despite|following|by)\s(.+)$/i) ||
+    // "as" bara när det följs av stor bokstav ("... as Earnings Season ..."), inte "as expected".
+    str.match(/^.{12,}?\sas\s([A-Z].+)$/) ||
+    // Komma följt av blanksteg (inte "$4,999"): delen efter kommat om den är en egen mening.
+    str.match(/^.{12,}?,\s+(.+)$/);
   if (!m) return '';
   const t = m[1].trim().replace(/^\S/, (c) => c.toUpperCase());
-  return t.length >= 25 && t.length <= MAX_LEN ? t : '';
+  return t.length >= 20 && t.length <= MAX_LEN ? t : '';
 }
 
 function summaryStats() {
