@@ -1,6 +1,6 @@
 const { listNews } = require('./_lib/store');
 const { enrich, compareEditorial, matchesEditorialFocus, PRIORITY_TOPICS } = require('./_lib/editorial');
-const { fetchLiveArticles, resolveStats, summaryStats, dedupeItems } = require('./_lib/sources');
+const { fetchLiveArticles, resolveStats, summaryStats, dedupeItems, isSoftDrop, isTopCritic } = require('./_lib/sources');
 const { fetchDygnet, dygnetBonus } = require('./_lib/dygnet');
 
 // Lagrade/seed-nyheter blandas bara in när live-RSS ger färre än så här många nyheter (eller misslyckas).
@@ -30,8 +30,10 @@ function filterItems(items, { q, category, tag, editorial, positive }) {
       }
       // positive=1 (standard) = "positiv lutning": styr bara rankningen (positiva först, neutrala OK, negativa sist).
       // positive=only är strikt: returnerar enbart items med sentiment === 'positive'.
+      if (!item.dygnet && isSoftDrop(item)) return false;
       if (positive === 'only' && !item.dygnet) {
         if (item.sentiment !== 'positive') return false;
+        if (isTopCritic(item)) return false;
       }
       if (cat && cat.toLowerCase() !== 'alla' && item.category.toLowerCase() !== cat.toLowerCase()) {
         return false;
