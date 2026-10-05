@@ -118,6 +118,11 @@ module.exports = async function handler(req, res) {
   const filtered = filterItems(all, { q, category, tag, editorial, positive });
   const items = sortItems(filtered, sort).slice(0, 50);
 
+  // Vercels edge cachar svaret i 5 min och serverar gammalt svar direkt i upp till en timme medan det förnyas.
+  // refresh=1 och misslyckade live-hämtningar cachas aldrig.
+  const noStore = url.searchParams.get('refresh') === '1' || !!liveError || (live && !liveItems.length);
+  res.setHeader('Cache-Control', noStore ? 'no-store' : 'public, s-maxage=300, stale-while-revalidate=3600');
+
   return res.status(200).json({
     items,
     total: all.length,
