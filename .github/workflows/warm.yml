@@ -4,6 +4,7 @@ name: Värm upp API
 # Hobby-planen tillåter bara dagliga crons på Vercel, därför körs uppvärmningen härifrån. Inga secrets behövs.
 # Obs: GitHub kan försena schemalagda körningar och stänger av dem efter 60 dagars inaktivitet i repot.
 # Cron offset från heltimme (5,15,…) minskar risken att körningen stryks vid hög last. URL:erna måste matcha frontend.
+# Schema omregistrerat 2026-10-05 (trivial kommentar) så att schedule aktiveras på main.
 
 on:
   schedule:
