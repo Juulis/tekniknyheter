@@ -108,11 +108,11 @@ function parseDygnet(raw, now = new Date()) {
   return out.slice(0, MAX_POSTS);
 }
 
-/** Bonus på prioritetspoängen: tekniskt ämne dagens +100 / gårdagens +70, övriga +25 / +15; äldre får vanlig rankning. */
+/** Bonus: dagens Dygnet behåller stark boost; gårdagens (≥1) sänkt så färska morgonnyheter går före. */
 function dygnetBonus(item) {
   const tech = item.dygnetTech !== false;
   if (item.dygnetAge === 0) return tech ? 100 : 25;
-  if (item.dygnetAge === 1) return tech ? 70 : 15;
+  if (item.dygnetAge === 1) return tech ? 22 : 6;
   return 0;
 }
 
