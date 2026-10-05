@@ -1,6 +1,6 @@
 /** Ephemeral in-memory store for the shell. Replace with durable storage later. */
 
-const { enrich, compareEditorial } = require('./editorial');
+const { enrich, compareEditorial } = require('./editorial_boost');
 
 function hoursAgo(hours) {
   return new Date(Date.now() - hours * 60 * 60 * 1000).toISOString();
