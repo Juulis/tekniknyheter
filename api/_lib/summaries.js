@@ -105,6 +105,12 @@ async function fillSummaries(items, { top = 40 } = {}) {
 
   const wanted = items.slice(0, top);
   // En sidhämtning ger både beskrivning och bild: hämta för kort som saknar något av dem (cache per id, MAX_FAILS försök).
+  const imgPriority = (it) => {
+    const t = String(it.title || '').toLowerCase();
+    if (/german registrations?|switzerland|jaguar type|nvidia.{0,20}stock|stock.{0,20}nvidia|key level/.test(t)) return 0;
+    if (/tesla|nvidia|foxconn|hon hai/.test(t)) return 1;
+    return 2;
+  };
   const todo = wanted
     .filter((it) => {
       if (!it.url || isGoogleUrl(it.url) || skipSummaryFetch(it.url) || (st.fails.get(it.id) || 0) >= MAX_FAILS) return false;
@@ -112,6 +118,7 @@ async function fillSummaries(items, { top = 40 } = {}) {
       const needImg = !it.imageUrl && !st.imgs.has(it.id);
       return needSum || needImg;
     })
+    .sort((a, b) => imgPriority(a) - imgPriority(b) || (!a.imageUrl) - (!b.imageUrl))
     .slice(0, MAX_PER_REFRESH);
 
   const started = Date.now();
