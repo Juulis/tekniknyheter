@@ -130,7 +130,7 @@
       "boss": "spinnmodern"
     }
   ],
-  "monsters_note": "Stats för fiender utanför portalbyn. Odöda stats finns i portal_by.json. Skada efter försvar enligt skademodellen.",
+  "monsters_note": "Stats för fiender utanför portalbyn. Odöda stats finns i portal_by.json. Skada efter försvar enligt skademodellen. Stats gäller vid ref_level och skalas enligt monster_niva.json.",
   "monsters": [
     {
       "id": "skogsvarg",
@@ -147,7 +147,8 @@
       "aggro_range": 10,
       "xp": 10,
       "ai": "Demons nuvarande varg: vandrar, jagar inom 10, biter.",
-      "note": "Matchar spawnWolf i game.js."
+      "note": "Matchar spawnWolf i game.js.",
+      "ref_level": 1
     },
     {
       "id": "skuggvarg",
@@ -163,7 +164,8 @@
       "attack_cd": 1.0,
       "aggro_range": 12,
       "xp": 18,
-      "ai": "Flockledare, flankerar, ylar och kallar närliggande vargar."
+      "ai": "Flockledare, flankerar, ylar och kallar närliggande vargar.",
+      "ref_level": 3
     },
     {
       "id": "taggsvin",
@@ -179,7 +181,8 @@
       "attack_cd": 2.5,
       "aggro_range": 10,
       "xp": 20,
-      "ai": "Laddar rakt fram i fart 7 efter 1 s varning, kan undvikas."
+      "ai": "Laddar rakt fram i fart 7 efter 1 s varning, kan undvikas.",
+      "ref_level": 3
     },
     {
       "id": "ruttbjorn",
@@ -195,7 +198,8 @@
       "attack_cd": 2.0,
       "aggro_range": 8,
       "xp": 60,
-      "ai": "Långsam, slår omkull, rasar under 30 % HP."
+      "ai": "Långsam, slår omkull, rasar under 30 % HP.",
+      "ref_level": 3
     },
     {
       "id": "grabjornen_ulvhild",
@@ -212,7 +216,8 @@
       "aggro_range": 10,
       "xp": 550,
       "ai": "Boss: tre faser, kallar vargar, laddning, ras.",
-      "boss": true
+      "boss": true,
+      "ref_level": 3
     },
     {
       "id": "dimgast",
@@ -229,7 +234,8 @@
       "aggro_range": 10,
       "xp": 22,
       "ai": "Svävar genom hinder, blir osynlig 2 s efter träff.",
-      "dark_magic": true
+      "dark_magic": true,
+      "ref_level": 5
     },
     {
       "id": "trasknacken",
@@ -246,7 +252,8 @@
       "aggro_range": 10,
       "xp": 40,
       "ai": "Drar spelaren mot sig från vatten, räckvidd 6.",
-      "dark_magic": true
+      "dark_magic": true,
+      "ref_level": 5
     },
     {
       "id": "klagokvinna",
@@ -263,7 +270,8 @@
       "aggro_range": 10,
       "xp": 35,
       "ai": "Skrik i radie 6 sänker spelarens uthållighetsregen 50 % i 4 s.",
-      "dark_magic": true
+      "dark_magic": true,
+      "ref_level": 5
     },
     {
       "id": "trasdrottningen",
@@ -281,7 +289,8 @@
       "xp": 700,
       "ai": "Boss.",
       "boss": true,
-      "dark_magic": true
+      "dark_magic": true,
+      "ref_level": 5
     },
     {
       "id": "gruvspindel",
@@ -297,7 +306,8 @@
       "attack_cd": 0.8,
       "aggro_range": 10,
       "xp": 16,
-      "ai": "Hoppar från tak, flock 3 till 5."
+      "ai": "Hoppar från tak, flock 3 till 5.",
+      "ref_level": 6
     },
     {
       "id": "syrabagge",
@@ -313,7 +323,8 @@
       "attack_cd": 2.2,
       "aggro_range": 10,
       "xp": 30,
-      "ai": "Spottar syra som sänker försvar 3 i 5 s."
+      "ai": "Spottar syra som sänker försvar 3 i 5 s.",
+      "ref_level": 6
     },
     {
       "id": "kitinvakt",
@@ -329,7 +340,8 @@
       "attack_cd": 1.8,
       "aggro_range": 10,
       "xp": 55,
-      "ai": "Pansar, svag bakifrån (dubbel skada)."
+      "ai": "Pansar, svag bakifrån (dubbel skada).",
+      "ref_level": 6
     },
     {
       "id": "spinnmodern",
@@ -346,7 +358,8 @@
       "aggro_range": 10,
       "xp": 800,
       "ai": "Boss.",
-      "boss": true
+      "boss": true,
+      "ref_level": 6
     },
     {
       "id": "askimp",
@@ -363,7 +376,8 @@
       "aggro_range": 10,
       "xp": 24,
       "ai": "Kastar glöd från avstånd, flyr i närstrid.",
-      "dark_magic": true
+      "dark_magic": true,
+      "ref_level": 8
     },
     {
       "id": "hornslaktare",
@@ -379,7 +393,8 @@
       "attack_cd": 1.6,
       "aggro_range": 10,
       "xp": 70,
-      "ai": "Närstrid, svepande yxa, laddar."
+      "ai": "Närstrid, svepande yxa, laddar.",
+      "ref_level": 8
     },
     {
       "id": "eldpiska_demon",
@@ -396,7 +411,8 @@
       "aggro_range": 10,
       "xp": 65,
       "ai": "Piska räckvidd 5, drar spelaren.",
-      "dark_magic": true
+      "dark_magic": true,
+      "ref_level": 8
     },
     {
       "id": "askfursten_morvath",
@@ -414,7 +430,8 @@
       "xp": 1200,
       "ai": "Slutboss för första akten.",
       "boss": true,
-      "dark_magic": true
+      "dark_magic": true,
+      "ref_level": 8
     },
     {
       "id": "smittbarare",
@@ -430,7 +447,8 @@
       "attack_cd": 1.0,
       "aggro_range": 10,
       "xp": 20,
-      "ai": "Exploderar vid död, giftmoln radie 3."
+      "ai": "Exploderar vid död, giftmoln radie 3.",
+      "ref_level": 7
     },
     {
       "id": "kottklump",
@@ -446,7 +464,8 @@
       "attack_cd": 2.0,
       "aggro_range": 10,
       "xp": 50,
-      "ai": "Delar sig i två små vid död."
+      "ai": "Delar sig i två små vid död.",
+      "ref_level": 7
     },
     {
       "id": "galen_munk",
@@ -462,7 +481,8 @@
       "attack_cd": 1.2,
       "aggro_range": 10,
       "xp": 30,
-      "ai": "Oförutsägbar, byter mål."
+      "ai": "Oförutsägbar, byter mål.",
+      "ref_level": 7
     },
     {
       "id": "fadern_av_smittan",
@@ -479,7 +499,8 @@
       "aggro_range": 10,
       "xp": 650,
       "ai": "Boss, ej placerad ännu.",
-      "boss": true
+      "boss": true,
+      "ref_level": 7
     }
   ]
 }

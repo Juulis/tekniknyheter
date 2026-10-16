@@ -14,7 +14,9 @@
       "note": "Magi låses upp senare i kampanjen (t.ex. via runorna). Ingen klass har magi från start."
     },
     "growth_note": "Ersätter generell tillväxt i portal_by.json: per klass nedan.",
-    "crit_multiplier": 1.75
+    "crit_multiplier": 1.75,
+    "max_level": 30,
+    "xp_curve_ref": "monster_niva.json hero_xp_curve"
   },
   "classes": [
     {
@@ -266,57 +268,5 @@
       ]
     }
   ],
-  "items": [
-    {
-      "id": "jaktspjut",
-      "type": "weapon",
-      "damage_type": "stick",
-      "attack_bonus": 2,
-      "range": 2.6
-    },
-    {
-      "id": "kastspjut",
-      "type": "ammo",
-      "damage_type": "stick",
-      "stack": 10
-    },
-    {
-      "id": "tvahands_klubba",
-      "type": "weapon",
-      "damage_type": "kross",
-      "attack_bonus": 4,
-      "attack_speed_mult": 0.85
-    },
-    {
-      "id": "langsvard",
-      "type": "weapon",
-      "damage_type": "hugg",
-      "attack_bonus": 3
-    },
-    {
-      "id": "skold_ek",
-      "type": "armor",
-      "slot": "offhand",
-      "defense": 2
-    },
-    {
-      "id": "palsvast",
-      "type": "armor",
-      "slot": "body",
-      "defense": 1,
-      "max_hp_bonus": 10
-    },
-    {
-      "id": "laderharnesk",
-      "type": "armor",
-      "slot": "body",
-      "defense": 1
-    },
-    {
-      "id": "ringbrynja",
-      "type": "armor",
-      "slot": "body",
-      "defense": 3
-    }
-  ]
+  "items_ref": "foremal_bas.json (start_gear id:n finns där)"
 }
