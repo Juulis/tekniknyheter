@@ -1,297 +1,658 @@
+// Runornas kall – vertikal skiva. Modeller byggs i MODELS/LOOKS och kan bytas mot GLB senare.
 import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { GLB } from './assets.js';
 
-const renderer = new THREE.WebGLRenderer({ antialias: true });
-renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
-renderer.setSize(innerWidth, innerHeight);
-renderer.shadowMap.enabled = true;
-renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-document.body.prepend(renderer.domElement);
-
-const scene = new THREE.Scene();
-const FOG = 0x8a9aa8;
-scene.background = new THREE.Color(FOG);
-scene.fog = new THREE.FogExp2(FOG, 0.028);
-const camera = new THREE.PerspectiveCamera(60, innerWidth / innerHeight, 0.1, 200);
-
-scene.add(new THREE.HemisphereLight(0xcfe0ff, 0x3a4a3a, 0.9));
-const sun = new THREE.DirectionalLight(0xfff1dd, 1.2);
-sun.position.set(20, 30, 10); sun.castShadow = true;
-sun.shadow.mapSize.set(1024, 1024);
-Object.assign(sun.shadow.camera, { left: -30, right: 30, top: 30, bottom: -30, near: 1, far: 80 });
-scene.add(sun, sun.target);
-
-// toon gradient
-const g = new Uint8Array([90, 160, 255]);
-const grad = new THREE.DataTexture(g, 3, 1, THREE.RedFormat); grad.needsUpdate = true;
-const toon = (c, o = {}) => new THREE.MeshToonMaterial({ color: c, gradientMap: grad, ...o });
-
-const WORLD = 45;
-const ground = new THREE.Mesh(new THREE.CircleGeometry(WORLD + 20, 48), toon(0x4d6b45));
-ground.rotation.x = -Math.PI / 2; ground.receiveShadow = true; scene.add(ground);
-
-// seeded random
-let seed = 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
-const colliders = [], trees = [];
-const treeMats = [toon(0x2f5a3c), toon(0x3a6b46), toon(0x274d35)];
-const trunkMat = toon(0x5a3f2a), rockMat = toon(0x8a8f96, { flatShading: true });
-const coneGeo = new THREE.ConeGeometry(1, 1.6, 7), trunkGeo = new THREE.CylinderGeometry(0.15, 0.2, 1, 6);
-const runePos = [[14, -10], [-16, -6], [4, 20]];
-const free = (x, z, r) => Math.hypot(x, z) > 12 && runePos.every(([a, b]) => Math.hypot(x - a, z - b) > 4) && colliders.every(c => Math.hypot(x - c.x, z - c.z) > c.r + r);
-
-function tree(x, z) {
-  const s = 0.8 + rnd() * 0.9, t = new THREE.Group();
-  const tr = new THREE.Mesh(trunkGeo, trunkMat); tr.position.y = 0.5; tr.castShadow = true; t.add(tr);
-  const m = treeMats[(rnd() * 3) | 0].clone(), tm = trunkMat.clone(); m.transparent = tm.transparent = true; tr.material = tm;
-  for (let i = 0; i < 3; i++) {
-    const c = new THREE.Mesh(coneGeo, m); const k = 1.3 - i * 0.3;
-    c.scale.set(k, 1, k); c.position.y = 1.4 + i * 0.9; c.castShadow = true; t.add(c);
-  }
-  t.scale.setScalar(s); t.position.set(x, 0, z); t.rotation.y = rnd() * 6; scene.add(t);
-  colliders.push({ x, z, r: 0.45 * s }); trees.push({ g: t, mats: [m, tm] });
-}
-function rock(x, z) {
-  const s = 0.5 + rnd() * 1.1;
-  const geo = rnd() > 0.5 ? new THREE.DodecahedronGeometry(s, 0) : new THREE.IcosahedronGeometry(s, 0);
-  const r = new THREE.Mesh(geo, rockMat); r.position.set(x, s * 0.4, z); r.rotation.set(rnd() * 3, rnd() * 3, 0);
-  r.castShadow = r.receiveShadow = true; scene.add(r); colliders.push({ x, z, r: s * 0.9 });
-}
-for (let n = 0; n < 120;) { const a = rnd() * 6.283, d = Math.sqrt(rnd()) * (WORLD + 12), x = Math.cos(a) * d, z = Math.sin(a) * d; if (free(x, z, 1)) { tree(x, z); n++; } }
-for (let n = 0; n < 35;) { const a = rnd() * 6.283, d = Math.sqrt(rnd()) * WORLD, x = Math.cos(a) * d, z = Math.sin(a) * d; if (free(x, z, 1.2)) { rock(x, z); n++; } }
-
-// rune stones
-const runes = runePos.map(([x, z]) => {
-  const grp = new THREE.Group(); grp.position.set(x, 0, z);
-  const stone = new THREE.Mesh(new THREE.BoxGeometry(1.1, 2.4, 0.5), toon(0x6f747c, { flatShading: true }));
-  stone.position.y = 1.2; stone.rotation.z = 0.05; stone.castShadow = true; grp.add(stone);
-  const runeMat = new THREE.MeshStandardMaterial({ color: 0x223344, emissive: 0x000000 });
-  for (let i = 0; i < 3; i++) {
-    const r = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.45, 0.05), runeMat);
-    r.position.set(0, 0.7 + i * 0.6, 0.27); r.rotation.z = (i - 1) * 0.5; grp.add(r);
-    const r2 = r.clone(); r2.position.z = -0.27; grp.add(r2);
-  }
-  const light = new THREE.PointLight(0x55aaff, 0, 9); light.position.y = 2; grp.add(light);
-  const pg = new THREE.BufferGeometry(); const pp = new Float32Array(40 * 3);
-  pg.setAttribute('position', new THREE.BufferAttribute(pp, 3));
-  const parts = new THREE.Points(pg, new THREE.PointsMaterial({ color: 0x88ccff, size: 0.15, transparent: true, opacity: 0, depthWrite: false }));
-  grp.add(parts); scene.add(grp);
-  colliders.push({ x, z, r: 0.8 });
-  return { x, z, grp, runeMat, light, parts, pp, active: false, t: 0 };
-});
-
-// hero
-const hero = new THREE.Group(); scene.add(hero);
-const skin = toon(0xf0c8a0), tunic = toon(0x3e5f8a), pants = toon(0x4a3a2a), cape = toon(0x8a2a2a, { side: THREE.DoubleSide });
-const box = (w, h, d, m, x, y, z, p = hero) => { const b = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m); b.position.set(x, y, z); b.castShadow = true; p.add(b); return b; };
-box(0.7, 0.8, 0.4, tunic, 0, 1.2, 0);
-const head = new THREE.Mesh(new THREE.IcosahedronGeometry(0.28, 1), skin); head.position.y = 1.85; head.castShadow = true; hero.add(head);
-box(0.62, 0.15, 0.62, toon(0x6b4a2b), 0, 2.05, 0);
-const limb = (x, y, w, h, m) => { const p = new THREE.Group(); p.position.set(x, y, 0); hero.add(p); box(w, h, w, m, 0, -h / 2, 0, p); return p; };
-const armL = limb(-0.45, 1.55, 0.2, 0.7, tunic), armR = limb(0.45, 1.55, 0.2, 0.7, tunic);
-const legL = limb(-0.17, 0.8, 0.24, 0.8, pants), legR = limb(0.17, 0.8, 0.24, 0.8, pants);
-const sword = box(0.08, 0.9, 0.04, toon(0xcfd8e0), 0, -0.9, 0.15, armR); sword.rotation.x = Math.PI / 2;
-box(0.25, 0.06, 0.06, toon(0x8a6a2a), 0, -0.68, 0.0, armR);
-const capeM = new THREE.Mesh(new THREE.PlaneGeometry(0.7, 1.2), cape); capeM.position.set(0, 1.0, -0.23); capeM.castShadow = true;
-const capePivot = new THREE.Group(); capePivot.position.set(0, 1.6, -0.22); capeM.position.set(0, -0.6, 0); capePivot.add(capeM); hero.add(capePivot);
-
-// state
-const S = { hp: 100, mana: 100, count: 0, playing: false, won: false };
-const keys = {}; let yaw = 0, pitch = 0.7, walkT = 0;
-const joy = { x: 0, y: 0 };
+const [CLS, FAM, PB, SPAWN] = await Promise.all(['klasser', 'monsterfamiljer', 'portal_by', 'spawnzoner'].map(n => fetch(`data/${n}.json`).then(r => r.json())));
+const FAMS = Object.fromEntries(FAM.families.map(f => [f.id, f]));
+const ITEMS = Object.fromEntries(PB.items.map(i => [i.id, i]));
+const RAR = Object.fromEntries(PB.rarities.map(r => [r.id, r]));
+const NAMES = { liten_halsodryck: 'Liten hälsodryck', stor_halsodryck: 'Stor hälsodryck', uthallighetsdryck: 'Uthållighetsdryck', benflisa: 'Benflisa', rostig_kortsvard: 'Rostigt kortsvärd', jarnyxa: 'Järnyxa', runsmidd_klinga: 'Runsmidd klinga', gravvaktarens_hillebard: 'Gravväktarens hillebard', benkungens_lie: 'Benkungens lie', laderharnesk: 'Läderharnesk', ringbrynja: 'Ringbrynja', benhjalm: 'Benhjälm', runskold: 'Runsköld', gravvaktarens_pansar: 'Gravväktarens pansar', benkungens_krona: 'Benkungens krona' };
+const P = { bg: 0x0d0f12, fog: 0x1c2128, stone: 0x3a3f45, grass: 0x3d4430, peat: 0x3b2f26, rust: 0x6e3b24, bone: 0xa8b0a0, gast: 0x4a6a7a, blood: 0x7a1018, portal: 0xc0182a, glow: 0xff3344, torch: 0xe08a2a, hope: 0xf2c46b };
 const $ = id => document.getElementById(id);
+const rand = (a, b) => a + Math.random() * (b - a), randi = (a, b) => Math.floor(rand(a, b + 1)), roll = r => randi(r[0], r[1]);
+const TOUCH = matchMedia('(pointer:coarse)').matches;
 
-function reset() {
-  S.hp = 100; S.mana = 100; S.count = 0; S.won = false; S.playing = true;
-  hero.position.set(0, 0, 0); hero.rotation.y = 0; yaw = 0; pitch = 0.7;
-  monsters.forEach(m => scene.remove(m.g)); monsters.length = 0; spawnPack(4);
-  $('lose').classList.add('hidden');
-  runes.forEach(r => { r.active = false; r.runeMat.emissive.setHex(0); r.light.intensity = 0; r.parts.material.opacity = 0; });
-  $('win').classList.add('hidden'); $('hud').classList.remove('hidden');
-}
-$('startBtn').onclick = () => { $('start').classList.add('hidden'); reset(); };
-$('againBtn').onclick = reset; $('retryBtn').onclick = reset;
+// ---------- renderer / ljus enligt stilguide ----------
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2)); renderer.setSize(innerWidth, innerHeight);
+renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.15; renderer.outputColorSpace = THREE.SRGBColorSpace;
+document.body.prepend(renderer.domElement);
+const scene = new THREE.Scene();
+scene.fog = new THREE.Fog(0x141a17, 10, 42);
+const camera = new THREE.PerspectiveCamera(55, innerWidth / innerHeight, 0.1, 200);
+scene.add(new THREE.HemisphereLight(0x5a6890, 0x2a2018, 2.2));
+const moon = new THREE.DirectionalLight(0x8fa6d6, 2.4); moon.castShadow = true; moon.shadow.mapSize.set(2048, 2048);
+Object.assign(moon.shadow.camera, { left: -30, right: 30, top: 30, bottom: -30, near: 1, far: 120 }); scene.add(moon, moon.target);
+const lantern = new THREE.PointLight(P.torch, 6, 12, 1.2); scene.add(lantern);
+const skyMat = new THREE.ShaderMaterial({ side: THREE.BackSide, depthWrite: false, fog: false, uniforms: { h: { value: new THREE.Color(0x141a17) }, t: { value: new THREE.Color(P.bg) } },
+  vertexShader: 'varying vec3 p; void main(){ p = normalize(position); gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }',
+  fragmentShader: 'uniform vec3 h; uniform vec3 t; varying vec3 p; void main(){ float k = smoothstep(-0.05, 0.5, p.y); vec3 c = mix(h, t, k) + vec3(0.06,0.02,0.03)*(1.0-abs(p.y*3.0-0.3)); gl_FragColor = vec4(c,1.0); }' });
+const sky = new THREE.Mesh(new THREE.SphereGeometry(150, 24, 12), skyMat); scene.add(sky);
+const grad = new THREE.DataTexture(new Uint8Array([60, 140, 255]), 3, 1, THREE.RedFormat);
+grad.minFilter = grad.magFilter = THREE.NearestFilter; grad.needsUpdate = true;
+const toon = (c, o = {}) => new THREE.MeshToonMaterial({ color: c, gradientMap: grad, ...o });
+const box = (w, h, d, m, x, y, z, p) => { const b = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m); b.position.set(x, y, z); b.castShadow = true; p.add(b); return b; };
+const outlineMat = new THREE.MeshBasicMaterial({ color: 0x050608, side: THREE.BackSide });
+function outline(g) { const ms = []; g.traverse(o => { if (o.isMesh && !o.userData.noOutline) ms.push(o); }); for (const m of ms) { const o = new THREE.Mesh(m.geometry, outlineMat); o.scale.setScalar(1.08); o.userData.noOutline = true; m.add(o); } }
 
-let msgT;
-function flash(t) { const m = $('msg'); m.textContent = t; m.classList.remove('hidden'); clearTimeout(msgT); msgT = setTimeout(() => m.classList.add('hidden'), 1800); }
-
-const COST = 20;
-function nearRune() { return runes.find(r => !r.active && Math.hypot(r.x - hero.position.x, r.z - hero.position.z) < 2.6); }
-function activate(r = nearRune()) {
-  if (!S.playing || !r || r.active) return false;
-  if (S.mana < COST) { flash('För lite mana…'); return false; }
-  S.mana -= COST; r.active = true; S.count++;
-  r.runeMat.emissive.setHex(0x3399ff); r.runeMat.emissiveIntensity = 2;
-  flash(`Runan vaknar! (${S.count}/3)`);
-  if (S.count >= 3) { S.won = true; S.playing = false; setTimeout(() => $('win').classList.remove('hidden'), 900); }
-  return true;
+// ---------- Kenney GLB (CC0), inbäddade som base64 ----------
+const TPL = {};
+await Promise.all(Object.entries(GLB).map(([n, b64]) => new Promise(res => {
+  const bin = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+  new GLTFLoader().parse(bin.buffer, '', g => { TPL[n] = g.scene; res(); }, () => res());
+})));
+const matCache = {};
+function place(parent, name, x, z, size, rot = 0, color = P.stone) {
+  const t = TPL[name]; if (!t) return null;
+  const o = t.clone(true); const bb = new THREE.Box3().setFromObject(o), s = bb.getSize(new THREE.Vector3());
+  const k = size / Math.max(s.x, s.z); o.scale.setScalar(k); o.position.set(x, -bb.min.y * k, z); o.rotation.y = rot;
+  const m = matCache[color] ||= toon(color);
+  o.traverse(c => { if (c.isMesh) { c.material = m; c.castShadow = c.receiveShadow = true; } });
+  parent.add(o); return o;
 }
 
-// ---------- combat ----------
-function collide(p, rad) {
-  for (const k of colliders) { const ox = p.x - k.x, oz = p.z - k.z, d = Math.hypot(ox, oz), m = k.r + rad; if (d < m && d > 0) { p.x = k.x + ox / d * m; p.z = k.z + oz / d * m; } }
-  const d = Math.hypot(p.x, p.z); if (d > WORLD) { p.x *= WORLD / d; p.z *= WORLD / d; }
+// ---------- spelläge ----------
+const S = { cls: null, level: 1, xp: 0, gold: 0, hp: 100, st: 100, stDelay: 0, stage: 0, runes: 0, playing: false, god: false, inv: [], equip: {}, city: 'besatt' };
+let stats = {};
+const need = n => Math.round(100 * Math.pow(n, 1.5));
+function recalc() {
+  const c = S.cls, b = c.base, g = c.growth, L = S.level - 1; let atk = 0, def = 0, hp = 0, st = 0, stm = 1;
+  for (const it of Object.values(S.equip)) if (it) { atk += it.attack_bonus || 0; def += it.defense || 0; hp += it.max_hp_bonus || 0; st += it.max_stamina_bonus || 0; stm *= it.stamina_regen_mult || 1; }
+  stats = { maxHp: b.hp + g.hp * L + hp, maxSt: b.stamina + g.stamina * L + st, damage: b.damage + g.damage * L + atk, defense: b.defense + g.defense * L + def, speed: b.speed,
+    crit: b.crit_chance + g.crit_chance * L, regen: CLS.meta.resource.regen_per_s * stm, type: S.equip.weapon?.damage_type || c.main_damage_type, lifesteal: S.equip.weapon?.lifesteal || 0,
+    reach: c.id === 'amazonkrigare' ? 2.6 : 2.2 };
+  S.hp = Math.min(S.hp, stats.maxHp); S.st = Math.min(S.st, stats.maxSt);
 }
-const monsters = [], sparks = [], dmgs = [];
-const sparkGeo = new THREE.BoxGeometry(0.08, 0.08, 0.08), sparkMat = new THREE.MeshBasicMaterial({ color: 0xffdd66 });
-function spawnWolf(x, z) {
-  const g = new THREE.Group(), body = new THREE.Group(); g.add(body);
-  const mats = [toon(0x6a6e78), toon(0x3e424a)]; mats.forEach(m => m.transparent = true);
-  box(0.5, 0.45, 1.1, mats[0], 0, 0.75, 0, body);
-  box(0.42, 0.4, 0.45, mats[0], 0, 0.98, 0.7, body);
-  box(0.22, 0.18, 0.32, mats[1], 0, 0.9, 1.05, body);
-  box(0.1, 0.18, 0.08, mats[1], -0.13, 1.25, 0.62, body); box(0.1, 0.18, 0.08, mats[1], 0.13, 1.25, 0.62, body);
-  const tail = box(0.12, 0.12, 0.55, mats[1], 0, 0.9, -0.75, body); tail.rotation.x = 0.5;
-  const eye = new THREE.MeshBasicMaterial({ color: 0xffcc33 });
-  box(0.07, 0.05, 0.02, eye, -0.11, 1.03, 0.93, body); box(0.07, 0.05, 0.02, eye, 0.11, 1.03, 0.93, body);
-  const legs = [[-0.17, 0.38], [0.17, 0.38], [-0.17, -0.38], [0.17, -0.38]].map(([lx, lz]) => {
-    const p = new THREE.Group(); p.position.set(lx, 0.6, lz); body.add(p); box(0.14, 0.6, 0.14, mats[1], 0, -0.3, 0, p); return p; });
-  const c = document.createElement('canvas'); c.width = 64; c.height = 8;
-  const tex = new THREE.CanvasTexture(c);
-  const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, depthTest: false })); sp.scale.set(1.2, 0.15, 1); sp.position.y = 1.7; sp.renderOrder = 10; g.add(sp);
-  g.position.set(x, 0, z); scene.add(g);
-  const m = { g, body, legs, mats, c, tex, sp, hp: 50, max: 50, cd: 0, wt: 0, tx: x, tz: z, kb: new THREE.Vector3(), flash: 0, dead: 0, walk: 0 };
-  drawHp(m); monsters.push(m); return m;
+function spendSt(n) { if (S.st < n) { flash('För lite uthållighet…'); return false; } S.st -= n; S.stDelay = CLS.meta.resource.regen_delay_s; return true; }
+
+// ---------- hjälte ----------
+const HERO_LOOK = {
+  amazonkrigare: { tunic: P.rust, pants: P.peat, arms: 0xd8b090, cape: null, hat: 0x2a1c14, weapon: 'spear' },
+  barbar: { tunic: 0x5a4630, pants: P.peat, arms: 0xd8b090, cape: null, hat: 0x6e4a2a, weapon: 'club' },
+  riddare: { tunic: 0x7a8088, pants: 0x3a3f45, arms: 0x7a8088, cape: 0x46588a, hat: 0x8a9098, weapon: 'sword' }
+};
+const hero = new THREE.Group(); scene.add(hero);
+let H = {};
+function buildHero(id) {
+  hero.clear(); const L = HERO_LOOK[id], skin = toon(0xe0b890);
+  const torso = box(0.7, 0.8, 0.4, toon(L.tunic), 0, 1.2, 0, hero);
+  const head = new THREE.Mesh(new THREE.IcosahedronGeometry(0.28, 1), skin); head.position.y = 1.85; head.castShadow = true; hero.add(head);
+  box(0.6, 0.16, 0.6, toon(L.hat), 0, 2.06, -0.02, hero);
+  const limb = (x, y, w, h, m) => { const p = new THREE.Group(); p.position.set(x, y, 0); hero.add(p); box(w, h, w, m, 0, -h / 2, 0, p); return p; };
+  const armL = limb(-0.45, 1.55, 0.2, 0.7, toon(L.arms)), armR = limb(0.45, 1.55, 0.2, 0.7, toon(L.arms));
+  const legL = limb(-0.17, 0.8, 0.24, 0.8, toon(L.pants)), legR = limb(0.17, 0.8, 0.24, 0.8, toon(L.pants));
+  const wpn = new THREE.Group(); wpn.position.set(0, -0.68, 0.05); armR.add(wpn);
+  const metal = toon(0xc8ccd0), wood = toon(P.peat);
+  if (L.weapon === 'spear') { box(0.06, 0.06, 2.0, wood, 0, 0, 0.5, wpn); const tip = new THREE.Mesh(new THREE.ConeGeometry(0.08, 0.35, 5), metal); tip.rotation.x = Math.PI / 2; tip.position.z = 1.65; wpn.add(tip); }
+  if (L.weapon === 'club') { box(0.08, 0.08, 1.1, wood, 0, 0, 0.45, wpn); const h = new THREE.Mesh(new THREE.DodecahedronGeometry(0.22, 0), toon(0x4a3a2a)); h.position.z = 1.0; h.castShadow = true; wpn.add(h); }
+  if (L.weapon === 'sword') { box(0.06, 0.03, 0.95, metal, 0, 0, 0.6, wpn); box(0.3, 0.06, 0.06, toon(P.hope), 0, 0, 0.12, wpn);
+    const sh = box(0.08, 0.7, 0.55, toon(0x5a4630), 0, -0.3, 0.2, armL); box(0.1, 0.15, 0.15, metal, 0.03, 0, 0, sh); sh.position.set(-0.12, -0.35, 0.15); }
+  let capeP = null; if (L.cape) { capeP = new THREE.Group(); capeP.position.set(0, 1.6, -0.22); const c = new THREE.Mesh(new THREE.PlaneGeometry(0.7, 1.2), toon(L.cape, { side: THREE.DoubleSide })); c.position.y = -0.6; c.castShadow = true; capeP.add(c); hero.add(capeP); }
+  outline(hero);
+  H = { torso, armL, armR, legL, legR, capeP };
 }
-function drawHp(m) { const x = m.c.getContext('2d'); x.fillStyle = '#000b'; x.fillRect(0, 0, 64, 8); x.fillStyle = '#e33'; x.fillRect(1, 1, 62 * Math.max(0, m.hp) / m.max, 6); m.tex.needsUpdate = true; }
-function spawnPack(n) {
-  for (let i = 0; i < n;) { const a = Math.random() * 6.283, d = 18 + Math.random() * 22, x = Math.cos(a) * d, z = Math.sin(a) * d;
-    if (colliders.every(c => Math.hypot(x - c.x, z - c.z) > c.r + 1)) { spawnWolf(x, z); i++; } }
+
+// ---------- zoner ----------
+const zones = {}; let Z = null;
+function newZone(name) { return { name, g: new THREE.Group(), colliders: [], monsters: [], drops: [], fades: [], projectiles: [], fx: [] }; }
+function collide(p, rad, z = Z) {
+  for (const k of z.colliders) { if (k.off) continue; const ox = p.x - k.x, oz = p.z - k.z, d = Math.hypot(ox, oz), m = k.r + rad; if (d < m && d > 0) { p.x = k.x + ox / d * m; p.z = k.z + oz / d * m; } }
+  if (z.circle) { const d = Math.hypot(p.x, p.z); if (d > z.circle) { p.x *= z.circle / d; p.z *= z.circle / d; } }
+  if (z.rect) { const [a, b] = z.rect; p.x = THREE.MathUtils.clamp(p.x, a, b); p.z = THREE.MathUtils.clamp(p.z, a, b); }
 }
-function hurt(n) {
-  if (!S.playing) return; S.hp = Math.max(0, S.hp - n);
+let seed = 7; const srnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+function pine(z, x, y, s, palette) {
+  const t = new THREE.Group(), mats = [toon(palette[(srnd() * palette.length) | 0], { transparent: true }), toon(P.peat, { transparent: true })];
+  const tr = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.2, 1, 6), mats[1]); tr.position.y = 0.5; tr.castShadow = true; t.add(tr);
+  for (let i = 0; i < 3; i++) { const c = new THREE.Mesh(new THREE.ConeGeometry(1.3 - i * 0.3, 1.6, 7), mats[0]); c.position.y = 1.4 + i * 0.9; c.castShadow = true; t.add(c); }
+  t.scale.setScalar(s); t.position.set(x, 0, y); t.rotation.y = srnd() * 6; z.g.add(t); z.colliders.push({ x, z: y, r: 0.45 * s }); z.fades.push({ g: t, mats });
+}
+function rock(z, x, y, s) {
+  const r = new THREE.Mesh(srnd() > 0.5 ? new THREE.DodecahedronGeometry(s, 0) : new THREE.IcosahedronGeometry(s, 0), toon(0x4a5058));
+  r.position.set(x, s * 0.4, y); r.rotation.set(srnd() * 3, srnd() * 3, 0); r.castShadow = r.receiveShadow = true; z.g.add(r); z.colliders.push({ x, z: y, r: s * 0.9 });
+}
+function ground(z, size, color) { const g = new THREE.Mesh(new THREE.PlaneGeometry(size, size), toon(color)); g.rotation.x = -Math.PI / 2; g.receiveShadow = true; z.g.add(g); }
+function makeParticles(n, color, size = 0.15) {
+  const geo = new THREE.BufferGeometry(), pos = new Float32Array(n * 3); geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  const pts = new THREE.Points(geo, new THREE.PointsMaterial({ color, size, transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending })); return { pts, pos, n };
+}
+
+// ----- skogen (fiender kommer från spawnsystemet) -----
+const RUNE_POS = PB.meta.baseline_from_demo.rune_positions;
+function buildForest() {
+  seed = 7; const z = newZone('forest'); z.circle = 45; z.fog = [0x141a17, 10, 42]; z.entry = [0, 0];
+  ground(z, 160, P.grass);
+  const pal = [0x22362a, 0x2a4030, 0x1e3026];
+  const free = (x, y, r) => Math.hypot(x, y) > 12 && RUNE_POS.every(([a, b]) => Math.hypot(x - a, y - b) > 4) && z.colliders.every(c => Math.hypot(x - c.x, y - c.z) > c.r + r);
+  for (let n = 0; n < 120;) { const a = srnd() * 6.283, d = Math.sqrt(srnd()) * 57, x = Math.cos(a) * d, y = Math.sin(a) * d; if (free(x, y, 1)) { pine(z, x, y, 0.8 + srnd() * 0.9, pal); n++; } }
+  for (let n = 0; n < 35;) { const a = srnd() * 6.283, d = Math.sqrt(srnd()) * 45, x = Math.cos(a) * d, y = Math.sin(a) * d; if (free(x, y, 1.2)) { rock(z, x, y, 0.5 + srnd() * 1.1); n++; } }
+  z.runes = RUNE_POS.map(([x, y]) => {
+    const g = new THREE.Group(); g.position.set(x, 0, y);
+    const st = new THREE.Mesh(new THREE.BoxGeometry(1.1, 2.4, 0.5), toon(0x50565e)); st.position.y = 1.2; st.castShadow = true; g.add(st);
+    const runeMat = new THREE.MeshStandardMaterial({ color: 0x1a2228, emissive: 0 });
+    for (let i = 0; i < 3; i++) for (const s of [1, -1]) { const r = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.45, 0.05), runeMat); r.position.set(0, 0.7 + i * 0.6, 0.27 * s); r.rotation.z = (i - 1) * 0.5; g.add(r); }
+    const light = new THREE.PointLight(0x7fb8d8, 0, 9); light.position.y = 2; g.add(light);
+    const parts = makeParticles(40, 0x9fd0e8); g.add(parts.pts); z.g.add(g); z.colliders.push({ x, z: y, r: 0.8 });
+    return { x, z: y, runeMat, light, parts, active: false };
+  });
+  initSpawner(z, 'startskogen');
+  return z;
+}
+function makePortal(z, x, y, target, spawn) {
+  const g = new THREE.Group(); g.position.set(x, 0, y);
+  const mat = new THREE.MeshStandardMaterial({ color: P.portal, emissive: P.glow, emissiveIntensity: 1.5 });
+  const ring = new THREE.Mesh(new THREE.TorusGeometry(1.4, 0.16, 10, 32), mat); ring.position.y = 1.7; g.add(ring);
+  const disc = new THREE.Mesh(new THREE.CircleGeometry(1.3, 32), new THREE.MeshBasicMaterial({ color: P.portal, transparent: true, opacity: 0.35, side: THREE.DoubleSide, depthWrite: false })); disc.position.y = 1.7; g.add(disc);
+  const base = new THREE.Mesh(new THREE.RingGeometry(1.6, 2.1, 32), new THREE.MeshBasicMaterial({ color: P.glow, transparent: true, opacity: 0.5 })); base.rotation.x = -Math.PI / 2; base.position.y = 0.03; g.add(base);
+  const light = new THREE.PointLight(P.glow, PB.portal.light_intensity, 16); light.position.y = 1.8; g.add(light);
+  const parts = makeParticles(70, P.glow, 0.13); parts.pts.material.opacity = 0.9; g.add(parts.pts);
+  z.g.add(g); const p = { g, ring, disc, light, parts, mat, target, spawn, t: 0, x, z: y }; z.portals = (z.portals || []); z.portals.push(p); return p;
+}
+
+// ----- byn (32x32 rutor, 1 ruta = 2 enheter) -----
+const T = (tx, ty) => [(tx - 15.5) * 2, (ty - 15.5) * 2];
+const zoneRect = id => { const zz = PB.village.zones.find(q => q.id === id).tiles; const [x0, z0] = T(zz[0][0], zz[0][1]), [x1, z1] = T(zz[1][0], zz[1][1]); return [x0, z0, x1, z1]; };
+function house(z, x, y, w, d, rot, ruined) {
+  const g = new THREE.Group(); g.position.set(x, 0, y); g.rotation.y = rot; const mats = [toon(0x4a4e54, { transparent: true }), toon(P.peat, { transparent: true })];
+  const walls = new THREE.Mesh(new THREE.BoxGeometry(w, ruined ? 1.8 : 2.6, d), mats[0]); walls.position.y = ruined ? 0.9 : 1.3; walls.castShadow = walls.receiveShadow = true; g.add(walls);
+  box(0.9, 1.5, 0.05, toon(0x15100c), 0, 0.75, d / 2 + 0.01, g);
+  if (!ruined) { const roof = new THREE.Mesh(new THREE.CylinderGeometry(0.01, w * 0.62, 1.6, 4, 1), mats[1]); roof.rotation.y = Math.PI / 4; roof.scale.z = d / w; roof.position.y = 3.4; roof.castShadow = true; g.add(roof); }
+  else place(g, 'wall-broken', w / 2 + 0.6, 0, 1.6, 0.4, 0x4a4e54);
+  z.g.add(g); z.fades.push({ g, mats, house: true }); const r = Math.max(w, d) * 0.5; z.colliders.push({ x, z: y, r: r * 0.95 });
+  const ax = Math.cos(rot) * w * 0.3, az = -Math.sin(rot) * w * 0.3; z.colliders.push({ x: x + ax, z: y + az, r: r * 0.75 }, { x: x - ax, z: y - az, r: r * 0.75 });
+}
+function torch(z, x, y) {
+  const g = new THREE.Group(); g.position.set(x, 0, y); box(0.12, 1.6, 0.12, toon(P.peat), 0, 0.8, 0, g);
+  const f = new THREE.Mesh(new THREE.ConeGeometry(0.14, 0.35, 5), new THREE.MeshBasicMaterial({ color: P.torch })); f.position.y = 1.75; g.add(f);
+  const l = new THREE.PointLight(P.torch, 1.2, 12); l.position.y = 1.9; g.add(l); z.g.add(g); z.torches = z.torches || []; z.torches.push(l);
+}
+function buildVillage() {
+  seed = 99; const z = newZone('village'); z.rect = [-31, 31]; z.fog = [0x2a0e12, 6, 35];
+  ground(z, 70, 0x363c2c);
+  const road = toon(0x33373c); const r1 = new THREE.Mesh(new THREE.PlaneGeometry(4, 54), road); r1.rotation.x = -Math.PI / 2; r1.position.set(1, 0.01, 3); r1.receiveShadow = true; z.g.add(r1);
+  const r2 = new THREE.Mesh(new THREE.PlaneGeometry(50, 3), road); r2.rotation.x = -Math.PI / 2; r2.position.set(0, 0.012, 4); r2.receiveShadow = true; z.g.add(r2);
+  const pal = [0x1e2a24, 0x243028];
+  for (let i = 0; i < 64; i++) { const t = i / 64 * 4, side = Math.floor(t), f = t - side, c = -30 + f * 60, e = 32 + srnd() * 3; const [x, y] = [[c, -e], [e, c], [-c, e], [-e, -c]][side]; pine(z, x, y, 1 + srnd() * 0.6, pal); }
+  const [, gz] = T(16, 22);
+  for (let x = -21; x <= 23; x += 4) if (Math.abs(x - 1) > 3) { place(z.g, 'wall', x, gz, 4, 0, 0x4a4e54); for (let k = -1.5; k <= 1.5; k += 1.5) z.colliders.push({ x: x + k, z: gz, r: 0.9 }); }
+  place(z.g, 'tower-square-base', -2.5, gz, 2, 0, 0x50565e); place(z.g, 'tower-square-base', 4.5, gz, 2, 0, 0x50565e);
+  z.colliders.push({ x: -2.5, z: gz, r: 1.1 }, { x: 4.5, z: gz, r: 1.1 });
+  torch(z, -1, gz + 2); torch(z, 3, gz + 2);
+  for (const [tx, ty, ru] of [[4, 11, 0], [4, 17, 1], [4, 22, 0], [8, 19, 1], [27, 11, 1], [27, 16, 0], [27, 21, 0], [23, 18, 1]]) { const [x, y] = T(tx, ty); house(z, x, y, 4.6 + srnd(), 3.8 + srnd(), Math.PI / 2 * (tx < 16 ? 1 : -1), ru); }
+  for (const [tx, ty] of [[12, 15], [19, 15], [12, 20]]) { const [x, y] = T(tx, ty); place(z.g, 'stall', x, y, 2.6, srnd() * 6, P.peat); z.colliders.push({ x, z: y, r: 1.2 }); }
+  { const [x0, y] = T(16, 18), x = x0 + 4; const w = new THREE.Group(); w.position.set(x, 0, y); const ring = new THREE.Mesh(new THREE.CylinderGeometry(1, 1.1, 0.8, 10, 1, true), toon(0x50565e, { side: THREE.DoubleSide })); ring.position.y = 0.4; ring.castShadow = true; w.add(ring);
+    const water = new THREE.Mesh(new THREE.CircleGeometry(0.95, 10), toon(0x0a0c10)); water.rotation.x = -Math.PI / 2; water.position.y = 0.3; w.add(water);
+    box(0.12, 1.8, 0.12, toon(P.peat), -0.9, 0.9, 0, w); box(0.12, 1.8, 0.12, toon(P.peat), 0.9, 0.9, 0, w); const rf = new THREE.Mesh(new THREE.ConeGeometry(1.4, 0.7, 4), toon(P.peat)); rf.position.y = 2.1; rf.rotation.y = Math.PI / 4; rf.castShadow = true; w.add(rf);
+    z.g.add(w); z.colliders.push({ x, z: y, r: 1.2 }); }
+  const [kx0, kz0, kx1, kz1] = zoneRect('kyrkogarden');
+  for (let x = kx0 + 1; x < kx1; x += 2.6) for (let y = kz0 + 1; y < kz1; y += 3) { if (Math.abs(x - 1) < 3) continue; const n = ['gravestone-cross', 'gravestone-round', 'gravestone-broken'][(srnd() * 3) | 0];
+    place(z.g, n, x + srnd() * 0.6, y, 0.9, (srnd() - 0.5) * 0.5, 0x6a7078); const mound = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.2, 1.6), toon(P.peat)); mound.position.set(x, 0.1, y + 1); mound.receiveShadow = true; z.g.add(mound); z.colliders.push({ x, z: y + 0.5, r: 0.5 }); }
+  for (let x = kx0; x < kx1; x += 2.2) if (Math.abs(x - 1) > 3) place(z.g, 'fence-damaged', x, kz1 + 1.5, 2.2, 0, P.peat);
+  const [ax0, az0, ax1, az1] = zoneRect('benkungens_kapell'); z.arena = [ax0, az0, ax1, az1 + 2];
+  const af = new THREE.Mesh(new THREE.PlaneGeometry(ax1 - ax0 + 2, az1 - az0 + 2), toon(0x2e3236)); af.rotation.x = -Math.PI / 2; af.position.set((ax0 + ax1) / 2, 0.015, (az0 + az1) / 2); af.receiveShadow = true; z.g.add(af);
+  place(z.g, 'crypt', (ax0 + ax1) / 2, az0 - 1.5, 7, Math.PI, 0x4a4e54); z.colliders.push({ x: (ax0 + ax1) / 2, z: az0 - 2, r: 3 });
+  for (const [x, y] of [[ax0, az0], [ax1, az0], [ax0, az1], [ax1, az1]]) { place(z.g, 'tower-square-base', x, y, 1.6, 0, 0x50565e); z.colliders.push({ x, z: y, r: 0.9 }); }
+  torch(z, ax0 + 1.5, az1 + 1); torch(z, ax1 - 1.5, az1 + 1);
+  z.barrier = new THREE.Group(); const bm = toon(0x22262a);
+  for (let x = ax0 + 1; x < ax1; x += 0.6) { const b = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 2.4, 5), bm); b.position.set(x, 1.2, az1 + 1.5); b.castShadow = true; z.barrier.add(b); }
+  z.g.add(z.barrier); z.barrierCols = []; for (let x = ax0 + 1; x < ax1; x += 1) { const c = { x, z: az1 + 1.5, r: 0.6 }; z.colliders.push(c); z.barrierCols.push(c); }
+  for (let x = ax0 - 8; x < ax0; x += 1) z.colliders.push({ x, z: az1 + 1.5, r: 0.6 }); for (let x = ax1 + 1; x < ax1 + 9; x += 1) z.colliders.push({ x, z: az1 + 1.5, r: 0.6 });
+  for (let x = ax0 - 8; x < ax0 - 1; x += 2.2) place(z.g, 'fence-damaged', x, az1 + 1.5, 2.2, 0, P.peat); for (let x = ax1 + 2; x < ax1 + 9; x += 2.2) place(z.g, 'fence-damaged', x, az1 + 1.5, 2.2, 0, P.peat);
+  const [ex, ez] = T(...PB.portal.village_entry_tile); z.entry = [ex, ez - 3];
+  makePortal(z, ex, ez + 1, 'forest', [0, 4]);
+  initSpawner(z, 'gamla_byn');
+  return z;
+}
+
+// ---------- fiendedata: monsterfamiljer.json + detaljer från portal_by.json ----------
+const DEFS = {};
+for (const m of FAM.monsters) DEFS[m.id] = { attack_range: 1.8, ...m };
+for (const e of PB.enemies) DEFS[e.id] = { ...(DEFS[e.id] || {}), ...e };
+DEFS.benkungen_valdemar = { ...(DEFS.benkungen_valdemar || {}), ...PB.boss, damage: [18, 24], attack_cd: 1.4, attack_range: 2.6 };
+const MODELS = {
+  quad(color, o = {}) { // vargar, benhund, taggsvin
+    const s = o.scale || 1, g = new THREE.Group(), body = new THREE.Group(); body.scale.setScalar(s); g.add(body); const m = toon(color, { transparent: true }), d = toon(o.dark || 0x2a2218, { transparent: true }), mats = [m, d]; const w = o.thin ? 0.32 : o.stocky ? 0.7 : 0.5;
+    box(w, o.thin ? 0.3 : o.stocky ? 0.6 : 0.45, 1.1, m, 0, 0.75, 0, body); box(0.4, 0.38, 0.45, m, 0, 0.98, 0.7, body); box(0.22, 0.18, 0.32, d, 0, 0.9, 1.05, body);
+    if (o.stocky) { for (let i = 0; i < 9; i++) { const c = new THREE.Mesh(new THREE.ConeGeometry(0.07, 0.45, 4), d); c.position.set(rand(-0.25, 0.25), 1.15, rand(-0.45, 0.4)); c.rotation.set(rand(-0.5, 0.5), 0, rand(-0.5, 0.5)); body.add(c); }
+      for (const sx of [-0.14, 0.14]) { const tusk = new THREE.Mesh(new THREE.ConeGeometry(0.03, 0.2, 4), toon(P.bone)); tusk.position.set(sx, 0.86, 1.2); tusk.rotation.x = 1.2; body.add(tusk); } }
+    else { box(0.1, 0.18, 0.08, d, -0.13, 1.25, 0.62, body); box(0.1, 0.18, 0.08, d, 0.13, 1.25, 0.62, body); const tl = box(0.1, 0.1, 0.55, d, 0, 0.9, -0.75, body); tl.rotation.x = 0.5; }
+    const eye = new THREE.MeshBasicMaterial({ color: P.glow }); box(0.07, 0.05, 0.02, eye, -0.11, 1.03, 0.93, body); box(0.07, 0.05, 0.02, eye, 0.11, 1.03, 0.93, body);
+    const legs = [[-0.15, 0.38], [0.15, 0.38], [-0.15, -0.38], [0.15, -0.38]].map(([x, z]) => { const p = new THREE.Group(); p.position.set(x, 0.6, z); body.add(p); box(0.12, 0.6, 0.12, d, 0, -0.3, 0, p); return p; });
+    return { g, body, legs, arms: [], mats, h: 1.6 * s };
+  },
+  skeleton(o = {}) {
+    const s = o.scale || 1, g = new THREE.Group(), body = new THREE.Group(); body.scale.setScalar(s); g.add(body); const m = toon(o.color || P.bone, { transparent: true }), mats = [m];
+    box(0.4, 0.14, 0.22, m, 0, 0.95, 0, body); box(0.09, 0.45, 0.09, m, 0, 1.2, 0, body);
+    for (let i = 0; i < 3; i++) box(0.5 - i * 0.06, 0.06, 0.28, m, 0, 1.25 + i * 0.13, 0, body);
+    const skull = new THREE.Mesh(new THREE.IcosahedronGeometry(0.22, 0), m); skull.position.y = 1.78; skull.castShadow = true; body.add(skull); box(0.2, 0.08, 0.16, m, 0, 1.6, 0.04, body);
+    const eye = new THREE.MeshBasicMaterial({ color: P.glow }); box(0.06, 0.05, 0.02, eye, -0.08, 1.8, 0.2, body); box(0.06, 0.05, 0.02, eye, 0.08, 1.8, 0.2, body);
+    if (o.crown) { const c = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.22, 0.14, 6, 1, true), toon(P.hope, { side: THREE.DoubleSide })); c.position.y = 2.0; body.add(c); for (let i = 0; i < 6; i++) { const sp = new THREE.Mesh(new THREE.ConeGeometry(0.04, 0.14, 4), toon(P.hope)); sp.position.set(Math.cos(i) * 0.2, 2.12, Math.sin(i) * 0.2); body.add(sp); } }
+    const limb = (x, y, h) => { const q = new THREE.Group(); q.position.set(x, y, 0); body.add(q); box(0.08, h, 0.08, m, 0, -h / 2, 0, q); return q; };
+    const arms = [limb(-0.3, 1.55, 0.65), limb(0.3, 1.55, 0.65)], legs = [limb(-0.12, 0.9, 0.85), limb(0.12, 0.9, 0.85)];
+    const w = new THREE.Group(); w.position.set(0, -0.6, 0.05); arms[1].add(w); const rust = toon(0x5a4a3a);
+    if (o.weapon === 'sword' || o.weapon === 'shield') box(0.05, 0.03, 0.8, toon(0x8a8a80), 0, 0, 0.4, w);
+    if (o.weapon === 'bow') { const b = new THREE.Mesh(new THREE.TorusGeometry(0.45, 0.03, 4, 10, Math.PI), rust); b.rotation.y = Math.PI / 2; b.position.y = -0.6; arms[0].add(b); }
+    if (o.weapon === 'staff') { box(0.05, 1.6, 0.05, rust, 0, 0.3, 0.1, w); const orb = new THREE.Mesh(new THREE.OctahedronGeometry(0.12), new THREE.MeshBasicMaterial({ color: P.glow })); orb.position.set(0, 1.15, 0.1); w.add(orb); }
+    if (o.weapon === 'shield') { const sh = box(0.08, 0.75, 0.6, toon(0x3a3f45), 0, 0, 0, arms[0]); sh.position.set(-0.1, -0.4, 0.15); }
+    if (o.weapon === 'scythe') { box(0.06, 0.06, 2.2, rust, 0, 0, 0.5, w); const bl = box(0.04, 0.9, 0.12, toon(0x9a9a90), 0, -0.4, 1.55, w); bl.rotation.x = -0.3; }
+    return { g, body, legs, arms, mats, h: 2.2 * s };
+  }
+};
+// Familjens utseende: Bestar = fyrbenta djur, Odöda = skelett.
+const LOOKS = {
+  skogsvarg: () => MODELS.quad(0x6a5640), skuggvarg: () => MODELS.quad(0x2c2830, { scale: 1.15, dark: 0x151215 }), taggsvin: () => MODELS.quad(0x4a3a2a, { stocky: true, dark: 0x201810 }),
+  skelett_hund: () => MODELS.quad(P.bone, { thin: true, dark: 0x7a8070 }), skelett_krigare: () => MODELS.skeleton({ weapon: 'sword' }), skelett_bagskytt: () => MODELS.skeleton({ weapon: 'bow' }),
+  skelett_vakt: () => MODELS.skeleton({ weapon: 'shield', scale: 1.2, color: 0x9aa094 }), skelett_runprast: () => MODELS.skeleton({ weapon: 'staff', color: 0xb8b8a8 }),
+  benkungen_valdemar: () => MODELS.skeleton({ weapon: 'scythe', scale: 1.6, crown: true })
+};
+const hitGeo = new THREE.CylinderGeometry(0.8, 0.8, 2.4, 8), hitMat = new THREE.MeshBasicMaterial({ visible: false });
+function spawnMonster(z, id, x, y) {
+  const def = DEFS[id], v = LOOKS[id](); outline(v.g);
+  const c = document.createElement('canvas'); c.width = 64; c.height = 8; const tex = new THREE.CanvasTexture(c);
+  const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, depthTest: false })); sp.scale.set(1.2, 0.15, 1); sp.position.y = v.h + 0.2; sp.renderOrder = 10; v.g.add(sp);
+  const hit = new THREE.Mesh(hitGeo, hitMat); hit.position.y = 1.2; if (id === 'benkungen_valdemar') hit.scale.setScalar(1.5); v.g.add(hit);
+  v.g.position.set(x, 0, y); v.g.rotation.y = rand(0, 6.28); z.g.add(v.g);
+  const fam = FAMS[def.family] || { weak: [], resist: [] };
+  const m = { id, def, fam, ...v, c, tex, sp, hit, hp: def.hp, max: def.hp, cd: rand(0, 1), wt: 0, tx: x, tz: y, kb: new THREE.Vector3(), flash: 0, dead: 0, walk: 0, stun: 0, t: {}, home: [x, y] };
+  hit.userData.m = m; if (id === 'benkungen_valdemar') { sp.visible = false; m.boss = true; m.phase = 0; m.active = false; }
+  drawHp(m); z.monsters.push(m); return m;
+}
+function drawHp(m) { const x = m.c.getContext('2d'); x.fillStyle = '#000b'; x.fillRect(0, 0, 64, 8); x.fillStyle = '#b8323c'; x.fillRect(1, 1, 62 * Math.max(0, m.hp) / m.max, 6); m.tex.needsUpdate = true; }
+
+// ---------- spawnsystem enligt spawnzoner.json / "Spawnalgoritm" ----------
+function weighted(table) { const sum = table.reduce((a, r) => a + r.weight, 0), r = Math.random() * sum; let acc = 0; for (const row of table) { acc += row.weight; if (acc > r) return row; } return table[table.length - 1]; }
+function initSpawner(z, areaId) {
+  const A = SPAWN.areas.find(a => a.id === areaId), city = !!A.city_id, conv = city ? p => T(p[0], p[1]) : p => p, sc = city ? 2 : 1;
+  const mk = (pts, table, resp, out) => pts.map(p => ({ ...p, pos: conv(p.pos), radius: p.radius * sc, timer: rand(0, 1.5), first: true, alive: [], table: (A.zone_tables && p.zone && A.zone_tables[p.zone]) || table, resp, outskirts: out }));
+  z.sp = { A, points: [...mk(A.spawn_points, A.enemy_table, A.respawn_s, false), ...(A.outskirts ? mk(A.outskirts.spawn_points, A.outskirts.enemy_table, A.outskirts.respawn_s, true) : [])] };
+  z.zoneIds = [...new Set(A.spawn_points.map(p => p.zone).filter(Boolean))]; z.cleared = {};
+  if (A.boss && S.city === 'besatt') { const [x, y] = conv(A.boss.pos); spawnMonster(z, A.boss.enemy, x, y); }
+}
+const frustum = new THREE.Frustum(), projM = new THREE.Matrix4();
+function visible(x, y) {
+  const to = new THREE.Vector3(x - camera.position.x, 0, y - camera.position.z).normalize(), f = new THREE.Vector3(); camera.getWorldDirection(f); f.y = 0; f.normalize();
+  if (Math.acos(THREE.MathUtils.clamp(f.dot(to), -1, 1)) > 70 * Math.PI / 180) return false;
+  projM.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse); frustum.setFromProjectionMatrix(projM);
+  if (!frustum.containsPoint(new THREE.Vector3(x, 1, y))) return false;
+  const from = camera.position.clone(), dir = new THREE.Vector3(x, 1, y).sub(from), len = dir.length(); ray.set(from, dir.normalize()); ray.far = len;
+  const hs = Z.fades.filter(f => f.house).map(f => f.g); const blocked = hs.length && ray.intersectObjects(hs, true).length > 0; ray.far = Infinity;
+  return !blocked;
+}
+function okSpawn(z, x, y, minD, ignoreSight) {
+  if (Math.hypot(x - hero.position.x, y - hero.position.z) < minD) return false;
+  if (z.sp.A.center_safe_radius && Math.hypot(x, y) < z.sp.A.center_safe_radius) return false;
+  if (z.circle && Math.hypot(x, y) > z.circle - 1) return false; if (z.rect && (Math.abs(x) > z.rect[1] - 1 || Math.abs(y) > z.rect[1] - 1)) return false;
+  if (!z.colliders.every(c => c.off || Math.hypot(x - c.x, y - c.z) > c.r + 0.8)) return false;
+  return ignoreSight || !visible(x, y);
+}
+const zoneAlive = (z, id) => z.monsters.filter(m => !m.dead && m.zoneId === id).length;
+function updateSpawner(z, dt) {
+  const sp = z.sp; if (!sp || !S.playing) return; const A = sp.A, st = A.city_id ? S.city : 'alltid';
+  const mult = A.state_spawn_multiplier[st] ?? 0, outMult = A.outskirts?.state_spawn_multiplier[st] ?? 0, rs = A.runes_scaling ? (A.runes_scaling[String(S.runes)] || 1) : 1;
+  let areaAlive = z.monsters.filter(m => !m.dead && m.point && !m.point.outskirts).length;
+  for (const zid of z.zoneIds) if (!z.cleared[zid]) { const pts = sp.points.filter(p => p.zone === zid); if (pts.every(p => p.spawned) && zoneAlive(z, zid) === 0) { z.cleared[zid] = true; flash(`Område rensat: ${PB.village.zones.find(q => q.id === zid)?.id.replace('_', ' ') || zid}`); checkVillage(); } }
+  for (const p of sp.points) {
+    p.alive = p.alive.filter(m => !m.dead);
+    if (p.zone && z.cleared[p.zone]) continue;
+    if ((p.timer -= dt) > 0) continue;
+    const k = p.outskirts ? outMult : mult, cap = Math.floor(p.max_alive * k), areaCap = Math.floor(A.max_alive_area * k * rs);
+    if (cap <= 0 || p.alive.length >= cap || (!p.outskirts && areaAlive >= areaCap)) { p.timer = 2; continue; }
+    const row = weighted(p.table), g = row.group || A.group_size; let n = Math.min(randi(g[0], g[1]), cap - p.alive.length, p.outskirts ? 99 : areaCap - areaAlive), placed = 0;
+    for (let i = 0; i < n; i++) for (let tries = 0; tries < 10; tries++) { const a = rand(0, 6.283), r = Math.sqrt(Math.random()) * p.radius, x = p.pos[0] + Math.cos(a) * r, y = p.pos[1] + Math.sin(a) * r;
+      if (okSpawn(z, x, y, A.min_player_distance, p.first)) { const m = spawnMonster(z, row.enemy, x, y); m.point = p; m.zoneId = p.zone; p.alive.push(m); placed++; areaAlive++; break; } }
+    if (placed) { p.spawned = true; p.first = false; p.timer = rand(p.resp[0], p.resp[1]); } else p.timer = 5;
+  }
+  for (const m of z.monsters) if (!m.dead && !m.boss && m.g.position.distanceTo(hero.position) > 60 && !visible(m.g.position.x, m.g.position.z)) { z.g.remove(m.g); m.gone = true; }
+}
+
+// ---------- skada ----------
+function floatText(pos, text, cls = '') { const el = document.createElement('div'); el.className = 'dmg ' + cls; el.textContent = text; document.body.appendChild(el); Z.fx.push({ el, p: pos.clone(), life: 0.9, kind: 'txt' }); }
+const sparkGeo = new THREE.BoxGeometry(0.08, 0.08, 0.08);
+function sparks(pos, color = 0xffd890, n = 14) { const mat = new THREE.MeshBasicMaterial({ color }); for (let i = 0; i < n; i++) { const s = new THREE.Mesh(sparkGeo, mat); s.position.copy(pos); s.userData = { v: new THREE.Vector3(rand(-0.5, 0.5), rand(0.2, 1), rand(-0.5, 0.5)).multiplyScalar(6), life: 0.4 }; Z.g.add(s); Z.fx.push({ mesh: s, kind: 'spark' }); } }
+function damageMonster(m, mult = 1, opts = {}) {
+  if (m.dead) return;
+  const t = stats.type, fm = m.fam.weak.includes(t) ? FAM.multiplier_rules.svag : m.fam.resist.includes(t) ? FAM.multiplier_rules.resistent : 1, crit = Math.random() < stats.crit;
+  let dmg = stats.damage * mult * fm * (crit ? CLS.meta.crit_multiplier : 1);
+  if (m.id === 'skelett_vakt') { const f = new THREE.Vector3(Math.sin(m.g.rotation.y), 0, Math.cos(m.g.rotation.y)), to = hero.position.clone().sub(m.g.position).normalize(); if (f.dot(to) > 0.3) dmg *= 0.5; }
+  dmg = m.immune > 0 ? 0 : Math.max(1, Math.round(dmg - (m.vuln > 0 ? 0 : m.def.defense)));
+  m.hp -= dmg; m.flash = 0.15; if (!m.boss) m.sp.visible = true; drawHp(m);
+  const o = m.g.position.clone().sub(hero.position).setY(0).normalize(); m.kb.copy(o.multiplyScalar((opts.kb || 8) * (1 - (m.def.knockback_resist || 0)) * (m.boss ? 0.15 : 1)));
+  if (opts.stun) m.stun = opts.stun; m.aggroed = true;
+  const hp = m.g.position.clone(); hp.y = 1.2; sparks(hp);
+  floatText(hp.clone().setY(m.h + 0.3), m.immune > 0 ? 'Immun' : (crit ? dmg + '!' : '' + dmg), (fm > 1 ? 'weak ' : fm < 1 ? 'res ' : '') + (crit ? 'crit' : ''));
+  if (stats.lifesteal) S.hp = Math.min(stats.maxHp, S.hp + dmg * stats.lifesteal);
+  if (m.id === 'skelett_runprast' && !(m.t.tp > 0) && m.hp > 0) { m.t.tp = 6; const a = rand(0, 6.28); m.g.position.x += Math.cos(a) * 5; m.g.position.z += Math.sin(a) * 5; collide(m.g.position, 0.5); }
+  if (m.hp <= 0) killMonster(m);
+}
+function killMonster(m) { m.dead = 0.001; m.sp.visible = false; gainXp(m.def.xp || 10); dropLoot(m); if (m.boss) bossDefeated(); }
+function hurt(raw, from) {
+  if (!S.playing || S.god) return;
+  let d = raw;
+  if (blocking && from) { const f = fwd(), to = from.clone().sub(hero.position).setY(0).normalize(); if (f.dot(to) > 0.2 && S.st >= 5) { d *= 0.3; S.st -= 5; S.stDelay = 1; } }
+  d = Math.max(1, Math.round(d - stats.defense)); S.hp = Math.max(0, S.hp - d);
+  floatText(hero.position.clone().setY(2.4), '-' + d, 'hurt');
   const f = $('flash'); f.classList.add('on'); setTimeout(() => f.classList.remove('on'), 90);
   if (S.hp <= 0) { S.playing = false; setTimeout(() => $('lose').classList.remove('hidden'), 600); }
 }
-let atkT = 0, atkCd = 0;
-function attack() {
-  if (!S.playing || atkCd > 0) return; atkCd = 0.5; atkT = 0.3;
-  const f = new THREE.Vector3(Math.sin(hero.rotation.y), 0, Math.cos(hero.rotation.y));
-  for (const m of monsters) {
-    if (m.dead) continue; const o = m.g.position.clone().sub(hero.position); o.y = 0; const d = o.length();
-    if (d < 2.2 + 0.4 && (d < 0.01 || o.dot(f) / d > 0.3)) {
-      m.hp -= 25; m.flash = 0.15; m.kb.copy(o.normalize().multiplyScalar(9)); drawHp(m);
-      const hp = m.g.position.clone(); hp.y = 1;
-      for (let i = 0; i < 14; i++) { const s = new THREE.Mesh(sparkGeo, sparkMat); s.position.copy(hp); s.userData = { v: new THREE.Vector3(Math.random() - 0.5, Math.random() * 0.8 + 0.2, Math.random() - 0.5).multiplyScalar(6), life: 0.4 }; scene.add(s); sparks.push(s); }
-      const el = document.createElement('div'); el.className = 'dmg'; el.textContent = '25'; document.body.appendChild(el);
-      dmgs.push({ el, p: hp.clone().setY(1.8), life: 0.9 });
-      if (m.hp <= 0) m.dead = 0.001;
-    }
-  }
-}
-function updateCombat(dt) {
-  atkCd -= dt;
-  let near = false;
-  for (const m of monsters) {
-    if (m.dead) { m.dead += dt; m.g.position.y -= dt * 0.8; m.sp.visible = false; m.mats.forEach(x => x.opacity = Math.max(0, 1 - m.dead)); if (m.dead > 1.2) { scene.remove(m.g); m.gone = true; } continue; }
-    const p = m.g.position, hx = hero.position.x - p.x, hz = hero.position.z - p.z, d = Math.hypot(hx, hz);
-    let vx = 0, vz = 0, sp = 0; m.cd -= dt;
-    if (S.playing && d < 10) {
-      near = true; if (d > 1.4) { vx = hx / d; vz = hz / d; sp = 3.6; } else m.g.rotation.y = Math.atan2(hx, hz);
-      if (d < 1.8 && m.cd <= 0) { m.cd = 1; hurt(8 + Math.random() * 4); }
-    } else {
-      m.wt -= dt; if (m.wt <= 0) { m.wt = 2 + Math.random() * 3; const a = Math.random() * 6.283; m.tx = p.x + Math.cos(a) * 6; m.tz = p.z + Math.sin(a) * 6; }
-      const ox = m.tx - p.x, oz = m.tz - p.z, od = Math.hypot(ox, oz); if (od > 0.5) { vx = ox / od; vz = oz / od; sp = 1.5; }
-    }
-    p.x += (vx * sp + m.kb.x) * dt; p.z += (vz * sp + m.kb.z) * dt; m.kb.multiplyScalar(Math.max(0, 1 - dt * 7));
-    collide(p, 0.5);
-    if (!(S.playing && d < 10)) { const r = Math.hypot(p.x, p.z); if (r < 12 && r > 0) { p.x *= 12 / r; p.z *= 12 / r; } }
-    if (sp) m.g.rotation.y = Math.atan2(vx, vz);
-    m.walk += dt * sp * 3; const s = Math.sin(m.walk) * 0.6;
-    m.legs.forEach((l, i) => l.rotation.x = (i === 0 || i === 3) ? s : -s);
-    m.body.position.y = Math.abs(Math.sin(m.walk)) * 0.07;
-    m.flash = Math.max(0, m.flash - dt); const e = m.flash > 0 ? 0.8 : 0; m.mats.forEach(x => x.emissive.setRGB(e, e * 0.3, e * 0.3));
-  }
-  for (let i = monsters.length - 1; i >= 0; i--) if (monsters[i].gone) monsters.splice(i, 1);
-  if (!near && S.playing) S.hp = Math.min(100, S.hp + dt * 2);
-  for (let i = sparks.length - 1; i >= 0; i--) { const s = sparks[i], u = s.userData; u.life -= dt; u.v.y -= 12 * dt; s.position.addScaledVector(u.v, dt); if (u.life <= 0) { scene.remove(s); sparks.splice(i, 1); } }
-  for (let i = dmgs.length - 1; i >= 0; i--) { const o = dmgs[i]; o.life -= dt; o.p.y += dt * 1.2; const v = o.p.clone().project(camera);
-    o.el.style.left = (v.x + 1) / 2 * innerWidth + 'px'; o.el.style.top = (1 - v.y) / 2 * innerHeight + 'px'; o.el.style.opacity = Math.min(1, o.life * 2);
-    if (o.life <= 0) { o.el.remove(); dmgs.splice(i, 1); } }
-}
-window.__rpg = {
-  activateAll() { runes.forEach(r => { S.mana = 100; activate(r); }); }, state: S, hero, monsters, attack,
-  setCamera(y, p) { yaw = y; if (p !== undefined) pitch = p; },
-  spawnNear(dist = 2.5) { return spawnWolf(hero.position.x + Math.sin(hero.rotation.y) * dist, hero.position.z + Math.cos(hero.rotation.y) * dist); }
-};
 
-addEventListener('keydown', e => { keys[e.code] = true; if (e.code === 'KeyE') activate(); if (e.code === 'Space') { e.preventDefault(); attack(); } });
-addEventListener('keyup', e => keys[e.code] = false);
-// mouse camera
-let drag = false, moved = 0;
-renderer.domElement.addEventListener('mousedown', e => { if (e.button === 0) { drag = true; moved = 0; } });
-addEventListener('mouseup', e => { if (drag && e.button === 0 && moved < 5) attack(); drag = false; });
-addEventListener('mousemove', e => { if (drag) { moved += Math.abs(e.movementX) + Math.abs(e.movementY); yaw -= e.movementX * 0.005; pitch = THREE.MathUtils.clamp(pitch + e.movementY * 0.004, 0.35, 1.25); } });
-// touch
+// ---------- loot / XP ----------
+const DEFAULT_LOOT = { drop_chance: 0.2, gold: [1, 4], rarity_weights: Object.fromEntries(PB.rarities.map(r => [r.id, r.weight_default])), guaranteed: [] };
+function pickRarity(w) { const tot = Object.values(w).reduce((a, b) => a + b, 0); let r = Math.random() * tot; for (const [k, v] of Object.entries(w)) { if ((r -= v) < 0) return k; } return 'common'; }
+function dropLoot(m) {
+  const lt = PB.loot_tables[m.id] || DEFAULT_LOOT, p = m.g.position, out = [{ gold: roll(lt.gold) }];
+  if (Math.random() < lt.drop_chance) { const r = pickRarity(lt.rarity_weights), pool = PB.items.filter(i => i.rarity === r && i.type !== 'material'); if (pool.length) out.push({ item: pool[randi(0, pool.length - 1)].id }); }
+  for (const g of lt.guaranteed || []) if (Math.random() < g.chance) for (let i = 0; i < (g.count || 1); i++) out.push({ item: g.item });
+  out.forEach((o, i) => { const a = i / out.length * 6.28 + rand(0, 1), r = out.length > 1 ? 0.9 : 0; spawnDrop(Z, p.x + Math.cos(a) * r, p.z + Math.sin(a) * r, o); });
+}
+function spawnDrop(z, x, y, o) {
+  const col = o.gold ? P.hope : RAR[ITEMS[o.item].rarity].color;
+  const geo = o.gold ? new THREE.CylinderGeometry(0.18, 0.18, 0.05, 8) : new THREE.OctahedronGeometry(0.22);
+  const mesh = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ color: col, emissive: col, emissiveIntensity: 0.8 })); mesh.position.set(x, 0.4, y);
+  const pts = makeParticles(10, col, 0.08); pts.pts.material.opacity = 0.9; mesh.add(pts.pts);
+  z.g.add(mesh); z.drops.push({ mesh, pts, o, t: rand(0, 6) });
+}
+function addItem(id, n = 1) { const it = S.inv.find(i => i.id === id && ITEMS[id].stack); if (it) it.n += n; else S.inv.push({ ...ITEMS[id], id, n }); renderInv(); }
+function pickup(d) {
+  if (d.o.gold) { S.gold += d.o.gold; floatText(hero.position.clone().setY(2.2), `+${d.o.gold} guld`, 'weak'); }
+  else { const r = RAR[ITEMS[d.o.item].rarity]; addItem(d.o.item); flash(`Hittade: ${NAMES[d.o.item]} (${r.name})`, r.color); }
+}
+function gainXp(n) {
+  if (S.level >= PB.progression.max_level) return; S.xp += n;
+  while (S.level < PB.progression.max_level && S.xp >= need(S.level)) { S.xp -= need(S.level); S.level++; recalc(); S.hp = stats.maxHp; S.st = stats.maxSt; flash(`Nivå ${S.level}!`); }
+  if (S.level >= PB.progression.max_level) S.xp = 0;
+}
+function useItem(it) {
+  if (it.type === 'potion') { if (it.heal) S.hp = Math.min(stats.maxHp, S.hp + it.heal); if (it.stamina) S.st = Math.min(stats.maxSt, S.st + it.stamina); if (--it.n <= 0) S.inv.splice(S.inv.indexOf(it), 1); }
+  else if (it.type === 'weapon' || it.type === 'armor') { const slot = it.type === 'weapon' ? 'weapon' : it.slot; S.equip[slot] = S.equip[slot] === it ? null : it; recalc(); }
+  renderInv();
+}
+function quaff(kind) { const it = S.inv.find(i => i.type === 'potion' && (kind === 'hp' ? i.heal : i.stamina)); if (it) useItem(it); else flash('Inga drycker kvar'); }
+function renderInv() {
+  $('invList').innerHTML = ''; for (const it of S.inv) {
+    const d = document.createElement('div'); d.className = 'it'; const eq = Object.values(S.equip).includes(it);
+    const bonus = [it.attack_bonus && `+${it.attack_bonus} skada`, it.damage_type, it.defense && `+${it.defense} försvar`, it.heal && `+${it.heal} HP`, it.stamina && `+${it.stamina} uth`, it.max_hp_bonus && `+${it.max_hp_bonus} max HP`].filter(Boolean).join(', ');
+    d.innerHTML = `<span style="color:${RAR[it.rarity].color}">${NAMES[it.id]}${it.n > 1 ? ' ×' + it.n : ''}${eq ? ' (utrustad)' : ''}</span><small>${bonus}</small>`; d.onclick = () => useItem(it); $('invList').appendChild(d);
+  }
+  if (!S.inv.length) $('invList').textContent = 'Tomt.';
+  if (S.cls) $('invStats').textContent = `Skada ${Math.round(stats.damage)} (${stats.type}) · Försvar ${stats.defense.toFixed(1)} · Krit ${(stats.crit * 100).toFixed(1)} % · Klicka för att använda/utrusta.`;
+  renderSlots();
+}
+
+// ---------- uppdrag ----------
+function quest() {
+  const v = zones.village;
+  const q = [['Runornas kall', 'Väck de tre runstenarna i skogen.', `Runstenar: ${S.runes}/3`], ['Runornas kall', 'Gå genom den röda portalen.', 'Gå genom portalen'],
+    ['Rensa byn', 'Driv ut de odöda ur byns områden.', v ? `Områden rensade: ${Object.keys(v.cleared).length}/${v.zoneIds.length}` : ''],
+    ['Besegra Benkungen Valdemar', 'Kapellets port är öppen. Möt Benkungen.', ''], ['Byn är rensad', 'Människor kan flytta tillbaka.', '✔']][S.stage];
+  $('qTitle').textContent = q[0]; $('qText').textContent = q[1]; $('qCount').textContent = q[2];
+}
+function checkVillage() {
+  const v = zones.village; if (!v || S.stage !== 2 || v.zoneIds.some(id => !v.cleared[id])) { quest(); return; }
+  S.stage = 3; v.barrier.visible = false; v.barrierCols.forEach(c => c.off = true); flash('Kapellets port öppnas…'); quest();
+}
+function bossDefeated() {
+  S.stage = 4; S.city = 'rensad'; $('bossbar').classList.add('hidden'); localStorage.setItem('rk_stad_gamla_byn', 'rensad'); quest();
+  const v = zones.village; v.fog = [0x1c2128, 12, 55]; for (const p of v.portals) { [p.mat.color, p.mat.emissive, p.light.color, p.parts.pts.material.color, p.disc.material.color].forEach(c => c.setHex(P.torch)); }
+  setTimeout(() => { S.playing = false; $('win').classList.remove('hidden'); }, 2500);
+}
+
+// ---------- strid ----------
+let atkT = 0, atkCd = 0, skillCd = 0, blocking = false;
+const fwd = () => new THREE.Vector3(Math.sin(hero.rotation.y), 0, Math.cos(hero.rotation.y));
+function arcHit(range, dot, mult, opts = {}, max = 99) {
+  const f = fwd(); let n = 0;
+  for (const m of Z.monsters) { if (m.dead || n >= max) continue; const o = m.g.position.clone().sub(hero.position).setY(0), d = o.length(), r = range + (m.boss ? 0.8 : 0.4);
+    if (d < r && (d < 0.01 || o.dot(f) / d > dot)) { damageMonster(m, mult, opts); n++; } }
+  return n;
+}
+function attack() { if (!S.playing || atkCd > 0) return; atkCd = 0.5 * (S.equip.weapon?.attack_speed_mult || 1); atkT = 0.3; arcHit(stats.reach, 0.3, 1); }
+function skill(down = true) {
+  if (!S.playing) return; const c = S.cls, sk = c.skills[0];
+  if (c.id === 'riddare') { blocking = down && S.st > 0; return; }
+  if (!down || skillCd > 0 || !spendSt(sk.stamina_cost)) return; skillCd = sk.cooldown_s; atkT = 0.3; atkCd = 0.5;
+  if (c.id === 'amazonkrigare') arcHit(3.5, 0.85, 1.5, { kb: 5 }, 2);
+  if (c.id === 'barbar') { arcHit(2.4, 0.2, 2.0, { kb: 10, stun: 1 }); sparks(hero.position.clone().add(fwd().multiplyScalar(1.5)).setY(0.2), 0xc8b090, 20); }
+  flash(sk.name);
+}
+function projectile(from, to, speed, dmg, kind) {
+  const mesh = kind === 'fire' ? new THREE.Mesh(new THREE.SphereGeometry(0.2, 8, 6), new THREE.MeshBasicMaterial({ color: P.glow })) : new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.05, 0.7), new THREE.MeshBasicMaterial({ color: P.bone }));
+  mesh.position.copy(from); const v = to.clone().sub(from).setY(0).normalize().multiplyScalar(speed); mesh.lookAt(from.clone().add(v)); Z.g.add(mesh); Z.projectiles.push({ mesh, v, dmg, life: 3 });
+}
+const inArena = p => Z.arena && p.x > Z.arena[0] - 1 && p.x < Z.arena[2] + 1 && p.z > Z.arena[1] - 1 && p.z < Z.arena[3];
+function updateMonsters(dt) {
+  const hp = hero.position; let near = false;
+  for (const m of Z.monsters) {
+    if (m.dead) { m.dead += dt; m.g.position.y -= dt * 0.8; m.mats.forEach(x => x.opacity = Math.max(0, 1 - m.dead)); if (m.dead > 1.2) { Z.g.remove(m.g); m.gone = true; } continue; }
+    const p = m.g.position, hx = hp.x - p.x, hz = hp.z - p.z, d = Math.hypot(hx, hz) || 0.01, D = m.def;
+    for (const k in m.t) m.t[k] -= dt; m.cd -= dt; m.immune = (m.immune || 0) - dt; m.vuln = (m.vuln || 0) - dt; m.stun -= dt;
+    let vx = 0, vz = 0, sp = 0, face = null; const aggro = S.playing && (d < D.aggro_range || (m.aggroed && d < D.aggro_range * 2)) && (!m.boss || m.active);
+    if (m.boss && !m.active && S.stage === 3 && inArena(hp)) { m.active = true; $('bossbar').classList.remove('hidden'); flash('Benkungen Valdemar vaknar!'); }
+    if (m.stun > 0) { }
+    else if (m.boss && m.active && S.playing) { const r = bossAI(m, d, hx, hz, dt); vx = r[0]; vz = r[1]; sp = r[2]; near = true; face = Math.atan2(hx, hz); }
+    else if (m.charge > 0) { // taggsvin: laddning i fart 7
+      m.charge -= dt; vx = m.cdir.x; vz = m.cdir.z; sp = 7; face = Math.atan2(vx, vz); near = true;
+      if (!m.chit && d < 1.3) { m.chit = true; hurt(roll(D.damage), p); }
+    } else if (aggro) {
+      near = true; const ranged = D.attack_range > 5; face = Math.atan2(hx, hz);
+      if (m.id === 'skelett_hund' && m.hp < m.max * 0.3 && !m.fled) m.fled = 2;
+      if (m.fled > 0) { m.fled -= dt; vx = -hx / d; vz = -hz / d; sp = D.speed; face = Math.atan2(vx, vz); if (m.fled <= 0) m.fled = -1; }
+      else if (m.id === 'taggsvin') {
+        if (m.warn > 0) { m.warn -= dt; m.flash = 0.05; if (m.warn <= 0) { m.charge = 1; m.chit = false; m.cdir = new THREE.Vector3(hx / d, 0, hz / d); m.cd = D.attack_cd; } }
+        else if (d < 8 && m.cd <= 0) m.warn = 1; else if (d > 2) { vx = hx / d; vz = hz / d; sp = D.speed; }
+      }
+      else if (ranged) {
+        if (d < 5) { vx = -hx / d; vz = -hz / d; sp = D.speed * 0.8; } else if (d > 10) { vx = hx / d; vz = hz / d; sp = D.speed; }
+        if (d <= D.attack_range && m.cd <= 0) { m.cd = D.attack_cd; const a = D.attacks[0]; projectile(p.clone().setY(1.4), hp.clone().setY(1.2), a.projectile_speed, roll(a.damage), m.id === 'skelett_runprast' ? 'fire' : 'arrow'); m.atk = 0.3; }
+      } else { if (d > D.attack_range * 0.75) { vx = hx / d; vz = hz / d; sp = D.speed; } if (d < D.attack_range && m.cd <= 0) { m.cd = D.attack_cd; m.atk = 0.3; hurt(roll(D.damage), p); } }
+    } else {
+      m.wt -= dt; if (m.wt <= 0) { m.wt = rand(2, 5); const a = rand(0, 6.28); m.tx = m.home[0] + Math.cos(a) * 5; m.tz = m.home[1] + Math.sin(a) * 5; }
+      const ox = m.tx - p.x, oz = m.tz - p.z, od = Math.hypot(ox, oz); if (od > 0.5) { vx = ox / od; vz = oz / od; sp = D.speed * 0.4; face = Math.atan2(vx, vz); }
+    }
+    p.x += (vx * sp + m.kb.x) * dt; p.z += (vz * sp + m.kb.z) * dt; m.kb.multiplyScalar(Math.max(0, 1 - dt * 7)); collide(p, m.boss ? 0.9 : 0.5);
+    if (Z.name === 'forest' && !aggro) { const r = Math.hypot(p.x, p.z); if (r < 12 && r > 0) { p.x *= 12 / r; p.z *= 12 / r; } }
+    if (m.boss && !m.active) { p.x = m.home[0]; p.z = m.home[1]; }
+    if (face !== null) { let df = face - m.g.rotation.y; df = Math.atan2(Math.sin(df), Math.cos(df)); m.g.rotation.y += df * Math.min(1, dt * 10); }
+    m.walk += dt * sp * 3; const s = Math.sin(m.walk) * 0.6;
+    if (m.legs.length === 4) m.legs.forEach((l, i) => l.rotation.x = (i === 0 || i === 3) ? s : -s); else { m.legs[0].rotation.x = s; m.legs[1].rotation.x = -s; }
+    if (m.arms.length) { m.arms[0].rotation.x = -s * 0.6; m.atk = (m.atk || 0) - dt; m.arms[1].rotation.x = m.atk > 0 ? -2.2 + (0.3 - m.atk) * 7 : (m.wind > 0 ? -2.4 : s * 0.6); }
+    m.body.position.y = Math.abs(Math.sin(m.walk)) * 0.07;
+    m.flash = Math.max(0, m.flash - dt); const e = m.flash > 0 ? 0.9 : m.immune > 0 ? 0.25 : 0; m.mats.forEach(x => x.emissive.setRGB(e, e * 0.4, e * 0.4));
+  }
+  Z.monsters = Z.monsters.filter(m => !m.gone);
+  return near;
+}
+function bossAI(m, d, hx, hz, dt) {
+  const ratio = m.hp / m.max, ph = ratio > 0.6 ? 0 : ratio > 0.3 ? 1 : 2;
+  if (ph !== m.phase) { m.phase = ph; m.immune = 2; flash(PB.boss.phases[ph].name); }
+  const F = PB.boss.phases[ph], A = Object.fromEntries(F.attacks.map(a => [a.id, a])), mult = F.damage_mult || 1, speed = F.speed || PB.boss.speed, lie = A.liehugg, p = m.g.position;
+  $('bossFill').style.width = Math.max(0, ratio * 100) + '%'; $('bossPhase').textContent = `Fas ${ph + 1}: ${F.name}`;
+  if (m.wind > 0) { m.wind -= dt; if (m.wind <= 0) { m.atk = 0.3; const f = new THREE.Vector3(Math.sin(m.g.rotation.y), 0, Math.cos(m.g.rotation.y)), to = new THREE.Vector3(hx, 0, hz).normalize(); if (d <= lie.range + 0.6 && f.dot(to) >= Math.cos(lie.arc_deg / 2 * Math.PI / 180)) hurt(roll(lie.damage) * mult, p); } return [0, 0, 0]; }
+  if (d <= lie.range && !(m.t.lie > 0)) { m.t.lie = lie.cd; m.wind = 0.35; return [0, 0, 0]; }
+  if (A.benstorm && !(m.t.storm > 0) && (ph === 2 || d > 4)) { m.t.storm = A.benstorm.cd; for (let i = 0; i < 8; i++) { const a = i / 8 * 6.283; projectile(p.clone().setY(1.3), p.clone().add(new THREE.Vector3(Math.cos(a), 0, Math.sin(a))), 10, roll(A.benstorm.damage) * mult, 'arrow'); } }
+  if (A.kalla_hovet && !(m.t.court > 0)) { m.t.court = A.kalla_hovet.cd; for (const [id, n] of Object.entries(A.kalla_hovet.summon)) for (let i = 0; i < n; i++) spawnMonster(Z, id, p.x + rand(-4, 4), p.z + rand(2, 4)).aggroed = true; flash('De dödas hov kallas!'); }
+  if (A.gravslag && !(m.t.slam > 0)) { m.t.slam = A.gravslag.cd; const c = hero.position.clone(); const ring = new THREE.Mesh(new THREE.RingGeometry(A.gravslag.radius - 0.3, A.gravslag.radius, 40), new THREE.MeshBasicMaterial({ color: P.portal, transparent: true, opacity: 0.8 })); ring.rotation.x = -Math.PI / 2; ring.position.copy(c).setY(0.05); Z.g.add(ring);
+    Z.fx.push({ kind: 'slam', mesh: ring, life: A.gravslag.telegraph_s, onEnd: () => { Z.g.remove(ring); sparks(c.clone().setY(0.3), P.bone, 30); if (hero.position.distanceTo(c) < A.gravslag.radius) hurt(roll(A.gravslag.damage) * mult, c); else { m.vuln = 3; flash('Benkungen är sårbar!'); } } }); }
+  return d > lie.range * 0.8 ? [hx / d, hz / d, speed] : [0, 0, 0];
+}
+
+// ---------- input (Diablo-stil + WASD + touch) ----------
+const keys = {}; let yaw = 0, yawVel = 0, pitch = 0.7, walkT = 0; const joy = { x: 0, y: 0 };
+let mx = innerWidth / 2, my = innerHeight / 2, mouseIn = false, leftDown = false, rightDrag = false, moveTarget = null, enemyTarget = null, holdT = 0;
+const ray = new THREE.Raycaster(), groundPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
+const markRing = new THREE.Mesh(new THREE.RingGeometry(0.35, 0.5, 24), new THREE.MeshBasicMaterial({ color: P.hope, transparent: true, opacity: 0, depthWrite: false })); markRing.rotation.x = -Math.PI / 2; scene.add(markRing);
+const targetRing = new THREE.Mesh(new THREE.RingGeometry(0.8, 1.0, 32), new THREE.MeshBasicMaterial({ color: P.portal, transparent: true, opacity: 0.9, depthWrite: false })); targetRing.rotation.x = -Math.PI / 2; targetRing.visible = false; scene.add(targetRing);
+function pick() {
+  ray.setFromCamera(new THREE.Vector2(mx / innerWidth * 2 - 1, -(my / innerHeight) * 2 + 1), camera);
+  const hits = ray.intersectObjects(Z.monsters.filter(m => !m.dead).map(m => m.hit), false);
+  if (hits.length) return { m: hits[0].object.userData.m };
+  const pt = new THREE.Vector3(); return ray.ray.intersectPlane(groundPlane, pt) ? { p: pt } : null;
+}
+function clickAt(allowEnemy = true) {
+  const r = pick(); if (!r) return;
+  if (r.m && allowEnemy) { enemyTarget = r.m; moveTarget = null; }
+  else if (r.p) { enemyTarget = null; moveTarget = r.p; markRing.position.set(r.p.x, 0.04, r.p.z); if (allowEnemy) { markRing.material.opacity = 1; markRing.scale.setScalar(1.4); } }
+}
+addEventListener('keydown', e => {
+  if (e.repeat) return; keys[e.code] = true;
+  if (e.code === 'KeyE') activate(); if (e.code === 'Space') { e.preventDefault(); attack(); }
+  if (e.code === 'KeyQ' || e.code === 'Digit2') skill(true); if (e.code === 'Digit1') attack();
+  if (e.code === 'Digit3') quaff('hp'); if (e.code === 'Digit4') quaff('st'); if (e.code === 'Digit5') flash('Magi är låst – runorna bär på hemligheten');
+  if (e.code === 'KeyI') $('inv').classList.toggle('hidden');
+});
+addEventListener('keyup', e => { keys[e.code] = false; if (e.code === 'KeyQ' || e.code === 'Digit2') skill(false); });
+const cv = renderer.domElement;
+cv.addEventListener('contextmenu', e => e.preventDefault());
+cv.addEventListener('mouseenter', () => mouseIn = true); cv.addEventListener('mouseleave', () => mouseIn = false);
+cv.addEventListener('mousedown', e => { mx = e.clientX; my = e.clientY; mouseIn = true; if (!S.playing || !Z) return; if (e.button === 0) { leftDown = true; holdT = 0; clickAt(); } if (e.button === 2) rightDrag = true; });
+addEventListener('mouseup', e => { if (e.button === 0) leftDown = false; if (e.button === 2) rightDrag = false; });
+addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; if (e.target === cv) mouseIn = true; if (rightDrag) { yaw -= e.movementX * 0.005; pitch = THREE.MathUtils.clamp(pitch + e.movementY * 0.004, 0.45, 1.15); } });
 const touches = {}; const knob = $('knob'), joyEl = $('joy');
 joyEl.addEventListener('touchstart', e => { e.preventDefault(); for (const t of e.changedTouches) touches[t.identifier] = { type: 'joy' }; }, { passive: false });
-renderer.domElement.addEventListener('touchstart', e => { for (const t of e.changedTouches) if (t.clientX > innerWidth / 2) touches[t.identifier] = { type: 'cam', x: t.clientX, y: t.clientY }; }, { passive: true });
-addEventListener('touchmove', e => {
-  for (const t of e.changedTouches) {
-    const o = touches[t.identifier]; if (!o) continue;
-    if (o.type === 'joy') {
-      const b = joyEl.getBoundingClientRect(); let dx = t.clientX - (b.left + b.width / 2), dy = t.clientY - (b.top + b.height / 2);
-      const l = Math.hypot(dx, dy), m = 40; if (l > m) { dx *= m / l; dy *= m / l; }
-      joy.x = dx / m; joy.y = dy / m; knob.style.transform = `translate(${dx}px,${dy}px)`;
-    } else { yaw -= (t.clientX - o.x) * 0.008; pitch = THREE.MathUtils.clamp(pitch + (t.clientY - o.y) * 0.005, 0.35, 1.25); o.x = t.clientX; o.y = t.clientY; }
-  }
-}, { passive: true });
+cv.addEventListener('touchstart', e => { for (const t of e.changedTouches) if (t.clientX > innerWidth / 2) touches[t.identifier] = { type: 'cam', x: t.clientX, y: t.clientY }; }, { passive: true });
+addEventListener('touchmove', e => { for (const t of e.changedTouches) { const o = touches[t.identifier]; if (!o) continue;
+  if (o.type === 'joy') { const b = joyEl.getBoundingClientRect(); let dx = t.clientX - (b.left + b.width / 2), dy = t.clientY - (b.top + b.height / 2); const l = Math.hypot(dx, dy), M = 40; if (l > M) { dx *= M / l; dy *= M / l; } joy.x = dx / M; joy.y = dy / M; knob.style.transform = `translate(${dx}px,${dy}px)`; }
+  else { yaw -= (t.clientX - o.x) * 0.008; pitch = THREE.MathUtils.clamp(pitch + (t.clientY - o.y) * 0.005, 0.45, 1.15); o.x = t.clientX; o.y = t.clientY; } } }, { passive: true });
 addEventListener('touchend', e => { for (const t of e.changedTouches) { if (touches[t.identifier]?.type === 'joy') { joy.x = joy.y = 0; knob.style.transform = ''; } delete touches[t.identifier]; } });
-$('actBtn').addEventListener('touchstart', e => { e.preventDefault(); activate(); }, { passive: false });
-$('actBtn').onclick = () => activate();
-$('atkBtn').addEventListener('touchstart', e => { e.preventDefault(); attack(); }, { passive: false });
-$('atkBtn').onclick = () => attack();
-
+const tb = (id, f, up) => { $(id).addEventListener('touchstart', e => { e.preventDefault(); f(); }, { passive: false }); if (up) $(id).addEventListener('touchend', up); $(id).onclick = f; };
+tb('actBtn', () => activate()); tb('atkBtn', () => attack()); tb('skBtn', () => skill(true), () => skill(false));
 addEventListener('resize', () => { camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth, innerHeight); });
 
-const ray = new THREE.Raycaster(); const clock = new THREE.Clock(); const camPos = new THREE.Vector3(0, 5, 8);
+// ---------- runor / portal / zonbyte ----------
+function nearRune() { return Z?.runes?.find(r => !r.active && Math.hypot(r.x - hero.position.x, r.z - hero.position.z) < 2.6); }
+function activate(r = nearRune(), free = false) {
+  if (!S.playing || !r || r.active) return false; if (!free && !spendSt(20)) return false;
+  r.active = true; S.runes++; r.runeMat.emissive.setHex(0x7fb8d8); r.runeMat.emissiveIntensity = 2; flash(`Runan vaknar! (${S.runes}/3)`); quest();
+  if (S.runes >= 3) setTimeout(() => { makePortal(zones.forest, ...PB.portal.forest_position, 'village'); S.stage = Math.max(S.stage, 1); quest(); flash('En röd portal öppnar sig i gläntan…'); }, PB.portal.trigger.delay_s * 1000);
+  return true;
+}
+let switching = false;
+function enterZone(name, spawn) {
+  if (switching) return; switching = true; $('fade').classList.add('on'); moveTarget = enemyTarget = null;
+  setTimeout(() => {
+    if (Z) scene.remove(Z.g); if (!zones[name]) zones[name] = name === 'village' ? buildVillage() : buildForest();
+    Z = zones[name]; scene.add(Z.g); const sp = spawn || Z.entry; hero.position.set(sp[0], 0, sp[1]); hero.rotation.y = Math.PI; yaw = 0; yawVel = 0; camPos.set(sp[0], 8, sp[1] + 8);
+    if (name === 'village' && S.stage < 2) S.stage = 2; quest(); setFog(true);
+    flash(name === 'village' ? 'Den gamla byn' : 'Den dimmiga skogen'); $('fade').classList.remove('on'); setTimeout(() => switching = false, 800);
+  }, 420);
+}
+function setFog(snap) { let f = Z.fog; if (Z.name === 'village' && inArena(hero.position) && S.stage < 4) f = [0x1f0d10, 10, 45];
+  const c = new THREE.Color(f[0]), k = snap ? 1 : 0.03; scene.fog.color.lerp(c, k); scene.fog.near += (f[1] - scene.fog.near) * k; scene.fog.far += (f[2] - scene.fog.far) * k; skyMat.uniforms.h.value.copy(scene.fog.color); }
+
+// ---------- UI ----------
+let msgT; function flash(t, color) { const m = $('msg'); m.textContent = t; m.style.color = color || ''; m.classList.remove('hidden'); clearTimeout(msgT); msgT = setTimeout(() => m.classList.add('hidden'), 2000); }
+const SKILL_ICON = { amazonkrigare: '🔱', barbar: '💥', riddare: '🛡️' };
+function renderSlots() {
+  if (!S.cls) return; const hpN = S.inv.filter(i => i.heal).reduce((a, b) => a + b.n, 0), stN = S.inv.filter(i => i.stamina).reduce((a, b) => a + b.n, 0);
+  $('slots').innerHTML = [['⚔️', 1, '', 'active'], [SKILL_ICON[S.cls.id], 2, 'Q', ''], ['🧪', 3, hpN, ''], ['🍶', 4, stN, ''], ['🔒', 5, '', 'locked']]
+    .map(([i, k, n, c]) => `<div class="slot ${c}"><i>${i}</i><small>${k}</small><em>${n}</em>${k === 2 ? '<div class="cd" id="skcd"></div>' : ''}</div>`).join('');
+}
+$('help').textContent = 'Vänsterklick: gå / anfall · Musen mot kanten: vrid kameran · Högerdrag: kamera · WASD: gå · Mellanslag: hugg · Q: färdighet · E: aktivera · 3/4: drycker · I: packning';
+let chosen = 'riddare';
+$('classes').innerHTML = CLS.classes.map(c => `<div class="card${c.id === chosen ? ' sel' : ''}" data-id="${c.id}"><h2>${c.name}</h2><i>${c.role}</i><br>HP ${c.base.hp} · Uthållighet ${c.base.stamina}<br>Skada ${c.base.damage} (${c.main_damage_type}) · Försvar ${c.base.defense}<br>Fart ${c.base.speed} · Krit ${Math.round(c.base.crit_chance * 100)} %<br><i>Färdighet: ${c.skills[0].name}</i></div>`).join('');
+document.querySelectorAll('.card').forEach(el => el.onclick = () => { chosen = el.dataset.id; document.querySelectorAll('.card').forEach(x => x.classList.toggle('sel', x === el)); });
+function newGame(id) {
+  S.cls = CLS.classes.find(c => c.id === id); Object.assign(S, { level: 1, xp: 0, gold: 0, stage: 0, runes: 0, inv: [], equip: {}, city: 'besatt' }); localStorage.removeItem('rk_stad_gamla_byn');
+  recalc(); S.hp = stats.maxHp; S.st = stats.maxSt; addItem('liten_halsodryck', 3); buildHero(id);
+  for (const k in zones) { zones[k].fx.forEach(f => f.el?.remove()); delete zones[k]; } if (Z) scene.remove(Z.g); Z = null;
+  $('bossbar').classList.add('hidden'); ['win', 'lose', 'start'].forEach(i => $(i).classList.add('hidden')); $('hud').classList.remove('hidden');
+  S.playing = true; enterZone('forest', [0, 0]);
+}
+$('startBtn').onclick = () => newGame(chosen);
+$('againBtn').onclick = () => { $('win').classList.add('hidden'); $('start').classList.remove('hidden'); $('hud').classList.add('hidden'); };
+$('retryBtn').onclick = () => {
+  $('lose').classList.add('hidden'); S.hp = stats.maxHp; S.st = stats.maxSt; S.playing = true; moveTarget = enemyTarget = null;
+  const b = Z.monsters.find(m => m.boss); if (b) { b.hp = b.max; b.active = false; b.phase = 0; b.t = {}; drawHp(b); $('bossbar').classList.add('hidden'); }
+  hero.position.set(Z.entry[0], 0, Z.entry[1]);
+};
+
+// ---------- huvudloop ----------
+const clock = new THREE.Clock(), camPos = new THREE.Vector3(0, 8, 8), tmpV = new THREE.Vector3();
 function tick() {
+  requestAnimationFrame(tick);
   const dt = Math.min(clock.getDelta(), 0.05), t = clock.elapsedTime;
+  if (!Z) { renderer.render(scene, camera); return; }
+  // kamera: musens X-offset styr vridhastighet, dödzon 15 %, låg maxfart + dämpning
+  let want = 0; if (!TOUCH && mouseIn && S.playing && !rightDrag) { const off = (mx / innerWidth - 0.5) * 2, dz = 0.15; if (Math.abs(off) > dz) want = -Math.sign(off) * (Math.abs(off) - dz) / (1 - dz) * 0.9; }
+  yawVel += (want - yawVel) * Math.min(1, dt * 3); yaw += yawVel * dt;
   let ix = 0, iz = 0;
-  if (S.playing) {
-    if (keys.KeyW || keys.ArrowUp) iz -= 1; if (keys.KeyS || keys.ArrowDown) iz += 1;
-    if (keys.KeyA || keys.ArrowLeft) ix -= 1; if (keys.KeyD || keys.ArrowRight) ix += 1;
-    ix += joy.x; iz += joy.y;
+  if (S.playing) { if (keys.KeyW || keys.ArrowUp) iz -= 1; if (keys.KeyS || keys.ArrowDown) iz += 1; if (keys.KeyA || keys.ArrowLeft) ix -= 1; if (keys.KeyD || keys.ArrowRight) ix += 1; ix += joy.x; iz += joy.y; }
+  let dx = 0, dz = 0, moving = false;
+  if (Math.hypot(ix, iz) > 0.1) { moveTarget = enemyTarget = null; const l = Math.max(1, Math.hypot(ix, iz)); ix /= l; iz /= l; const s = Math.sin(yaw), c = Math.cos(yaw); dx = ix * c + iz * s; dz = -ix * s + iz * c; }
+  else if (S.playing) {
+    if (leftDown && !enemyTarget) { holdT += dt; if (holdT > 0.2) clickAt(false); }
+    if (enemyTarget && (enemyTarget.dead || !Z.monsters.includes(enemyTarget))) enemyTarget = null;
+    if (enemyTarget) { const o = enemyTarget.g.position.clone().sub(hero.position).setY(0), d = o.length(), reach = stats.reach + (enemyTarget.boss ? 0.6 : 0.2);
+      if (d > reach) { dx = o.x / d; dz = o.z / d; } else { hero.rotation.y = Math.atan2(o.x, o.z); attack(); } }
+    else if (moveTarget) { const o = moveTarget.clone().sub(hero.position).setY(0), d = o.length(); if (d < 0.3) moveTarget = null; else { dx = o.x / d; dz = o.z / d; } }
   }
-  const len = Math.hypot(ix, iz); let moving = false;
-  if (len > 0.1) {
-    ix /= Math.max(len, 1); iz /= Math.max(len, 1);
-    const s = Math.sin(yaw), c = Math.cos(yaw);
-    const dx = ix * c + iz * s, dz = -ix * s + iz * c, sp = 5.5 * dt;
-    const p = hero.position; p.x += dx * sp; p.z += dz * sp; collide(p, 0.4);
-    const target = Math.atan2(dx, dz); let diff = target - hero.rotation.y; diff = Math.atan2(Math.sin(diff), Math.cos(diff));
-    hero.rotation.y += diff * Math.min(1, dt * 12); moving = true;
+  if (dx || dz) {
+    const sp = stats.speed * dt * (blocking ? 0.5 : 1), p = hero.position, ox = p.x, oz = p.z; p.x += dx * sp; p.z += dz * sp; collide(p, 0.4);
+    if (moveTarget && !leftDown && Math.hypot(p.x - ox, p.z - oz) < sp * 0.1) moveTarget = null;
+    let diff = Math.atan2(dx, dz) - hero.rotation.y; diff = Math.atan2(Math.sin(diff), Math.cos(diff)); hero.rotation.y += diff * Math.min(1, dt * 12); moving = true;
   }
-  walkT += dt * (moving ? 10 : 0);
-  const sw = moving ? Math.sin(walkT) * 0.7 : 0, k = Math.min(1, dt * 10);
-  legL.rotation.x += (sw - legL.rotation.x) * k; legR.rotation.x += (-sw - legR.rotation.x) * k;
-  armL.rotation.x += (-sw - armL.rotation.x) * k; if (atkT > 0) { atkT -= dt; const q = 1 - Math.max(0, atkT) / 0.3, e2 = q * q * (3 - 2 * q); armR.rotation.x = -2.8 + e2 * 2.6; armR.rotation.z = Math.sin(q * Math.PI) * 0.5; } else { armR.rotation.x += (sw * 0.6 - armR.rotation.x) * k; armR.rotation.z *= 0.8; }
-  hero.children[0].position.y = 1.2 + (moving ? Math.abs(Math.sin(walkT)) * 0.06 : Math.sin(t * 2) * 0.015);
-  capePivot.rotation.x = (moving ? 0.4 : 0.08) + Math.sin(t * 3) * 0.05;
-
-  updateCombat(dt);
-  S.mana = Math.min(100, S.mana + dt * 3);
-  $('hp').style.width = S.hp + '%'; $('mana').style.width = S.mana + '%'; $('qc').textContent = `${S.count}/3`;
-  $('prompt').classList.toggle('hidden', !(S.playing && nearRune()));
-
-  for (const r of runes) {
-    if (!r.active) continue; r.t += dt;
-    r.light.intensity = 3 + Math.sin(t * 4) * 0.8; r.parts.material.opacity = 0.9;
-    for (let i = 0; i < 40; i++) {
-      const ph = (t * 0.4 + i / 40) % 1, a = i * 2.4 + t;
-      r.pp[i * 3] = Math.cos(a) * (0.8 + ph * 0.5); r.pp[i * 3 + 1] = ph * 3.5; r.pp[i * 3 + 2] = Math.sin(a) * (0.8 + ph * 0.5);
-    }
-    r.parts.geometry.attributes.position.needsUpdate = true;
-  }
-
-  const want = new THREE.Vector3(Math.sin(yaw) * Math.cos(pitch), Math.sin(pitch), Math.cos(yaw) * Math.cos(pitch)).multiplyScalar(10).add(hero.position).add(new THREE.Vector3(0, 1.2, 0));
-  camPos.lerp(want, Math.min(1, dt * 8)); camera.position.copy(camPos);
-  camera.lookAt(hero.position.x, hero.position.y + 1.5, hero.position.z);
-  sun.position.set(hero.position.x + 20, 30, hero.position.z + 10); sun.target.position.copy(hero.position);
-  // fade trees between camera and hero
+  walkT += dt * (moving ? 10 : 0); const sw = moving ? Math.sin(walkT) * 0.7 : 0, k = Math.min(1, dt * 10);
+  H.legL.rotation.x += (sw - H.legL.rotation.x) * k; H.legR.rotation.x += (-sw - H.legR.rotation.x) * k;
+  H.armL.rotation.x += ((blocking ? -1.4 : -sw) - H.armL.rotation.x) * k;
+  if (atkT > 0) { atkT -= dt; const q = 1 - Math.max(0, atkT) / 0.3, e2 = q * q * (3 - 2 * q); H.armR.rotation.x = -2.8 + e2 * 2.6; H.armR.rotation.z = Math.sin(q * Math.PI) * 0.5; } else { H.armR.rotation.x += (sw * 0.6 - H.armR.rotation.x) * k; H.armR.rotation.z *= 0.8; }
+  H.torso.position.y = 1.2 + (moving ? Math.abs(Math.sin(walkT)) * 0.06 : Math.sin(t * 2) * 0.015); if (H.capeP) H.capeP.rotation.x = (moving ? 0.4 : 0.08) + Math.sin(t * 3) * 0.05;
+  atkCd -= dt; skillCd -= dt; if (blocking && S.st <= 0) blocking = false;
+  updateSpawner(Z, dt);
+  const near = updateMonsters(dt);
+  for (let i = Z.projectiles.length - 1; i >= 0; i--) { const pr = Z.projectiles[i]; pr.life -= dt; pr.mesh.position.addScaledVector(pr.v, dt);
+    if (pr.mesh.position.distanceTo(tmpV.copy(hero.position).setY(1.2)) < 0.7) { hurt(pr.dmg, pr.mesh.position.clone()); pr.life = 0; }
+    if (pr.life <= 0) { Z.g.remove(pr.mesh); Z.projectiles.splice(i, 1); } }
+  for (let i = Z.fx.length - 1; i >= 0; i--) { const f = Z.fx[i];
+    if (f.kind === 'spark') { const u = f.mesh.userData; u.life -= dt; u.v.y -= 12 * dt; f.mesh.position.addScaledVector(u.v, dt); if (u.life <= 0) { Z.g.remove(f.mesh); Z.fx.splice(i, 1); } }
+    else if (f.kind === 'txt') { f.life -= dt; f.p.y += dt * 1.2; const v = f.p.clone().project(camera); f.el.style.left = (v.x + 1) / 2 * innerWidth + 'px'; f.el.style.top = (1 - v.y) / 2 * innerHeight + 'px'; f.el.style.opacity = Math.min(1, f.life * 2); if (f.life <= 0) { f.el.remove(); Z.fx.splice(i, 1); } }
+    else if (f.kind === 'slam') { f.life -= dt; f.mesh.material.opacity = 0.4 + Math.sin(t * 20) * 0.3; if (f.life <= 0) { f.onEnd(); Z.fx.splice(i, 1); } } }
+  for (let i = Z.drops.length - 1; i >= 0; i--) { const d = Z.drops[i]; d.t += dt; d.mesh.position.y = 0.4 + Math.sin(d.t * 3) * 0.1; d.mesh.rotation.y += dt * 2;
+    for (let j = 0; j < d.pts.n; j++) { const a = j * 2.4 + d.t * 2, ph = (d.t * 0.7 + j / d.pts.n) % 1; d.pts.pos[j * 3] = Math.cos(a) * 0.3; d.pts.pos[j * 3 + 1] = ph * 0.8 - 0.2; d.pts.pos[j * 3 + 2] = Math.sin(a) * 0.3; } d.pts.pts.geometry.attributes.position.needsUpdate = true;
+    if (S.playing && Math.hypot(d.mesh.position.x - hero.position.x, d.mesh.position.z - hero.position.z) < 1.2) { pickup(d); Z.g.remove(d.mesh); Z.drops.splice(i, 1); renderSlots(); } }
+  if (S.stDelay > 0) S.stDelay -= dt; else S.st = Math.min(stats.maxSt, S.st + stats.regen * dt);
+  if (!near && S.playing) S.hp = Math.min(stats.maxHp, S.hp + dt * 2);
+  if (Z.runes) for (const r of Z.runes) { if (!r.active) continue; r.light.intensity = 3 + Math.sin(t * 4) * 0.6; r.parts.pts.material.opacity = 0.9;
+    for (let i = 0; i < r.parts.n; i++) { const ph = (t * 0.4 + i / r.parts.n) % 1, a = i * 2.4 + t; r.parts.pos[i * 3] = Math.cos(a) * (0.8 + ph * 0.5); r.parts.pos[i * 3 + 1] = ph * 3.5; r.parts.pos[i * 3 + 2] = Math.sin(a) * (0.8 + ph * 0.5); } r.parts.pts.geometry.attributes.position.needsUpdate = true; }
+  for (const pt of Z.portals || []) { pt.t += dt; pt.ring.rotation.z += dt * 0.6; pt.light.intensity = PB.portal.light_intensity * (1 + Math.sin(t * 9) * 0.15); pt.disc.material.opacity = 0.3 + Math.sin(t * 3) * 0.1;
+    for (let i = 0; i < pt.parts.n; i++) { const ph = (t * 0.5 + i / pt.parts.n) % 1, a = i * 2.39 + t * 1.5, r = (1.4 + Math.sin(i) * 0.15) * (1 - ph * 0.6); pt.parts.pos[i * 3] = Math.cos(a) * r; pt.parts.pos[i * 3 + 1] = 1.7 + Math.sin(a) * r; pt.parts.pos[i * 3 + 2] = (ph - 0.5) * 0.6; } pt.parts.pts.geometry.attributes.position.needsUpdate = true;
+    if (S.playing && pt.t > 0.5 && Math.hypot(pt.x - hero.position.x, pt.z - hero.position.z) < PB.portal.interaction_radius) enterZone(pt.target, pt.spawn); }
+  for (const l of Z.torches || []) l.intensity = 1.2 * (1 + (Math.random() - 0.5) * 0.3);
+  $('hp').style.width = S.hp / stats.maxHp * 100 + '%'; $('hpT').textContent = `HP ${Math.ceil(S.hp)}/${stats.maxHp}`;
+  $('st').style.width = S.st / stats.maxSt * 100 + '%'; $('stT').textContent = `Uthållighet ${Math.floor(S.st)}/${stats.maxSt}`;
+  $('xp').style.width = (S.level >= 10 ? 100 : S.xp / need(S.level) * 100) + '%'; $('lvl').textContent = `Nivå ${S.level}`; $('gold').textContent = `🪙 ${S.gold}`;
+  const sc = $('skcd'); if (sc) sc.style.transform = `scaleY(${Math.max(0, skillCd / S.cls.skills[0].cooldown_s)})`;
+  const nr = S.playing && nearRune(); $('prompt').classList.toggle('hidden', !nr); if (nr) $('prompt').textContent = 'Tryck E för att aktivera (20 uthållighet)';
+  markRing.material.opacity = Math.max(0, markRing.material.opacity - dt * 1.4); markRing.scale.multiplyScalar(1 - dt * 0.8);
+  targetRing.visible = !!enemyTarget; if (enemyTarget) { targetRing.position.set(enemyTarget.g.position.x, 0.05, enemyTarget.g.position.z); targetRing.scale.setScalar(enemyTarget.boss ? 1.7 : 1); }
+  const off = new THREE.Vector3(Math.sin(yaw) * Math.cos(pitch), Math.sin(pitch), Math.cos(yaw) * Math.cos(pitch)).multiplyScalar(10);
+  camPos.lerp(off.add(hero.position).add(new THREE.Vector3(0, 1, 0)), Math.min(1, dt * 6)); camera.position.copy(camPos); camera.lookAt(hero.position.x, 1.3, hero.position.z); camera.updateMatrixWorld();
+  sky.position.copy(camera.position); setFog(false);
+  moon.position.set(hero.position.x - 20 + Math.sin(yaw) * 15, 50, hero.position.z + Math.cos(yaw) * 25); moon.target.position.copy(hero.position); lantern.position.set(hero.position.x, 2.6, hero.position.z);
   const head = new THREE.Vector3(hero.position.x, 1.4, hero.position.z), dir = head.clone().sub(camera.position);
   ray.set(camera.position, dir.clone().normalize()); ray.far = dir.length();
-  const hit = new Set(ray.intersectObjects(trees.map(o => o.g), true).map(h => h.object.parent));
-  for (const o of trees) { const f = hit.has(o.g); for (const mt of o.mats) { mt.opacity += ((f ? 0.3 : 1) - mt.opacity) * Math.min(1, dt * 10); mt.depthWrite = mt.opacity > 0.95; } }
+  const hit = new Set(); for (const h of ray.intersectObjects(Z.fades.map(o => o.g), true)) { let o = h.object; while (o && !Z.fades.some(f => f.g === o)) o = o.parent; if (o) hit.add(o); }
+  ray.far = Infinity;
+  for (const o of Z.fades) { const f = hit.has(o.g); for (const mt of o.mats) { mt.opacity += ((f ? 0.3 : 1) - mt.opacity) * Math.min(1, dt * 10); mt.depthWrite = mt.opacity > 0.95; } }
   renderer.render(scene, camera);
-  requestAnimationFrame(tick);
 }
 tick();
+
+// ---------- debug ----------
+window.__rpg = {
+  state: S, hero, get zone() { return Z; }, get stats() { return stats; }, attack, skill, newGame, DEFS,
+  setCamera(y, p) { yaw = y; yawVel = 0; if (p !== undefined) pitch = p; },
+  activateAll() { hero.position.set(0, 0, 6); hero.rotation.y = Math.PI; yaw = 0; zones.forest.runes.forEach(r => activate(r, true)); },
+  enterPortal() { enterZone('village'); },
+  killAll() { Z.monsters.filter(m => !m.dead && !m.boss).forEach(m => { m.hp = 0; killMonster(m); }); },
+  clearVillage() { const v = zones.village; v.zoneIds.forEach(id => v.cleared[id] = true); this.killAll(); checkVillage(); },
+  spawnBoss() { const go = () => { this.clearVillage(); hero.position.set(1, 0, Z.arena[3] - 3); hero.rotation.y = Math.PI; yaw = 0; }; if (Z.name !== 'village') { enterZone('village'); setTimeout(go, 700); } else go(); },
+  boss() { return Z.monsters.find(m => m.boss); },
+  setBossHp(f) { const b = this.boss(); b.hp = b.max * f; drawHp(b); },
+  setLevel(n) { S.level = Math.max(1, Math.min(10, n)); S.xp = 0; recalc(); S.hp = stats.maxHp; S.st = stats.maxSt; },
+  spawnNear(dist = 3, id = Z.name === 'village' ? 'skelett_krigare' : 'skogsvarg') { return spawnMonster(Z, id, hero.position.x + Math.sin(hero.rotation.y) * dist, hero.position.z + Math.cos(hero.rotation.y) * dist); },
+  screenOf(m) { const v = m.g.position.clone().setY(1).project(camera); return [(v.x + 1) / 2 * innerWidth, (1 - v.y) / 2 * innerHeight]; },
+  spawnInfo() { return { area: Z.sp?.A.id, points: Z.sp?.points.length, alive: Z.monsters.filter(m => !m.dead).map(m => m.id) }; },
+  killBoss() { const b = this.boss(); b.immune = 0; b.hp = 0; drawHp(b); killMonster(b); },
+  god(on = true) { S.god = on; }
+};
