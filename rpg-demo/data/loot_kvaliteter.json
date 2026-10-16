@@ -1,0 +1,142 @@
+{
+  "meta": {
+    "version": "1.0",
+    "replaces": "portal_by.json rarities (common, uncommon, rare, epic, legendary)",
+    "mapping_old_to_new": {
+      "common": "normal",
+      "uncommon": "magic",
+      "rare": "rare",
+      "epic": "legendary",
+      "legendary": "legendary"
+    }
+  },
+  "qualities": [
+    {
+      "id": "normal",
+      "name": "Normal",
+      "color": "#e8e8e8",
+      "label_color": "vit",
+      "affixes": {
+        "prefix": [
+          0,
+          0
+        ],
+        "suffix": [
+          0,
+          0
+        ]
+      },
+      "sockets_max": 3,
+      "base_chance": null,
+      "note": "Resten när inga andra kvaliteter träffar. Kan ha 0 till 3 hylsor (sockets), även kallad Hylsad i grått #9a9a9a om sockets > 0.",
+      "socketed_color": "#9a9a9a"
+    },
+    {
+      "id": "magic",
+      "name": "Magisk (Magic)",
+      "color": "#6a6aff",
+      "label_color": "blå",
+      "affixes": {
+        "prefix": [
+          0,
+          1
+        ],
+        "suffix": [
+          0,
+          1
+        ],
+        "total": [
+          1,
+          2
+        ]
+      },
+      "sockets_max": 2,
+      "base_chance": 0.2,
+      "mf_curve": "full"
+    },
+    {
+      "id": "rare",
+      "name": "Sällsynt (Rare)",
+      "color": "#ffff64",
+      "label_color": "gul",
+      "affixes": {
+        "prefix": [
+          1,
+          3
+        ],
+        "suffix": [
+          1,
+          3
+        ],
+        "total": [
+          3,
+          6
+        ]
+      },
+      "sockets_max": 1,
+      "base_chance": 0.05,
+      "mf_curve": "rare",
+      "name_rule": "Två slumpade ord ur rare_names, t.ex. Gravens Klo."
+    },
+    {
+      "id": "set",
+      "name": "Set",
+      "color": "#00c400",
+      "label_color": "grön",
+      "affixes": "fasta enligt set.json",
+      "sockets_max": 0,
+      "base_chance": 0.012,
+      "mf_curve": "set"
+    },
+    {
+      "id": "legendary",
+      "name": "Legendarisk (Legendary)",
+      "color": "#c7a35a",
+      "label_color": "guld",
+      "affixes": "fasta enligt legendary i foremal_bas.json",
+      "sockets_max": 0,
+      "base_chance": 0.008,
+      "mf_curve": "legendary"
+    }
+  ],
+  "roll_order": [
+    "legendary",
+    "set",
+    "rare",
+    "magic",
+    "normal"
+  ],
+  "fallback": "Om legendary eller set träffar men ingen sådan finns för bastypen och nivån: legendary blir rare med 3 extra affix-värde, set blir magic med max värden.",
+  "non_quality_categories": [
+    "potion",
+    "gem",
+    "gold",
+    "material"
+  ],
+  "rare_names": {
+    "forsta": [
+      "Gravens",
+      "Askans",
+      "Blodets",
+      "Skuggans",
+      "Likets",
+      "Korpens",
+      "Vargens",
+      "Dimmans",
+      "Benets",
+      "Glömskans"
+    ],
+    "andra": [
+      "Klo",
+      "Bett",
+      "Hand",
+      "Sång",
+      "Vakt",
+      "Törn",
+      "Rop",
+      "Ed",
+      "Börda",
+      "Kyss"
+    ]
+  }
+}

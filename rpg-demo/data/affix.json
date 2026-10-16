@@ -1,0 +1,830 @@
+{
+  "meta": {
+    "version": "1.0",
+    "rules": [
+      "Max en affix per id per föremål.",
+      "Affixens tier kräver min_ilvl ≤ ilvl: tier 1 från 1, tier 2 från 9, tier 3 från 18.",
+      "Värden slumpas jämnt inom intervallet; procent som decimal.",
+      "Magisk: 1 prefix och/eller 1 suffix, namn blir 'Prefix Basnamn Suffix', t.ex. Vass långsvärd Livets.",
+      "Sällsynt: 3 till 6 totalt, högst 3 av varje sort."
+    ],
+    "slot_groups": {
+      "vapen_ej_skold": "alla vapen utom sköld",
+      "rustning": [
+        "hjalm",
+        "brost",
+        "handskar",
+        "balte",
+        "stovlar"
+      ]
+    }
+  },
+  "affixes": [
+    {
+      "id": "vass",
+      "name": "Vass",
+      "kind": "prefix",
+      "stat": "damage_pct",
+      "tiers": [
+        {
+          "tier": 1,
+          "min_ilvl": 1,
+          "value": [
+            0.1,
+            0.2
+          ]
+        },
+        {
+          "tier": 2,
+          "min_ilvl": 9,
+          "value": [
+            0.21,
+            0.4
+          ]
+        },
+        {
+          "tier": 3,
+          "min_ilvl": 18,
+          "value": [
+            0.41,
+            0.65
+          ]
+        }
+      ],
+      "slots": [
+        "vapen_ej_skold"
+      ]
+    },
+    {
+      "id": "tung",
+      "name": "Tung",
+      "kind": "prefix",
+      "stat": "damage_flat",
+      "tiers": [
+        {
+          "tier": 1,
+          "min_ilvl": 1,
+          "value": [
+            1,
+            3
+          ]
+        },
+        {
+          "tier": 2,
+          "min_ilvl": 9,
+          "value": [
+            3,
+            6
+          ]
+        },
+        {
+          "tier": 3,
+          "min_ilvl": 18,
+          "value": [
+            6,
+            10
+          ]
+        }
+      ],
+      "slots": [
+        "vapen_ej_skold",
+        "amulett",
+        "ring"
+      ]
+    },
+    {
+      "id": "treffsaker",
+      "name": "Träffsäker",
+      "kind": "prefix",
+      "stat": "attack_rating",
+      "tiers": [
+        {
+          "tier": 1,
+          "min_ilvl": 1,
+          "value": [
+            10,
+            25
+          ]
+        },
+        {
+          "tier": 2,
+          "min_ilvl": 9,
+          "value": [
+            26,
+            50
+          ]
+        },
+        {
+          "tier": 3,
+          "min_ilvl": 18,
+          "value": [
+            51,
+            90
+          ]
+        }
+      ],
+      "slots": [
+        "vapen_ej_skold",
+        "handskar",
+        "amulett",
+        "ring"
+      ]
+    },
+    {
+      "id": "forstarkt",
+      "name": "Förstärkt",
+      "kind": "prefix",
+      "stat": "defense_pct",
+      "tiers": [
+        {
+          "tier": 1,
+          "min_ilvl": 1,
+          "value": [
+            0.1,
+            0.25
+          ]
+        },
+        {
+          "tier": 2,
+          "min_ilvl": 9,
+          "value": [
+            0.26,
+            0.5
+          ]
+        },
+        {
+          "tier": 3,
+          "min_ilvl": 18,
+          "value": [
+            0.51,
+            0.8
+          ]
+        }
+      ],
+      "slots": [
+        "rustning",
+        "skold"
+      ]
+    },
+    {
+      "id": "robust",
+      "name": "Robust",
+      "kind": "prefix",
+      "stat": "defense",
+      "tiers": [
+        {
+          "tier": 1,
+          "min_ilvl": 1,
+          "value": [
+            1,
+            3
+          ]
+        },
+        {
+          "tier": 2,
+          "min_ilvl": 9,
+          "value": [
+            3,
+            6
+          ]
+        },
+        {
+          "tier": 3,
+          "min_ilvl": 18,
+          "value": [
+            6,
+            10
+          ]
+        }
+      ],
+      "slots": [
+        "rustning",
+        "skold",
+        "amulett",
+        "ring"
+      ]
+    },
+    {
+      "id": "vaktande",
+      "name": "Vaktande",
+      "kind": "prefix",
+      "stat": "block_chance",
+      "tiers": [
+        {
+          "tier": 1,
+          "min_ilvl": 1,
+          "value": [
+            0.02,
+            0.04
+          ]
+        },
+        {
+          "tier": 2,
+          "min_ilvl": 9,
+          "value": [
+            0.04,
+            0.07
+          ]
+        },
+        {
+          "tier": 3,
+          "min_ilvl": 18,
+          "value": [
+            0.07,
+            0.1
+          ]
+        }
+      ],
+      "slots": [
+        "skold"
+      ]
+    },
+    {
+      "id": "lyckosam",
+      "name": "Lyckosam",
+      "kind": "prefix",
+      "stat": "magic_find",
+      "tiers": [
+        {
+          "tier": 1,
+          "min_ilvl": 1,
+          "value": [
+            0.05,
+            0.1
+          ]
+        },
+        {
+          "tier": 2,
+          "min_ilvl": 9,
+          "value": [
+            0.1,
+            0.2
+          ]
+        },
+        {
+          "tier": 3,
+          "min_ilvl": 18,
+          "value": [
+            0.2,
+            0.35
+          ]
+        }
+      ],
+      "slots": [
+        "hjalm",
+        "balte",
+        "stovlar",
+        "amulett",
+        "ring"
+      ]
+    },
+    {
+      "id": "hungrig",
+      "name": "Hungrig",
+      "kind": "prefix",
+      "stat": "lifesteal",
+      "tiers": [
+        {
+          "tier": 1,
+          "min_ilvl": 1,
+          "value": [
+            0.02,
+            0.03
+          ]
+        },
+        {
+          "tier": 2,
+          "min_ilvl": 9,
+          "value": [
+            0.03,
+            0.05
+          ]
+        },
+        {
+          "tier": 3,
+          "min_ilvl": 18,
+          "value": [
+            0.05,
+            0.07
+          ]
+        }
+      ],
+      "slots": [
+        "vapen_ej_skold",
+        "ring"
+      ]
+    },
+    {
+      "id": "askbranna",
+      "name": "Askbrända",
+      "kind": "prefix",
+      "stat": "vs_demoner_damage_pct",
+      "tiers": [
+        {
+          "tier": 1,
+          "min_ilvl": 1,
+          "value": [
+            0.15,
+            0.25
+          ]
+        },
+        {
+          "tier": 2,
+          "min_ilvl": 9,
+          "value": [
+            0.25,
+            0.4
+          ]
+        },
+        {
+          "tier": 3,
+          "min_ilvl": 18,
+          "value": [
+            0.4,
+            0.6
+          ]
+        }
+      ],
+      "slots": [
+        "vapen_ej_skold"
+      ]
+    },
+    {
+      "id": "gravskandad",
+      "name": "Gravskändarens",
+      "kind": "prefix",
+      "stat": "vs_ododa_damage_pct",
+      "tiers": [
+        {
+          "tier": 1,
+          "min_ilvl": 1,
+          "value": [
+            0.15,
+            0.25
+          ]
+        },
+        {
+          "tier": 2,
+          "min_ilvl": 9,
+          "value": [
+            0.25,
+            0.4
+          ]
+        },
+        {
+          "tier": 3,
+          "min_ilvl": 18,
+          "value": [
+            0.4,
+            0.6
+          ]
+        }
+      ],
+      "slots": [
+        "vapen_ej_skold"
+      ]
+    },
+    {
+      "id": "jagarens",
+      "name": "Jägarens",
+      "kind": "prefix",
+      "stat": "vs_bestar_damage_pct",
+      "tiers": [
+        {
+          "tier": 1,
+          "min_ilvl": 1,
+          "value": [
+            0.15,
+            0.25
+          ]
+        },
+        {
+          "tier": 2,
+          "min_ilvl": 9,
+          "value": [
+            0.25,
+            0.4
+          ]
+        },
+        {
+          "tier": 3,
+          "min_ilvl": 18,
+          "value": [
+            0.4,
+            0.6
+          ]
+        }
+      ],
+      "slots": [
+        "vapen_ej_skold"
+      ]
+    },
+    {
+      "id": "livets",
+      "name": "Livets",
+      "kind": "suffix",
+      "stat": "life",
+      "tiers": [
+        {
+          "tier": 1,
+          "min_ilvl": 1,
+          "value": [
+            5,
+            12
+          ]
+        },
+        {
+          "tier": 2,
+          "min_ilvl": 9,
+          "value": [
+            12,
+            25
+          ]
+        },
+        {
+          "tier": 3,
+          "min_ilvl": 18,
+          "value": [
+            25,
+            40
+          ]
+        }
+      ],
+      "slots": [
+        "vapen_ej_skold",
+        "rustning",
+        "skold",
+        "amulett",
+        "ring"
+      ]
+    },
+    {
+      "id": "uthallighetens",
+      "name": "Uthållighetens",
+      "kind": "suffix",
+      "stat": "stamina",
+      "tiers": [
+        {
+          "tier": 1,
+          "min_ilvl": 1,
+          "value": [
+            5,
+            10
+          ]
+        },
+        {
+          "tier": 2,
+          "min_ilvl": 9,
+          "value": [
+            10,
+            20
+          ]
+        },
+        {
+          "tier": 3,
+          "min_ilvl": 18,
+          "value": [
+            20,
+            30
+          ]
+        }
+      ],
+      "slots": [
+        "vapen_ej_skold",
+        "rustning",
+        "skold",
+        "amulett",
+        "ring"
+      ]
+    },
+    {
+      "id": "andningens",
+      "name": "Andningens",
+      "kind": "suffix",
+      "stat": "stamina_regen_pct",
+      "tiers": [
+        {
+          "tier": 1,
+          "min_ilvl": 1,
+          "value": [
+            0.05,
+            0.1
+          ]
+        },
+        {
+          "tier": 2,
+          "min_ilvl": 9,
+          "value": [
+            0.1,
+            0.2
+          ]
+        },
+        {
+          "tier": 3,
+          "min_ilvl": 18,
+          "value": [
+            0.2,
+            0.3
+          ]
+        }
+      ],
+      "slots": [
+        "hjalm",
+        "brost",
+        "amulett",
+        "ring"
+      ]
+    },
+    {
+      "id": "snabbhetens",
+      "name": "Snabbhetens",
+      "kind": "suffix",
+      "stat": "attack_speed_pct",
+      "tiers": [
+        {
+          "tier": 1,
+          "min_ilvl": 1,
+          "value": [
+            0.05,
+            0.08
+          ]
+        },
+        {
+          "tier": 2,
+          "min_ilvl": 9,
+          "value": [
+            0.08,
+            0.12
+          ]
+        },
+        {
+          "tier": 3,
+          "min_ilvl": 18,
+          "value": [
+            0.12,
+            0.18
+          ]
+        }
+      ],
+      "slots": [
+        "vapen_ej_skold",
+        "handskar"
+      ]
+    },
+    {
+      "id": "vindens",
+      "name": "Vindens",
+      "kind": "suffix",
+      "stat": "move_speed_pct",
+      "tiers": [
+        {
+          "tier": 1,
+          "min_ilvl": 1,
+          "value": [
+            0.03,
+            0.05
+          ]
+        },
+        {
+          "tier": 2,
+          "min_ilvl": 9,
+          "value": [
+            0.05,
+            0.08
+          ]
+        },
+        {
+          "tier": 3,
+          "min_ilvl": 18,
+          "value": [
+            0.08,
+            0.12
+          ]
+        }
+      ],
+      "slots": [
+        "stovlar"
+      ]
+    },
+    {
+      "id": "krossens",
+      "name": "Krossens",
+      "kind": "suffix",
+      "stat": "strong_hit_chance",
+      "tiers": [
+        {
+          "tier": 1,
+          "min_ilvl": 1,
+          "value": [
+            0.03,
+            0.05
+          ]
+        },
+        {
+          "tier": 2,
+          "min_ilvl": 9,
+          "value": [
+            0.05,
+            0.08
+          ]
+        },
+        {
+          "tier": 3,
+          "min_ilvl": 18,
+          "value": [
+            0.08,
+            0.12
+          ]
+        }
+      ],
+      "slots": [
+        "vapen_ej_skold",
+        "handskar"
+      ]
+    },
+    {
+      "id": "blodets",
+      "name": "Blodets",
+      "kind": "suffix",
+      "stat": "bleed_dps",
+      "tiers": [
+        {
+          "tier": 1,
+          "min_ilvl": 1,
+          "value": [
+            2,
+            4
+          ]
+        },
+        {
+          "tier": 2,
+          "min_ilvl": 9,
+          "value": [
+            4,
+            8
+          ]
+        },
+        {
+          "tier": 3,
+          "min_ilvl": 18,
+          "value": [
+            8,
+            12
+          ]
+        }
+      ],
+      "slots": [
+        "vapen_ej_skold"
+      ]
+    },
+    {
+      "id": "tornets",
+      "name": "Törnets",
+      "kind": "suffix",
+      "stat": "thorns",
+      "tiers": [
+        {
+          "tier": 1,
+          "min_ilvl": 1,
+          "value": [
+            2,
+            4
+          ]
+        },
+        {
+          "tier": 2,
+          "min_ilvl": 9,
+          "value": [
+            4,
+            7
+          ]
+        },
+        {
+          "tier": 3,
+          "min_ilvl": 18,
+          "value": [
+            7,
+            12
+          ]
+        }
+      ],
+      "slots": [
+        "brost",
+        "skold"
+      ]
+    },
+    {
+      "id": "guldets",
+      "name": "Guldets",
+      "kind": "suffix",
+      "stat": "gold_find",
+      "tiers": [
+        {
+          "tier": 1,
+          "min_ilvl": 1,
+          "value": [
+            0.1,
+            0.25
+          ]
+        },
+        {
+          "tier": 2,
+          "min_ilvl": 9,
+          "value": [
+            0.25,
+            0.5
+          ]
+        },
+        {
+          "tier": 3,
+          "min_ilvl": 18,
+          "value": [
+            0.5,
+            0.8
+          ]
+        }
+      ],
+      "slots": [
+        "handskar",
+        "balte",
+        "amulett",
+        "ring"
+      ]
+    },
+    {
+      "id": "lakningens",
+      "name": "Läkningens",
+      "kind": "suffix",
+      "stat": "life_regen",
+      "tiers": [
+        {
+          "tier": 1,
+          "min_ilvl": 1,
+          "value": [
+            0.5,
+            1
+          ]
+        },
+        {
+          "tier": 2,
+          "min_ilvl": 9,
+          "value": [
+            1,
+            2
+          ]
+        },
+        {
+          "tier": 3,
+          "min_ilvl": 18,
+          "value": [
+            2,
+            3
+          ]
+        }
+      ],
+      "slots": [
+        "brost",
+        "balte",
+        "amulett",
+        "ring"
+      ]
+    },
+    {
+      "id": "kritens",
+      "name": "Skarpögats",
+      "kind": "suffix",
+      "stat": "crit_chance",
+      "tiers": [
+        {
+          "tier": 1,
+          "min_ilvl": 1,
+          "value": [
+            0.02,
+            0.03
+          ]
+        },
+        {
+          "tier": 2,
+          "min_ilvl": 9,
+          "value": [
+            0.03,
+            0.05
+          ]
+        },
+        {
+          "tier": 3,
+          "min_ilvl": 18,
+          "value": [
+            0.05,
+            0.07
+          ]
+        }
+      ],
+      "slots": [
+        "vapen_ej_skold",
+        "handskar",
+        "amulett"
+      ]
+    }
+  ]
+}

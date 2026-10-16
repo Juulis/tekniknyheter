@@ -1,0 +1,1730 @@
+{
+  "meta": {
+    "version": "1.0",
+    "categories": [
+      "vapen",
+      "rustning",
+      "adelsten",
+      "dryck",
+      "amulett",
+      "ring",
+      "guld",
+      "material"
+    ],
+    "tiers": {
+      "1": {
+        "ilvl": [
+          1,
+          6
+        ]
+      },
+      "2": {
+        "ilvl": [
+          7,
+          14
+        ]
+      },
+      "3": {
+        "ilvl": [
+          15,
+          30
+        ]
+      }
+    },
+    "tier_rule": "En bastyp kan droppa om item_level ≤ ilvl (ilvl = monster_level, boss +2). Högsta tillåtna tier vägs 3, lägre 1. Bastyper i tier 1 slutar droppa vid ilvl 20.",
+    "weapon_types": {
+      "svard": {
+        "name": "Svärd",
+        "dt": "hugg"
+      },
+      "yxa": {
+        "name": "Yxa",
+        "dt": "hugg"
+      },
+      "klubba": {
+        "name": "Klubba",
+        "dt": "kross"
+      },
+      "spjut": {
+        "name": "Spjut",
+        "dt": "stick"
+      },
+      "bage": {
+        "name": "Båge",
+        "dt": "stick"
+      },
+      "dolk": {
+        "name": "Dolk",
+        "dt": "stick"
+      },
+      "skold": {
+        "name": "Sköld",
+        "dt": null
+      }
+    },
+    "armor_weights": {
+      "latt": {
+        "name": "Lätt",
+        "move_penalty_max": 0
+      },
+      "lader": {
+        "name": "Läder",
+        "move_penalty_max": 0.02
+      },
+      "plate": {
+        "name": "Plate",
+        "move_penalty_max": 0.08,
+        "note": "Fartstraff summeras, tak 20 %. Riddaren halverar fartstraff från plate."
+      }
+    },
+    "class_affinity": {
+      "amazonkrigare": [
+        "spjut",
+        "bage",
+        "dolk"
+      ],
+      "barbar": [
+        "yxa",
+        "klubba",
+        "svard"
+      ],
+      "riddare": [
+        "svard",
+        "skold",
+        "klubba"
+      ]
+    },
+    "legendary_rule": "Ett legendariskt föremål kan rullas när kvaliteten blir legendary, basen matchar och level ≤ ilvl. Källor i drop_tabeller.json legendary_sources."
+  },
+  "weapons": [
+    {
+      "id": "rostig_kortsvard",
+      "name": "Rostigt kortsvärd",
+      "name_en": "Rusty Short Sword",
+      "category": "vapen",
+      "weapon_type": "svard",
+      "tier": 1,
+      "damage": [
+        3,
+        7
+      ],
+      "attack_speed": 1.1,
+      "range": 1.8,
+      "damage_type": "hugg",
+      "two_handed": false,
+      "requirements": {
+        "level": 1
+      },
+      "classes": [
+        "riddare",
+        "amazonkrigare",
+        "barbar"
+      ],
+      "sockets_max": 2,
+      "item_level": 1
+    },
+    {
+      "id": "langsvard",
+      "name": "Långsvärd",
+      "name_en": "Long Sword",
+      "category": "vapen",
+      "weapon_type": "svard",
+      "tier": 2,
+      "damage": [
+        6,
+        12
+      ],
+      "attack_speed": 1.0,
+      "range": 2.0,
+      "damage_type": "hugg",
+      "two_handed": false,
+      "requirements": {
+        "level": 6
+      },
+      "classes": [
+        "riddare",
+        "barbar"
+      ],
+      "sockets_max": 2,
+      "item_level": 6
+    },
+    {
+      "id": "riddarsvard",
+      "name": "Riddarsvärd",
+      "name_en": "Knight Sword",
+      "category": "vapen",
+      "weapon_type": "svard",
+      "tier": 3,
+      "damage": [
+        11,
+        20
+      ],
+      "attack_speed": 1.0,
+      "range": 2.1,
+      "damage_type": "hugg",
+      "two_handed": false,
+      "requirements": {
+        "level": 15
+      },
+      "classes": [
+        "riddare"
+      ],
+      "sockets_max": 2,
+      "item_level": 15
+    },
+    {
+      "id": "handyxa",
+      "name": "Handyxa",
+      "name_en": "Hand Axe",
+      "category": "vapen",
+      "weapon_type": "yxa",
+      "tier": 1,
+      "damage": [
+        4,
+        8
+      ],
+      "attack_speed": 1.0,
+      "range": 1.7,
+      "damage_type": "hugg",
+      "two_handed": false,
+      "requirements": {
+        "level": 1
+      },
+      "classes": [
+        "barbar",
+        "riddare"
+      ],
+      "sockets_max": 2,
+      "item_level": 1
+    },
+    {
+      "id": "jarnyxa",
+      "name": "Järnyxa",
+      "name_en": "Iron Axe",
+      "category": "vapen",
+      "weapon_type": "yxa",
+      "tier": 2,
+      "damage": [
+        7,
+        15
+      ],
+      "attack_speed": 0.9,
+      "range": 1.9,
+      "damage_type": "hugg",
+      "two_handed": false,
+      "requirements": {
+        "level": 7
+      },
+      "classes": [
+        "barbar"
+      ],
+      "sockets_max": 2,
+      "item_level": 7
+    },
+    {
+      "id": "stridsyxa",
+      "name": "Tvåhänd stridsyxa",
+      "name_en": "Great Axe",
+      "category": "vapen",
+      "weapon_type": "yxa",
+      "tier": 3,
+      "damage": [
+        14,
+        28
+      ],
+      "attack_speed": 0.75,
+      "range": 2.3,
+      "damage_type": "hugg",
+      "two_handed": true,
+      "requirements": {
+        "level": 15
+      },
+      "classes": [
+        "barbar"
+      ],
+      "sockets_max": 3,
+      "item_level": 15
+    },
+    {
+      "id": "knotpak",
+      "name": "Knölpåk",
+      "name_en": "Club",
+      "category": "vapen",
+      "weapon_type": "klubba",
+      "tier": 1,
+      "damage": [
+        3,
+        8
+      ],
+      "attack_speed": 1.0,
+      "range": 1.7,
+      "damage_type": "kross",
+      "two_handed": false,
+      "requirements": {
+        "level": 1
+      },
+      "classes": [
+        "barbar",
+        "riddare"
+      ],
+      "sockets_max": 2,
+      "item_level": 1
+    },
+    {
+      "id": "tvahands_klubba",
+      "name": "Tvåhandsklubba",
+      "name_en": "Great Maul",
+      "category": "vapen",
+      "weapon_type": "klubba",
+      "tier": 2,
+      "damage": [
+        8,
+        18
+      ],
+      "attack_speed": 0.8,
+      "range": 2.0,
+      "damage_type": "kross",
+      "two_handed": true,
+      "requirements": {
+        "level": 5
+      },
+      "classes": [
+        "barbar"
+      ],
+      "sockets_max": 3,
+      "item_level": 5
+    },
+    {
+      "id": "stridshammare",
+      "name": "Stridshammare",
+      "name_en": "War Hammer",
+      "category": "vapen",
+      "weapon_type": "klubba",
+      "tier": 3,
+      "damage": [
+        13,
+        24
+      ],
+      "attack_speed": 0.85,
+      "range": 2.0,
+      "damage_type": "kross",
+      "two_handed": false,
+      "requirements": {
+        "level": 15
+      },
+      "classes": [
+        "barbar",
+        "riddare"
+      ],
+      "sockets_max": 2,
+      "item_level": 15
+    },
+    {
+      "id": "jaktspjut",
+      "name": "Jaktspjut",
+      "name_en": "Hunting Spear",
+      "category": "vapen",
+      "weapon_type": "spjut",
+      "tier": 1,
+      "damage": [
+        4,
+        9
+      ],
+      "attack_speed": 1.0,
+      "range": 2.6,
+      "damage_type": "stick",
+      "two_handed": true,
+      "requirements": {
+        "level": 1
+      },
+      "classes": [
+        "amazonkrigare"
+      ],
+      "sockets_max": 3,
+      "item_level": 1
+    },
+    {
+      "id": "krigsspjut",
+      "name": "Krigsspjut",
+      "name_en": "War Spear",
+      "category": "vapen",
+      "weapon_type": "spjut",
+      "tier": 2,
+      "damage": [
+        7,
+        15
+      ],
+      "attack_speed": 1.0,
+      "range": 2.9,
+      "damage_type": "stick",
+      "two_handed": true,
+      "requirements": {
+        "level": 8
+      },
+      "classes": [
+        "amazonkrigare",
+        "riddare"
+      ],
+      "sockets_max": 3,
+      "item_level": 8
+    },
+    {
+      "id": "valkyriespjut",
+      "name": "Valkyriespjut",
+      "name_en": "Valkyrie Spear",
+      "category": "vapen",
+      "weapon_type": "spjut",
+      "tier": 3,
+      "damage": [
+        12,
+        24
+      ],
+      "attack_speed": 1.05,
+      "range": 3.2,
+      "damage_type": "stick",
+      "two_handed": true,
+      "requirements": {
+        "level": 15
+      },
+      "classes": [
+        "amazonkrigare"
+      ],
+      "sockets_max": 3,
+      "item_level": 15
+    },
+    {
+      "id": "kortbage",
+      "name": "Kortbåge",
+      "name_en": "Short Bow",
+      "category": "vapen",
+      "weapon_type": "bage",
+      "tier": 1,
+      "damage": [
+        2,
+        7
+      ],
+      "attack_speed": 1.2,
+      "range": 14,
+      "damage_type": "stick",
+      "two_handed": true,
+      "requirements": {
+        "level": 1
+      },
+      "classes": [
+        "amazonkrigare"
+      ],
+      "sockets_max": 3,
+      "item_level": 1,
+      "ammo": "pilar"
+    },
+    {
+      "id": "langbage",
+      "name": "Långbåge",
+      "name_en": "Long Bow",
+      "category": "vapen",
+      "weapon_type": "bage",
+      "tier": 2,
+      "damage": [
+        5,
+        12
+      ],
+      "attack_speed": 1.0,
+      "range": 18,
+      "damage_type": "stick",
+      "two_handed": true,
+      "requirements": {
+        "level": 8
+      },
+      "classes": [
+        "amazonkrigare"
+      ],
+      "sockets_max": 3,
+      "item_level": 8,
+      "ammo": "pilar"
+    },
+    {
+      "id": "kompositbage",
+      "name": "Kompositbåge",
+      "name_en": "Composite Bow",
+      "category": "vapen",
+      "weapon_type": "bage",
+      "tier": 3,
+      "damage": [
+        9,
+        19
+      ],
+      "attack_speed": 1.1,
+      "range": 20,
+      "damage_type": "stick",
+      "two_handed": true,
+      "requirements": {
+        "level": 15
+      },
+      "classes": [
+        "amazonkrigare"
+      ],
+      "sockets_max": 3,
+      "item_level": 15,
+      "ammo": "pilar"
+    },
+    {
+      "id": "kniv",
+      "name": "Kniv",
+      "name_en": "Knife",
+      "category": "vapen",
+      "weapon_type": "dolk",
+      "tier": 1,
+      "damage": [
+        2,
+        5
+      ],
+      "attack_speed": 1.4,
+      "range": 1.3,
+      "damage_type": "stick",
+      "two_handed": false,
+      "requirements": {
+        "level": 1
+      },
+      "classes": [
+        "amazonkrigare",
+        "riddare",
+        "barbar"
+      ],
+      "sockets_max": 2,
+      "item_level": 1
+    },
+    {
+      "id": "stilett",
+      "name": "Stilett",
+      "name_en": "Stiletto",
+      "category": "vapen",
+      "weapon_type": "dolk",
+      "tier": 2,
+      "damage": [
+        4,
+        9
+      ],
+      "attack_speed": 1.5,
+      "range": 1.3,
+      "damage_type": "stick",
+      "two_handed": false,
+      "requirements": {
+        "level": 9
+      },
+      "classes": [
+        "amazonkrigare"
+      ],
+      "sockets_max": 2,
+      "item_level": 9
+    },
+    {
+      "id": "ritualdolk",
+      "name": "Ritualdolk",
+      "name_en": "Ritual Dagger",
+      "category": "vapen",
+      "weapon_type": "dolk",
+      "tier": 3,
+      "damage": [
+        7,
+        14
+      ],
+      "attack_speed": 1.5,
+      "range": 1.4,
+      "damage_type": "stick",
+      "two_handed": false,
+      "requirements": {
+        "level": 15
+      },
+      "classes": [
+        "amazonkrigare",
+        "riddare"
+      ],
+      "sockets_max": 2,
+      "item_level": 15
+    },
+    {
+      "id": "skold_ek",
+      "name": "Eksköld",
+      "name_en": "Buckler",
+      "category": "vapen",
+      "weapon_type": "skold",
+      "slot": "offhand",
+      "tier": 1,
+      "defense": 2,
+      "block_chance": 0.2,
+      "move_penalty": 0.0,
+      "requirements": {
+        "level": 1
+      },
+      "classes": [
+        "riddare",
+        "barbar"
+      ],
+      "sockets_max": 2,
+      "item_level": 1
+    },
+    {
+      "id": "kampskold",
+      "name": "Kampsköld",
+      "name_en": "Kite Shield",
+      "category": "vapen",
+      "weapon_type": "skold",
+      "slot": "offhand",
+      "tier": 2,
+      "defense": 5,
+      "block_chance": 0.28,
+      "move_penalty": 0.03,
+      "requirements": {
+        "level": 7
+      },
+      "classes": [
+        "riddare"
+      ],
+      "sockets_max": 2,
+      "item_level": 7
+    },
+    {
+      "id": "tornskold",
+      "name": "Tornsköld",
+      "name_en": "Tower Shield",
+      "category": "vapen",
+      "weapon_type": "skold",
+      "slot": "offhand",
+      "tier": 3,
+      "defense": 10,
+      "block_chance": 0.38,
+      "move_penalty": 0.07,
+      "requirements": {
+        "level": 15
+      },
+      "classes": [
+        "riddare"
+      ],
+      "sockets_max": 2,
+      "item_level": 15
+    },
+    {
+      "id": "kastspjut",
+      "name": "Kastspjut",
+      "category": "vapen",
+      "weapon_type": "spjut",
+      "subtype": "kast",
+      "damage": [
+        5,
+        10
+      ],
+      "damage_type": "stick",
+      "stack": 10,
+      "classes": [
+        "amazonkrigare"
+      ],
+      "item_level": 1
+    },
+    {
+      "id": "pilar",
+      "name": "Pilkoger",
+      "category": "vapen",
+      "subtype": "ammunition",
+      "stack": 100,
+      "item_level": 1
+    }
+  ],
+  "armor": [
+    {
+      "id": "tygluva",
+      "name": "Tygluva",
+      "name_en": "Cap",
+      "category": "rustning",
+      "slot": "hjalm",
+      "weight": "latt",
+      "tier": 1,
+      "defense": 1,
+      "move_penalty": 0,
+      "stamina_regen_penalty": 0,
+      "requirements": {
+        "level": 1
+      },
+      "sockets_max": 2,
+      "item_level": 1
+    },
+    {
+      "id": "benhjalm",
+      "name": "Benhjälm",
+      "name_en": "Bone Helm",
+      "category": "rustning",
+      "slot": "hjalm",
+      "weight": "lader",
+      "tier": 2,
+      "defense": 3,
+      "move_penalty": 0,
+      "stamina_regen_penalty": 0,
+      "requirements": {
+        "level": 6
+      },
+      "sockets_max": 2,
+      "item_level": 6
+    },
+    {
+      "id": "riddarhjalm",
+      "name": "Riddarhjälm",
+      "name_en": "Knight Helm",
+      "category": "rustning",
+      "slot": "hjalm",
+      "weight": "plate",
+      "tier": 3,
+      "defense": 6,
+      "move_penalty": 0.02,
+      "stamina_regen_penalty": 0.15,
+      "requirements": {
+        "level": 15
+      },
+      "sockets_max": 2,
+      "item_level": 15
+    },
+    {
+      "id": "palsvast",
+      "name": "Pälsväst",
+      "name_en": "Fur Vest",
+      "category": "rustning",
+      "slot": "brost",
+      "weight": "latt",
+      "tier": 1,
+      "defense": 1,
+      "move_penalty": 0,
+      "stamina_regen_penalty": 0,
+      "requirements": {
+        "level": 1
+      },
+      "sockets_max": 3,
+      "item_level": 1,
+      "max_hp_bonus": 10
+    },
+    {
+      "id": "laderharnesk",
+      "name": "Läderharnesk",
+      "name_en": "Leather Armor",
+      "category": "rustning",
+      "slot": "brost",
+      "weight": "lader",
+      "tier": 1,
+      "defense": 2,
+      "move_penalty": 0,
+      "stamina_regen_penalty": 0,
+      "requirements": {
+        "level": 1
+      },
+      "sockets_max": 3,
+      "item_level": 1
+    },
+    {
+      "id": "ringbrynja",
+      "name": "Ringbrynja",
+      "name_en": "Ring Mail",
+      "category": "rustning",
+      "slot": "brost",
+      "weight": "lader",
+      "tier": 2,
+      "defense": 4,
+      "move_penalty": 0.02,
+      "stamina_regen_penalty": 0.05,
+      "requirements": {
+        "level": 7
+      },
+      "sockets_max": 3,
+      "item_level": 7
+    },
+    {
+      "id": "tempelpansar",
+      "name": "Tempelpansar",
+      "name_en": "Templar Armor",
+      "category": "rustning",
+      "slot": "brost",
+      "weight": "plate",
+      "tier": 3,
+      "defense": 9,
+      "move_penalty": 0.06,
+      "stamina_regen_penalty": 0.15,
+      "requirements": {
+        "level": 15
+      },
+      "sockets_max": 3,
+      "item_level": 15
+    },
+    {
+      "id": "riddarpansar",
+      "name": "Riddarpansar",
+      "name_en": "Knight Armor",
+      "category": "rustning",
+      "slot": "brost",
+      "weight": "plate",
+      "tier": 3,
+      "defense": 12,
+      "move_penalty": 0.08,
+      "stamina_regen_penalty": 0.15,
+      "requirements": {
+        "level": 17
+      },
+      "sockets_max": 3,
+      "item_level": 17
+    },
+    {
+      "id": "tyghandskar",
+      "name": "Tyghandskar",
+      "name_en": "Gloves",
+      "category": "rustning",
+      "slot": "handskar",
+      "weight": "latt",
+      "tier": 1,
+      "defense": 1,
+      "move_penalty": 0,
+      "stamina_regen_penalty": 0,
+      "requirements": {
+        "level": 1
+      },
+      "sockets_max": 0,
+      "item_level": 1
+    },
+    {
+      "id": "laderhandskar",
+      "name": "Läderhandskar",
+      "name_en": "Leather Gloves",
+      "category": "rustning",
+      "slot": "handskar",
+      "weight": "lader",
+      "tier": 2,
+      "defense": 2,
+      "move_penalty": 0,
+      "stamina_regen_penalty": 0,
+      "requirements": {
+        "level": 7
+      },
+      "sockets_max": 0,
+      "item_level": 7
+    },
+    {
+      "id": "jarnhandskar",
+      "name": "Järnhandskar",
+      "name_en": "Gauntlets",
+      "category": "rustning",
+      "slot": "handskar",
+      "weight": "plate",
+      "tier": 3,
+      "defense": 4,
+      "move_penalty": 0.01,
+      "stamina_regen_penalty": 0.15,
+      "requirements": {
+        "level": 15
+      },
+      "sockets_max": 0,
+      "item_level": 15
+    },
+    {
+      "id": "repbalte",
+      "name": "Repbälte",
+      "name_en": "Sash",
+      "category": "rustning",
+      "slot": "balte",
+      "weight": "latt",
+      "tier": 1,
+      "defense": 0,
+      "move_penalty": 0,
+      "stamina_regen_penalty": 0,
+      "requirements": {
+        "level": 1
+      },
+      "sockets_max": 0,
+      "item_level": 1,
+      "potion_slots": 2
+    },
+    {
+      "id": "laderbalte",
+      "name": "Läderbälte",
+      "name_en": "Belt",
+      "category": "rustning",
+      "slot": "balte",
+      "weight": "lader",
+      "tier": 2,
+      "defense": 1,
+      "move_penalty": 0,
+      "stamina_regen_penalty": 0,
+      "requirements": {
+        "level": 7
+      },
+      "sockets_max": 0,
+      "item_level": 7,
+      "potion_slots": 3
+    },
+    {
+      "id": "platebalte",
+      "name": "Platebälte",
+      "name_en": "Plated Belt",
+      "category": "rustning",
+      "slot": "balte",
+      "weight": "plate",
+      "tier": 3,
+      "defense": 3,
+      "move_penalty": 0.01,
+      "stamina_regen_penalty": 0.15,
+      "requirements": {
+        "level": 15
+      },
+      "sockets_max": 0,
+      "item_level": 15,
+      "potion_slots": 4
+    },
+    {
+      "id": "sandaler",
+      "name": "Sandaler",
+      "name_en": "Sandals",
+      "category": "rustning",
+      "slot": "stovlar",
+      "weight": "latt",
+      "tier": 1,
+      "defense": 0,
+      "move_penalty": 0,
+      "stamina_regen_penalty": 0,
+      "requirements": {
+        "level": 1
+      },
+      "sockets_max": 0,
+      "item_level": 1,
+      "speed_bonus": 0.03
+    },
+    {
+      "id": "laderstovlar",
+      "name": "Läderstövlar",
+      "name_en": "Leather Boots",
+      "category": "rustning",
+      "slot": "stovlar",
+      "weight": "lader",
+      "tier": 2,
+      "defense": 2,
+      "move_penalty": 0,
+      "stamina_regen_penalty": 0,
+      "requirements": {
+        "level": 7
+      },
+      "sockets_max": 0,
+      "item_level": 7
+    },
+    {
+      "id": "jarnstovlar",
+      "name": "Järnstövlar",
+      "name_en": "Greaves",
+      "category": "rustning",
+      "slot": "stovlar",
+      "weight": "plate",
+      "tier": 3,
+      "defense": 4,
+      "move_penalty": 0.02,
+      "stamina_regen_penalty": 0.15,
+      "requirements": {
+        "level": 15
+      },
+      "sockets_max": 0,
+      "item_level": 15
+    }
+  ],
+  "jewelry": [
+    {
+      "id": "bensmycke",
+      "name": "Benamulett",
+      "name_en": "Bone Charm",
+      "category": "amulett",
+      "slot": "amulett",
+      "item_level": 1
+    },
+    {
+      "id": "runamulett",
+      "name": "Runamulett",
+      "name_en": "Rune Amulet",
+      "category": "amulett",
+      "slot": "amulett",
+      "item_level": 10
+    },
+    {
+      "id": "jarnring",
+      "name": "Järnring",
+      "name_en": "Iron Ring",
+      "category": "ring",
+      "slot": "ring",
+      "item_level": 1
+    },
+    {
+      "id": "silverring",
+      "name": "Silverring",
+      "name_en": "Silver Ring",
+      "category": "ring",
+      "slot": "ring",
+      "item_level": 10
+    }
+  ],
+  "potions": [
+    {
+      "id": "liten_halsodryck",
+      "name": "Liten hälsodryck",
+      "category": "dryck",
+      "heal": 30,
+      "stack": 10,
+      "item_level": 1
+    },
+    {
+      "id": "stor_halsodryck",
+      "name": "Stor hälsodryck",
+      "category": "dryck",
+      "heal": 70,
+      "stack": 5,
+      "item_level": 7
+    },
+    {
+      "id": "uthallighetsdryck",
+      "name": "Uthållighetsdryck",
+      "category": "dryck",
+      "stamina": 40,
+      "stack": 10,
+      "item_level": 1
+    },
+    {
+      "id": "foryngringsdryck",
+      "name": "Föryngringsdryck",
+      "category": "dryck",
+      "heal_pct": 0.35,
+      "stamina_pct": 0.35,
+      "stack": 3,
+      "item_level": 15
+    }
+  ],
+  "gems": [
+    {
+      "id": "flisig_rubin",
+      "name": "Flisig rubin",
+      "category": "adelsten",
+      "gem": "rubin",
+      "grade": "flisig",
+      "color": "#c0182a",
+      "item_level": 1,
+      "socket_effect": {
+        "vapen": {
+          "stat": "strong_hit_chance",
+          "value": 0.02
+        },
+        "rustning": {
+          "stat": "life",
+          "value": 8
+        },
+        "skold": {
+          "stat": "life",
+          "value": 8
+        }
+      }
+    },
+    {
+      "id": "vanlig_rubin",
+      "name": "Rubin",
+      "category": "adelsten",
+      "gem": "rubin",
+      "grade": "vanlig",
+      "color": "#c0182a",
+      "item_level": 9,
+      "socket_effect": {
+        "vapen": {
+          "stat": "strong_hit_chance",
+          "value": 0.04
+        },
+        "rustning": {
+          "stat": "life",
+          "value": 15
+        },
+        "skold": {
+          "stat": "life",
+          "value": 15
+        }
+      }
+    },
+    {
+      "id": "felfri_rubin",
+      "name": "Felfri rubin",
+      "category": "adelsten",
+      "gem": "rubin",
+      "grade": "felfri",
+      "color": "#c0182a",
+      "item_level": 18,
+      "socket_effect": {
+        "vapen": {
+          "stat": "strong_hit_chance",
+          "value": 0.06
+        },
+        "rustning": {
+          "stat": "life",
+          "value": 25
+        },
+        "skold": {
+          "stat": "life",
+          "value": 25
+        }
+      }
+    },
+    {
+      "id": "flisig_safir",
+      "name": "Flisig safir",
+      "category": "adelsten",
+      "gem": "safir",
+      "grade": "flisig",
+      "color": "#3f7fff",
+      "item_level": 1,
+      "socket_effect": {
+        "vapen": {
+          "stat": "attack_rating",
+          "value": 15
+        },
+        "rustning": {
+          "stat": "stamina",
+          "value": 8
+        },
+        "skold": {
+          "stat": "stamina",
+          "value": 8
+        }
+      }
+    },
+    {
+      "id": "vanlig_safir",
+      "name": "Safir",
+      "category": "adelsten",
+      "gem": "safir",
+      "grade": "vanlig",
+      "color": "#3f7fff",
+      "item_level": 9,
+      "socket_effect": {
+        "vapen": {
+          "stat": "attack_rating",
+          "value": 30
+        },
+        "rustning": {
+          "stat": "stamina",
+          "value": 15
+        },
+        "skold": {
+          "stat": "stamina",
+          "value": 15
+        }
+      }
+    },
+    {
+      "id": "felfri_safir",
+      "name": "Felfri safir",
+      "category": "adelsten",
+      "gem": "safir",
+      "grade": "felfri",
+      "color": "#3f7fff",
+      "item_level": 18,
+      "socket_effect": {
+        "vapen": {
+          "stat": "attack_rating",
+          "value": 50
+        },
+        "rustning": {
+          "stat": "stamina",
+          "value": 25
+        },
+        "skold": {
+          "stat": "stamina",
+          "value": 25
+        }
+      }
+    },
+    {
+      "id": "flisig_topas",
+      "name": "Flisig topas",
+      "category": "adelsten",
+      "gem": "topas",
+      "grade": "flisig",
+      "color": "#ffd23f",
+      "item_level": 1,
+      "socket_effect": {
+        "vapen": {
+          "stat": "magic_find",
+          "value": 0.05
+        },
+        "rustning": {
+          "stat": "magic_find",
+          "value": 0.05
+        },
+        "skold": {
+          "stat": "magic_find",
+          "value": 0.05
+        }
+      }
+    },
+    {
+      "id": "vanlig_topas",
+      "name": "Topas",
+      "category": "adelsten",
+      "gem": "topas",
+      "grade": "vanlig",
+      "color": "#ffd23f",
+      "item_level": 9,
+      "socket_effect": {
+        "vapen": {
+          "stat": "magic_find",
+          "value": 0.1
+        },
+        "rustning": {
+          "stat": "magic_find",
+          "value": 0.1
+        },
+        "skold": {
+          "stat": "magic_find",
+          "value": 0.1
+        }
+      }
+    },
+    {
+      "id": "felfri_topas",
+      "name": "Felfri topas",
+      "category": "adelsten",
+      "gem": "topas",
+      "grade": "felfri",
+      "color": "#ffd23f",
+      "item_level": 18,
+      "socket_effect": {
+        "vapen": {
+          "stat": "magic_find",
+          "value": 0.15
+        },
+        "rustning": {
+          "stat": "magic_find",
+          "value": 0.15
+        },
+        "skold": {
+          "stat": "magic_find",
+          "value": 0.15
+        }
+      }
+    },
+    {
+      "id": "flisig_smaragd",
+      "name": "Flisig smaragd",
+      "category": "adelsten",
+      "gem": "smaragd",
+      "grade": "flisig",
+      "color": "#3fbf4f",
+      "item_level": 1,
+      "socket_effect": {
+        "vapen": {
+          "stat": "bleed_dps",
+          "value": 3
+        },
+        "rustning": {
+          "stat": "stamina_regen_pct",
+          "value": 0.05
+        },
+        "skold": {
+          "stat": "block_chance",
+          "value": 0.02
+        }
+      }
+    },
+    {
+      "id": "vanlig_smaragd",
+      "name": "Smaragd",
+      "category": "adelsten",
+      "gem": "smaragd",
+      "grade": "vanlig",
+      "color": "#3fbf4f",
+      "item_level": 9,
+      "socket_effect": {
+        "vapen": {
+          "stat": "bleed_dps",
+          "value": 6
+        },
+        "rustning": {
+          "stat": "stamina_regen_pct",
+          "value": 0.1
+        },
+        "skold": {
+          "stat": "block_chance",
+          "value": 0.03
+        }
+      }
+    },
+    {
+      "id": "felfri_smaragd",
+      "name": "Felfri smaragd",
+      "category": "adelsten",
+      "gem": "smaragd",
+      "grade": "felfri",
+      "color": "#3fbf4f",
+      "item_level": 18,
+      "socket_effect": {
+        "vapen": {
+          "stat": "bleed_dps",
+          "value": 10
+        },
+        "rustning": {
+          "stat": "stamina_regen_pct",
+          "value": 0.15
+        },
+        "skold": {
+          "stat": "block_chance",
+          "value": 0.05
+        }
+      }
+    },
+    {
+      "id": "flisig_onyx",
+      "name": "Flisig onyx",
+      "category": "adelsten",
+      "gem": "onyx",
+      "grade": "flisig",
+      "color": "#2a2a3a",
+      "item_level": 1,
+      "socket_effect": {
+        "vapen": {
+          "stat": "damage_flat",
+          "value": 2
+        },
+        "rustning": {
+          "stat": "defense",
+          "value": 2
+        },
+        "skold": {
+          "stat": "defense",
+          "value": 3
+        }
+      }
+    },
+    {
+      "id": "vanlig_onyx",
+      "name": "Onyx",
+      "category": "adelsten",
+      "gem": "onyx",
+      "grade": "vanlig",
+      "color": "#2a2a3a",
+      "item_level": 9,
+      "socket_effect": {
+        "vapen": {
+          "stat": "damage_flat",
+          "value": 4
+        },
+        "rustning": {
+          "stat": "defense",
+          "value": 4
+        },
+        "skold": {
+          "stat": "defense",
+          "value": 6
+        }
+      }
+    },
+    {
+      "id": "felfri_onyx",
+      "name": "Felfri onyx",
+      "category": "adelsten",
+      "gem": "onyx",
+      "grade": "felfri",
+      "color": "#2a2a3a",
+      "item_level": 18,
+      "socket_effect": {
+        "vapen": {
+          "stat": "damage_flat",
+          "value": 7
+        },
+        "rustning": {
+          "stat": "defense",
+          "value": 7
+        },
+        "skold": {
+          "stat": "defense",
+          "value": 10
+        }
+      }
+    }
+  ],
+  "materials": [
+    {
+      "id": "benflisa",
+      "name": "Benflisa",
+      "category": "material",
+      "stack": 99,
+      "item_level": 1
+    },
+    {
+      "id": "timmer",
+      "name": "Timmer",
+      "category": "material",
+      "stack": 99,
+      "item_level": 1
+    },
+    {
+      "id": "sten",
+      "name": "Sten",
+      "category": "material",
+      "stack": 99,
+      "item_level": 1
+    },
+    {
+      "id": "jarn",
+      "name": "Järn",
+      "category": "material",
+      "stack": 99,
+      "item_level": 1
+    }
+  ],
+  "gold": {
+    "id": "guld",
+    "category": "guld",
+    "formula": "guld = rint(monster_level × slump(gold_min_per_lvl, gold_max_per_lvl) × gold_mult)",
+    "gold_min_per_lvl": 2,
+    "gold_max_per_lvl": 6,
+    "mf_affects": false
+  },
+  "legendary": [
+    {
+      "id": "runsmidd_klinga",
+      "name": "Runsmidd klinga",
+      "base": "langsvard",
+      "level": 9,
+      "fixed": {
+        "damage_pct": 0.6,
+        "attack_rating": 40,
+        "strong_hit_chance": 0.05
+      },
+      "item_level": 9,
+      "requirements": {
+        "level": 9
+      },
+      "type": "svard"
+    },
+    {
+      "id": "gravvaktarens_hillebard",
+      "name": "Gravvaktarens hillebard",
+      "base": "krigsspjut",
+      "level": 9,
+      "fixed": {
+        "damage_pct": 0.8,
+        "range_bonus": 0.4,
+        "life_on_hit": 2
+      },
+      "item_level": 9,
+      "requirements": {
+        "level": 9
+      },
+      "type": "spjut"
+    },
+    {
+      "id": "benkungens_lie",
+      "name": "Benkungens lie",
+      "base": "jarnyxa",
+      "level": 10,
+      "fixed": {
+        "damage_pct": 1.2,
+        "lifesteal": 0.08,
+        "strong_hit_chance": 0.1,
+        "vs_ododa_damage_pct": 0.5
+      },
+      "item_level": 10,
+      "requirements": {
+        "level": 10
+      },
+      "type": "yxa"
+    },
+    {
+      "id": "runskold",
+      "name": "Runsköld",
+      "base": "kampskold",
+      "level": 8,
+      "fixed": {
+        "defense_pct": 0.6,
+        "block_chance": 0.08,
+        "stamina": 20
+      },
+      "item_level": 8,
+      "requirements": {
+        "level": 8
+      },
+      "type": "skold"
+    },
+    {
+      "id": "gravvaktarens_pansar",
+      "name": "Gravvaktarens pansar",
+      "base": "ringbrynja",
+      "level": 9,
+      "fixed": {
+        "defense_pct": 0.8,
+        "life": 30,
+        "damage_reduction_flat": 2
+      },
+      "item_level": 9,
+      "requirements": {
+        "level": 9
+      },
+      "type": "brost"
+    },
+    {
+      "id": "benkungens_krona",
+      "name": "Benkungens krona",
+      "base": "benhjalm",
+      "level": 10,
+      "fixed": {
+        "defense_pct": 1.0,
+        "stamina": 30,
+        "stamina_regen_pct": 0.3,
+        "magic_find": 0.25,
+        "note": "Bär på Benkungens bundna runor; ger mana +20 när magi låses upp."
+      },
+      "item_level": 10,
+      "requirements": {
+        "level": 10
+      },
+      "type": "hjalm"
+    },
+    {
+      "id": "vargblodets_band",
+      "name": "Vargblodets band",
+      "base": "jarnring",
+      "level": 6,
+      "fixed": {
+        "life": 20,
+        "attack_speed_pct": 0.1,
+        "vs_bestar_damage_pct": 0.3
+      },
+      "item_level": 6,
+      "requirements": {
+        "level": 6
+      },
+      "type": "ring"
+    },
+    {
+      "id": "flyktingens_sandaler",
+      "name": "Flyktingens sandaler",
+      "base": "sandaler",
+      "type": "stovlar",
+      "level": 2,
+      "item_level": 2,
+      "requirements": {
+        "level": 2
+      },
+      "fixed": {
+        "move_speed_pct": 0.1,
+        "stamina": 10,
+        "dodge_cost_pct": -0.2
+      },
+      "visual": "Slitna läderremmar med torkat blod, en liten tygbit med ett barns namn knuten runt hälen."
+    },
+    {
+      "id": "vargtandens_kniv",
+      "name": "Vargtandens kniv",
+      "base": "kniv",
+      "type": "dolk",
+      "level": 4,
+      "item_level": 4,
+      "requirements": {
+        "level": 4
+      },
+      "fixed": {
+        "damage_pct": 0.5,
+        "bleed_dps": 4,
+        "vs_bestar_damage_pct": 0.3
+      },
+      "visual": "Kort kniv med blad av en enda gulnad vargtand, skaftet lindat i grå päls."
+    },
+    {
+      "id": "korpmoderns_bage",
+      "name": "Korpmoderns båge",
+      "base": "langbage",
+      "type": "bage",
+      "level": 12,
+      "item_level": 12,
+      "requirements": {
+        "level": 12
+      },
+      "fixed": {
+        "damage_pct": 0.7,
+        "attack_rating": 60,
+        "crit_chance": 0.06,
+        "extra_arrows": 1
+      },
+      "visual": "Svart båge av krokigt idegran, svarta korpfjädrar längs bågen, sträng av tvinnat hår."
+    },
+    {
+      "id": "dimvandrarens_handskar",
+      "name": "Dimvandrarens handskar",
+      "base": "laderhandskar",
+      "type": "handskar",
+      "level": 13,
+      "item_level": 13,
+      "requirements": {
+        "level": 13
+      },
+      "fixed": {
+        "attack_speed_pct": 0.12,
+        "life": 20,
+        "resist_dark_magic": 0.15
+      },
+      "visual": "Bleka, fuktiga läderhandskar som ångar svagt av blågrå dimma."
+    },
+    {
+      "id": "klockarens_hammare",
+      "name": "Klockarens hammare",
+      "base": "stridshammare",
+      "type": "klubba",
+      "level": 16,
+      "item_level": 16,
+      "requirements": {
+        "level": 16
+      },
+      "fixed": {
+        "damage_pct": 0.9,
+        "strong_hit_chance": 0.12,
+        "stun_chance": 0.1,
+        "vs_ododa_damage_pct": 0.3
+      },
+      "visual": "Tung hammare gjord av en sprucken kyrkklocka i ärgad brons, kedja runt skaftet."
+    },
+    {
+      "id": "jarnmunkens_gordel",
+      "name": "Järnmunkens gördel",
+      "base": "platebalte",
+      "type": "balte",
+      "level": 18,
+      "item_level": 18,
+      "requirements": {
+        "level": 18
+      },
+      "fixed": {
+        "life": 35,
+        "defense": 6,
+        "potion_slots_bonus": 1,
+        "life_regen": 2
+      },
+      "visual": "Grova järnlänkar med fastnitade bönepärlor av ben, ett rostigt hänglås som spänne."
+    },
+    {
+      "id": "valkyrians_sista_andetag",
+      "name": "Valkyrians sista andetag",
+      "base": "valkyriespjut",
+      "type": "spjut",
+      "level": 19,
+      "item_level": 19,
+      "requirements": {
+        "level": 19
+      },
+      "fixed": {
+        "damage_pct": 1.0,
+        "range_bonus": 0.5,
+        "crit_chance": 0.08,
+        "pierce": 2
+      },
+      "visual": "Långt silverspjut med vingformad spets, en blek fjäder som alltid fladdrar."
+    },
+    {
+      "id": "pilgrimens_sista_svard",
+      "name": "Pilgrimens sista svärd",
+      "base": "riddarsvard",
+      "type": "svard",
+      "level": 21,
+      "item_level": 21,
+      "requirements": {
+        "level": 21
+      },
+      "fixed": {
+        "damage_pct": 1.0,
+        "attack_rating": 80,
+        "life_on_hit": 4,
+        "vs_demoner_damage_pct": 0.4
+      },
+      "visual": "Rakt svärd med flagnande heliga runor, bladet sotat svart nära parerstången."
+    },
+    {
+      "id": "tystnadens_stilett",
+      "name": "Tystnadens stilett",
+      "base": "ritualdolk",
+      "type": "dolk",
+      "level": 22,
+      "item_level": 22,
+      "requirements": {
+        "level": 22
+      },
+      "fixed": {
+        "damage_pct": 0.9,
+        "crit_chance": 0.12,
+        "crit_damage_pct": 0.5,
+        "silence_on_hit_s": 1.5
+      },
+      "visual": "Smal, nästan genomskinlig dolk i rökgrått glas, inget ljud när den dras."
+    },
+    {
+      "id": "hornslaktarens_bila",
+      "name": "Hornslaktarens bila",
+      "base": "stridsyxa",
+      "type": "yxa",
+      "level": 23,
+      "item_level": 23,
+      "requirements": {
+        "level": 23
+      },
+      "fixed": {
+        "damage_pct": 1.3,
+        "strong_hit_chance": 0.15,
+        "lifesteal": 0.06,
+        "move_speed_pct": -0.05
+      },
+      "visual": "Enorm bila av svart järn med inbrända hornmärken och glödande sprickor."
+    },
+    {
+      "id": "sista_vaktens_mur",
+      "name": "Sista vaktens mur",
+      "base": "tornskold",
+      "type": "skold",
+      "level": 24,
+      "item_level": 24,
+      "requirements": {
+        "level": 24
+      },
+      "fixed": {
+        "defense_pct": 1.2,
+        "block_chance": 0.12,
+        "thorns": 15,
+        "immune_knockback": true
+      },
+      "visual": "Hög tornsköld med hundratals repor och ett halvt utplånat stadsvapen från Askeborg."
+    },
+    {
+      "id": "askfurstens_horn",
+      "name": "Askfurstens horn",
+      "base": "riddarhjalm",
+      "type": "hjalm",
+      "level": 26,
+      "item_level": 26,
+      "requirements": {
+        "level": 26
+      },
+      "fixed": {
+        "defense_pct": 1.0,
+        "life": 40,
+        "damage_pct": 0.15,
+        "resist_dark_magic": 0.25
+      },
+      "visual": "Riddarhjälm sammansmält med två avbrutna demonhorn, glöd i ögonspringan."
+    },
+    {
+      "id": "smittfaderns_kapa",
+      "name": "Smittfaderns kåpa",
+      "base": "riddarpansar",
+      "type": "brost",
+      "level": 28,
+      "item_level": 28,
+      "requirements": {
+        "level": 28
+      },
+      "fixed": {
+        "defense_pct": 1.4,
+        "life": 60,
+        "poison_immune": true,
+        "thorns": 20
+      },
+      "visual": "Plåtpansar under en ruttnande munkkåpa, gröna blåsor växer ur fogarna."
+    }
+  ]
+}

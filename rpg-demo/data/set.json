@@ -1,0 +1,351 @@
+{
+  "meta": {
+    "version": "1.0",
+    "rule": "Set droppar som bastyp av en del. Bonusar är kumulativa. Klasslåsta set kan bäras av andra klasser men ger bara delarnas egna värden.",
+    "ilvl_rule": "En setdel kan droppa om ilvl ≥ setets level."
+  },
+  "sets": [
+    {
+      "id": "tempelriddarens_ed",
+      "name": "Tempelriddarens ed",
+      "class": "riddare",
+      "theme": "De sista riddarna som svor att hålla gravarna stängda.",
+      "level": 17,
+      "pieces": [
+        {
+          "base": "riddarsvard",
+          "name": "Edens klinga",
+          "fixed": {
+            "damage_pct": 0.5,
+            "vs_ododa_damage_pct": 0.3
+          },
+          "id": "edens_klinga"
+        },
+        {
+          "base": "tornskold",
+          "name": "Edens mur",
+          "fixed": {
+            "block_chance": 0.08,
+            "defense": 6
+          },
+          "id": "edens_mur"
+        },
+        {
+          "base": "riddarhjalm",
+          "name": "Edens visir",
+          "fixed": {
+            "life": 20
+          },
+          "id": "edens_visir"
+        },
+        {
+          "base": "tempelpansar",
+          "name": "Edens pansar",
+          "fixed": {
+            "defense_pct": 0.5,
+            "life": 25
+          },
+          "id": "edens_pansar"
+        },
+        {
+          "base": "jarnstovlar",
+          "name": "Edens steg",
+          "fixed": {
+            "move_speed_pct": 0.05
+          },
+          "id": "edens_steg"
+        }
+      ],
+      "bonuses": {
+        "2": {
+          "defense": 8
+        },
+        "3": {
+          "block_chance": 0.08
+        },
+        "4": {
+          "life": 40,
+          "damage_reduction_flat": 2
+        },
+        "5": {
+          "skill_bonus": {
+            "skoldslag": {
+              "stun_s": 1.0
+            }
+          },
+          "immune_knockback": true
+        }
+      }
+    },
+    {
+      "id": "bergsklanens_raseri",
+      "name": "Bergsklanens raseri",
+      "class": "barbar",
+      "theme": "En klan som åt sina döda för att inte låta demonerna få dem.",
+      "level": 15,
+      "pieces": [
+        {
+          "base": "stridsyxa",
+          "name": "Klanhövdingens yxa",
+          "fixed": {
+            "damage_pct": 0.6
+          },
+          "id": "klanhovdingens_yxa"
+        },
+        {
+          "base": "benhjalm",
+          "name": "Förfädernas skalle",
+          "fixed": {
+            "life": 25
+          },
+          "id": "forfadernas_skalle"
+        },
+        {
+          "base": "palsvast",
+          "name": "Vargpälsen",
+          "fixed": {
+            "life": 30,
+            "stamina": 10
+          },
+          "id": "vargpalsen"
+        },
+        {
+          "base": "laderhandskar",
+          "name": "Blodnävarna",
+          "fixed": {
+            "attack_speed_pct": 0.1
+          },
+          "id": "blodnavarna"
+        },
+        {
+          "base": "laderbalte",
+          "name": "Trofébältet",
+          "fixed": {
+            "life_regen": 1.5
+          },
+          "id": "trofebaltet"
+        }
+      ],
+      "bonuses": {
+        "2": {
+          "life": 30
+        },
+        "3": {
+          "strong_hit_chance": 0.08
+        },
+        "4": {
+          "lifesteal": 0.04
+        },
+        "5": {
+          "skill_bonus": {
+            "berserkerrus": {
+              "duration_s": 4,
+              "no_damage_taken_penalty": true
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "jaktgudinnans_dottrar",
+      "name": "Jaktgudinnans döttrar",
+      "class": "amazonkrigare",
+      "theme": "Amazoner som jagade i ruinerna när alla andra flydde.",
+      "level": 15,
+      "pieces": [
+        {
+          "base": "valkyriespjut",
+          "name": "Döttrarnas spjut",
+          "fixed": {
+            "damage_pct": 0.5,
+            "range_bonus": 0.3
+          },
+          "id": "dottrarnas_spjut"
+        },
+        {
+          "base": "kompositbage",
+          "name": "Månbågen",
+          "fixed": {
+            "damage_pct": 0.4,
+            "crit_chance": 0.05
+          },
+          "id": "manbagen"
+        },
+        {
+          "base": "tygluva",
+          "name": "Jägarinnans hätta",
+          "fixed": {
+            "crit_chance": 0.03
+          },
+          "id": "jagarinnans_hatta"
+        },
+        {
+          "base": "laderharnesk",
+          "name": "Skuggläder",
+          "fixed": {
+            "defense_pct": 0.4,
+            "move_speed_pct": 0.04
+          },
+          "id": "skugglader"
+        },
+        {
+          "base": "sandaler",
+          "name": "Tysta steg",
+          "fixed": {
+            "move_speed_pct": 0.08
+          },
+          "id": "tysta_steg"
+        }
+      ],
+      "bonuses": {
+        "2": {
+          "attack_rating": 40
+        },
+        "3": {
+          "crit_chance": 0.05
+        },
+        "4": {
+          "move_speed_pct": 0.08,
+          "stamina_regen_pct": 0.2
+        },
+        "5": {
+          "skill_bonus": {
+            "kastspjut": {
+              "extra_projectiles": 2
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "gravvaktarens_arv",
+      "name": "Gravvaktarens arv",
+      "class": null,
+      "theme": "Utrustning från de som vaktade de döda innan de döda reste sig.",
+      "level": 9,
+      "pieces": [
+        {
+          "base": "tvahands_klubba",
+          "name": "Vaktarens hammare",
+          "fixed": {
+            "vs_ododa_damage_pct": 0.5
+          },
+          "id": "vaktarens_hammare"
+        },
+        {
+          "base": "kampskold",
+          "name": "Vaktarens lock",
+          "fixed": {
+            "block_chance": 0.05
+          },
+          "id": "vaktarens_lock"
+        },
+        {
+          "base": "ringbrynja",
+          "name": "Vaktarens brynja",
+          "fixed": {
+            "defense": 5
+          },
+          "id": "vaktarens_brynja"
+        },
+        {
+          "base": "laderhandskar",
+          "name": "Vaktarens grepp",
+          "fixed": {
+            "strong_hit_chance": 0.05
+          },
+          "id": "vaktarens_grepp"
+        },
+        {
+          "base": "bensmycke",
+          "name": "Vaktarens ben",
+          "fixed": {
+            "life": 15
+          },
+          "id": "vaktarens_ben"
+        }
+      ],
+      "bonuses": {
+        "2": {
+          "vs_ododa_damage_pct": 0.2
+        },
+        "3": {
+          "defense_pct": 0.3
+        },
+        "4": {
+          "life": 30
+        },
+        "5": {
+          "resist_dark_magic": 0.25,
+          "magic_find": 0.2
+        }
+      }
+    },
+    {
+      "id": "askvandrarens_borda",
+      "name": "Askvandrarens börda",
+      "class": null,
+      "theme": "En pilgrim som gick in i Askeborg och aldrig kom ut.",
+      "level": 21,
+      "pieces": [
+        {
+          "base": "ritualdolk",
+          "name": "Pilgrimens törn",
+          "fixed": {
+            "vs_demoner_damage_pct": 0.5
+          },
+          "id": "pilgrimens_torn"
+        },
+        {
+          "base": "riddarpansar",
+          "name": "Den svärtade rustningen",
+          "fixed": {
+            "defense_pct": 0.6
+          },
+          "id": "den_svartade_rustningen"
+        },
+        {
+          "base": "platebalte",
+          "name": "Botgördeln",
+          "fixed": {
+            "life": 25
+          },
+          "id": "botgordeln"
+        },
+        {
+          "base": "laderstovlar",
+          "name": "Askvägen",
+          "fixed": {
+            "move_speed_pct": 0.06
+          },
+          "id": "askvagen"
+        },
+        {
+          "base": "runamulett",
+          "name": "Den brända runan",
+          "fixed": {
+            "stamina": 20
+          },
+          "id": "den_branda_runan"
+        }
+      ],
+      "bonuses": {
+        "2": {
+          "vs_demoner_damage_pct": 0.25
+        },
+        "3": {
+          "stamina_regen_pct": 0.25
+        },
+        "4": {
+          "thorns": 10
+        },
+        "5": {
+          "magic_unlock_preview": {
+            "mana": 30,
+            "note": "Ger mana när magi låses upp, annars +30 uthållighet."
+          }
+        }
+      }
+    }
+  ]
+}
