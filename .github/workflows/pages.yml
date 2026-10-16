@@ -31,6 +31,7 @@ jobs:
         run: |
           mkdir -p _site
           cp index.html styles.css app.js app-core.js app-ui.js config.js hit.js favicon.svg robots.txt sitemap.xml _site/ 2>/dev/null || cp index.html styles.css app-core.js app-ui.js config.js hit.js favicon.svg robots.txt sitemap.xml _site/
+          if [ -d rpg-demo ]; then cp -r rpg-demo _site/; fi
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3

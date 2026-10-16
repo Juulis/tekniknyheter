@@ -1,0 +1,28 @@
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100%;height:100%;overflow:hidden;background:#8a9aa8;font-family:Georgia,serif;color:#eef;touch-action:none;user-select:none}
+canvas{display:block}
+.hidden{display:none!important}
+#hud{position:fixed;inset:0;pointer-events:none}
+#bars{position:absolute;top:16px;left:16px;width:220px}
+.bar{position:relative;height:18px;margin-bottom:6px;background:#0008;border:1px solid #fff4;border-radius:9px;overflow:hidden}
+.bar span{position:absolute;left:8px;top:1px;font-size:12px;z-index:1;text-shadow:0 1px 2px #000}
+.fill{height:100%;transition:width .2s}.hp{background:linear-gradient(#e55,#a22)}.mana{background:linear-gradient(#5af,#26c)}
+#quest{position:absolute;top:16px;right:16px;width:230px;padding:10px 14px;background:#1a2430cc;border:1px solid #9bd4;border-radius:8px}
+#quest h3{color:#9df;margin-bottom:4px}#quest p{font-size:13px}.count{margin-top:4px}
+#slots{position:absolute;bottom:16px;left:50%;transform:translateX(-50%);display:flex;gap:6px}
+.slot{position:relative;width:48px;height:48px;background:#1a2430cc;border:1px solid #9bd6;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:24px}
+.slot small{position:absolute;top:1px;left:4px;font-size:11px;color:#cde}
+#help{position:absolute;bottom:76px;left:50%;transform:translateX(-50%);font-size:12px;background:#0006;padding:3px 10px;border-radius:6px;white-space:nowrap}
+#prompt{position:absolute;top:60%;left:50%;transform:translateX(-50%);background:#123c;border:1px solid #7cf;padding:8px 16px;border-radius:6px;color:#bef}
+#msg{position:absolute;top:30%;left:50%;transform:translateX(-50%);font-size:20px;color:#9df;text-shadow:0 0 8px #48f}
+.overlay{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:radial-gradient(#2a3848dd,#0d141ce8);text-align:center;padding:20px;gap:14px}
+.overlay h1{font-size:52px;color:#bdf;text-shadow:0 0 18px #48f;letter-spacing:3px}
+button{pointer-events:auto;font:inherit;font-size:20px;padding:10px 34px;background:#2b5f8f;color:#fff;border:1px solid #9df;border-radius:8px;cursor:pointer}
+button:hover{background:#3a78b0}
+#joy,#actBtn{display:none}
+@media (pointer:coarse){
+ #joy{display:block;position:absolute;left:24px;bottom:90px;width:110px;height:110px;border-radius:50%;background:#fff2;border:1px solid #fff5;pointer-events:auto}
+ #knob{position:absolute;left:35px;top:35px;width:40px;height:40px;border-radius:50%;background:#fff7}
+ #actBtn{display:block;position:absolute;right:28px;bottom:110px;width:70px;height:70px;padding:0;border-radius:50%}
+ #help{display:none}
+}
