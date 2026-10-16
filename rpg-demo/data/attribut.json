@@ -1,0 +1,62 @@
+{
+  "magic_find": {
+    "desc": "Ökar chansen till bättre kvalitet. Påverkar inte guld eller drop/ingen drop.",
+    "formula": "eff_mf(kvalitet) = mf × k / (mf + k), mf i procentenheter",
+    "k": {
+      "magic": null,
+      "rare": 600,
+      "set": 500,
+      "legendary": 250
+    },
+    "note_magic": "Magisk använder full MF utan avtagande.",
+    "example": "MF 200 % ger magic 200, rare 150, set 143, legendary 111.",
+    "quality_chance": "p(q) = base_chance(q) × (1 + eff_mf(q)/100) × level_factor × boss_bonus(q)",
+    "level_factor": "1 + (monster_level − 1) × 0.03",
+    "cap_note": "Ingen hård gräns, avtagandet är taket."
+  },
+  "life": {
+    "formula": "max_hp = (klass_hp + tillvaxt × (lvl − 1) + life_flat) × (1 + life_pct)",
+    "cap": null
+  },
+  "stamina": {
+    "formula": "max_uth = (klass_uth + tillvaxt × (lvl − 1) + stamina_flat) × (1 + stamina_pct); regen = 8 × (1 + stamina_regen_pct − rustningsstraff)/s efter 1 s",
+    "regen_floor": 2
+  },
+  "mana": {
+    "status": "framtida_upplasning",
+    "desc": "Mana blir en separat resurs när magi låses upp via runorna. Uthållighet driver fortfarande vapenfärdigheter och undanmanöver; mana driver bara magi. Föremål med mana är vilande och visas grå tills dess (ger i stället hälften av värdet som uthållighet).",
+    "start_mana_on_unlock": 50
+  },
+  "defense": {
+    "formula": "skada_efter = max(1, skada − defense_flat_reduction); defense från utrustning ger reduction = defense_total × 0.5 och sänker fiendens träffchans via defense_rating = defense_total × 10",
+    "note": "Två roller: platt reduktion och svårare att träffas."
+  },
+  "block_chance": {
+    "formula": "block = (skold_block + affix + set) × (1 − 0.5 om spelaren springer)",
+    "cap": 0.75,
+    "effect": "Blockerad träff ger 0 skada, kostar 5 uthållighet, Riddarens sköldblock lägger till enligt färdigheten. Ingen block på slag bakifrån."
+  },
+  "hit_chance": {
+    "formula": "hit = 2 × AR/(AR + DR) × alvl/(alvl + dlvl)",
+    "floor": 0.05,
+    "cap": 0.95,
+    "player_AR": "AR = 20 + 5 × lvl + attack_rating_bonus",
+    "monster_DR": "DR = monster.defense × 10 + 5 × monster_level",
+    "note": "Används för både spelare och monster (monster AR = 20 + 8 × monster_level)."
+  },
+  "strong_hit": {
+    "name": "Krosslag (Strong hit)",
+    "formula": "vid träff: chans = strong_hit_chance; extra skada = fiendens nuvarande HP × 0.25 (vanlig) eller × 0.10 (boss)",
+    "chance_cap": 0.5,
+    "boss_cap_per_hit": "högst 3 % av bossens max HP",
+    "note": "Som Crushing Blow i D2, reduceras mot bossar."
+  },
+  "crit": {
+    "formula": "chans = klass_krit + affix, skada × 1.75",
+    "cap": 0.5
+  },
+  "move_speed": {
+    "formula": "fart = klass_fart × (1 + move_speed_pct − summa fartstraff)",
+    "penalty_cap": 0.2
+  }
+}

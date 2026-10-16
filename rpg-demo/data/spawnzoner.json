@@ -1,9 +1,21 @@
 {
   "meta": {
-    "version": "1.0",
-    "units": "Startskogen i världsenheter från game.js. Städer i rutor från respektive layout. Respawn är [min, max] sekunder, slumpas jämnt.",
-    "state_rule": "state_spawn_multiplier multipliceras med max_alive. 0 stänger av spawn. Bossar spawnar en gång och kopplas inte till respawn.",
-    "group_rule": "group_size gäller per spawnhändelse om inte fiendens rad har egen group."
+    "version": "2.0",
+    "model": "D2 spawn: alla monster i ett område slumpas EN gång per game när området laddas och återkommer inte efter att de dödats. Inga respawntider.",
+    "units": "Startskogen i världsenheter från game.js. Städer i rutor från respektive layout.",
+    "seed_rule": {
+      "new_game": "Nytt game (ny start eller laddning från menyn) skapar game_seed = slumpat 32 bitars heltal.",
+      "same_game": "Inom samma game används samma seed. Områdets frö = hash(game_seed, area_id), punktens frö = hash(game_seed, area_id, point_id), så resultatet blir identiskt även om området laddas om.",
+      "game_state": "Varje genererat monster får ett id (area_id:point_id:grupp:index). Döda id:n sparas i game_state.dead_monsters och hoppas över vid omladdning. Skadade monster behåller inte HP mellan omladdningar (återställs).",
+      "persistent": "Stadstillstånd, lorebok, hjälte och föremål sparas mellan games; monster gör det inte."
+    },
+    "state_rule": "Endast besatt genererar monster. rensad och aterbefolkad_1 till 3 stänger spawn permanent i alla games, inklusive utkant. Bossen genereras bara om den inte är besegrad i sparfilen (besegrad boss ger rensad stad när alla zoner är rensade).",
+    "group_rule": "Varje spawnpunkt slumpar ett antal grupper inom groups. Varje grupp väljer fiende viktat ur tabellen och storlek ur radens group eller punktens group_size.",
+    "level_rule": "Varje grupp slumpar en level inom punktens level_range (hela gruppen samma level). Champions och unika lägger till levelbonus enligt monster_niva.json. Skalas aldrig efter hjälten.",
+    "elite_rule": "Se session_roll.champions och session_roll.uniques.",
+    "elites_ref": "monster_niva.json elites",
+    "removed": "Respawntider, max_alive, max_alive_area, state_spawn_multiplier, outskirts och runes_scaling är borttagna i version 2.0.",
+    "session_roll_rule": "session_roll per område: 1) välj antal aktiva spawnpunkter inom active_spawn_points (always_active ingår alltid), 2) per aktiv punkt antal grupper inom groups, 3) per grupp storlek inom radens group eller punktens group_size (monsters_per_group som standard), 4) champion per grupp med chance_per_group tills max nåtts, 5) unika med chance_per_game, högst max."
   },
   "areas": [
     {
@@ -12,87 +24,166 @@
       "family": "bestar",
       "city_id": null,
       "coord_system": "världsenheter (x, z) från game.js",
-      "max_alive_area": 8,
-      "respawn_s": [
-        25,
-        45
-      ],
-      "group_size": [
-        1,
-        3
-      ],
       "min_player_distance": 18,
       "spawn_points": [
         {
           "id": "skog_nordost",
           "radius": 5,
-          "max_alive": 3,
           "pos": [
             24,
             -22
+          ],
+          "level_range": [
+            2,
+            3
+          ],
+          "groups": [
+            1,
+            2
+          ],
+          "group_size": [
+            1,
+            3
           ]
         },
         {
           "id": "skog_ost",
           "radius": 5,
-          "max_alive": 3,
           "pos": [
             30,
             4
+          ],
+          "level_range": [
+            1,
+            2
+          ],
+          "groups": [
+            1,
+            2
+          ],
+          "group_size": [
+            1,
+            3
           ]
         },
         {
           "id": "skog_sydost",
           "radius": 5,
-          "max_alive": 2,
           "pos": [
             20,
             28
+          ],
+          "level_range": [
+            1,
+            2
+          ],
+          "groups": [
+            1,
+            2
+          ],
+          "group_size": [
+            1,
+            3
           ]
         },
         {
           "id": "skog_syd",
           "radius": 5,
-          "max_alive": 3,
           "pos": [
             -6,
             32
+          ],
+          "level_range": [
+            1,
+            2
+          ],
+          "groups": [
+            1,
+            2
+          ],
+          "group_size": [
+            1,
+            3
           ]
         },
         {
           "id": "skog_sydvast",
           "radius": 5,
-          "max_alive": 2,
           "pos": [
             -26,
             22
+          ],
+          "level_range": [
+            1,
+            2
+          ],
+          "groups": [
+            1,
+            2
+          ],
+          "group_size": [
+            1,
+            3
           ]
         },
         {
           "id": "skog_vast",
           "radius": 5,
-          "max_alive": 3,
           "pos": [
             -32,
             -2
+          ],
+          "level_range": [
+            2,
+            3
+          ],
+          "groups": [
+            1,
+            2
+          ],
+          "group_size": [
+            1,
+            3
           ]
         },
         {
           "id": "skog_nordvast",
           "radius": 5,
-          "max_alive": 2,
           "pos": [
             -22,
             -26
+          ],
+          "level_range": [
+            3,
+            3
+          ],
+          "groups": [
+            1,
+            2
+          ],
+          "group_size": [
+            1,
+            3
           ]
         },
         {
           "id": "skog_nord",
           "radius": 5,
-          "max_alive": 3,
           "pos": [
             2,
             -34
+          ],
+          "level_range": [
+            2,
+            3
+          ],
+          "groups": [
+            1,
+            2
+          ],
+          "group_size": [
+            1,
+            3
           ]
         }
       ],
@@ -122,18 +213,46 @@
           ]
         }
       ],
-      "state_spawn_multiplier": {
-        "alltid": 1.0
-      },
       "note": "Punkter ligger på radie 30 till 35 som i spawnPack (18 till 40), utanför centrumcirkeln 12 och minst 8 från runorna (14,-10), (-16,-6), (4,20). Ingen stad, alltid aktiv.",
-      "runes_scaling": {
-        "0": 1.0,
-        "1": 1.15,
-        "2": 1.3,
-        "3": 1.5,
-        "note": "max_alive_area multipliceras med antal aktiva runor, skogen blir farligare."
+      "center_safe_radius": 12,
+      "level_range": [
+        1,
+        3
+      ],
+      "spawn_states": {
+        "alltid": true
       },
-      "center_safe_radius": 12
+      "runes_rule": "Skogen genereras en gång per game. Vid tredje runan läggs en engångsgrupp skuggvargar vid två slumpade inaktiva punkter (samma seed).",
+      "session_roll": {
+        "active_spawn_points": [
+          5,
+          8
+        ],
+        "groups_per_point": "se spawn_points[].groups",
+        "monsters_per_group": [
+          1,
+          3
+        ],
+        "champions": {
+          "chance_per_group": 0.03,
+          "max": 1
+        },
+        "uniques": {
+          "chance_per_game": 0.15,
+          "max": 1
+        },
+        "rolled": "en gång per game med hash(game_seed, area_id)",
+        "expected_monsters_per_game": {
+          "p5": 10,
+          "medel": 17,
+          "p95": 24,
+          "note": "exklusive boss och unika minions"
+        },
+        "groups_total": [
+          5,
+          16
+        ]
+      }
     },
     {
       "id": "gamla_byn",
@@ -141,126 +260,238 @@
       "family": "ododa",
       "city_id": "gamla_byn",
       "coord_system": "rutor (portal_by grid, 1 ruta = 2 enheter)",
-      "max_alive_area": 16,
-      "respawn_s": [
-        90,
-        150
-      ],
-      "group_size": [
-        1,
-        2
-      ],
       "min_player_distance": 12,
       "spawn_points": [
         {
           "id": "byporten_v",
           "radius": 3,
-          "max_alive": 3,
           "pos": [
             12,
             24
           ],
-          "zone": "byporten"
+          "zone": "byporten",
+          "level_range": [
+            7,
+            7
+          ],
+          "groups": [
+            1,
+            2
+          ],
+          "group_size": [
+            1,
+            2
+          ]
         },
         {
           "id": "byporten_o",
           "radius": 3,
-          "max_alive": 3,
           "pos": [
             20,
             24
           ],
-          "zone": "byporten"
+          "zone": "byporten",
+          "level_range": [
+            7,
+            7
+          ],
+          "groups": [
+            1,
+            2
+          ],
+          "group_size": [
+            1,
+            2
+          ]
         },
         {
           "id": "torget_n",
           "radius": 3,
-          "max_alive": 3,
           "pos": [
             16,
             15
           ],
-          "zone": "torget"
+          "zone": "torget",
+          "level_range": [
+            7,
+            8
+          ],
+          "groups": [
+            1,
+            2
+          ],
+          "group_size": [
+            1,
+            2
+          ]
         },
         {
           "id": "torget_s",
           "radius": 3,
-          "max_alive": 3,
           "pos": [
             16,
             20
           ],
-          "zone": "torget"
+          "zone": "torget",
+          "level_range": [
+            7,
+            8
+          ],
+          "groups": [
+            1,
+            2
+          ],
+          "group_size": [
+            1,
+            2
+          ]
         },
         {
           "id": "vasterhus_n",
           "radius": 3,
-          "max_alive": 2,
           "pos": [
             5,
             13
           ],
-          "zone": "vasterhus"
+          "zone": "vasterhus",
+          "level_range": [
+            8,
+            8
+          ],
+          "groups": [
+            1,
+            2
+          ],
+          "group_size": [
+            1,
+            2
+          ]
         },
         {
           "id": "vasterhus_s",
           "radius": 3,
-          "max_alive": 2,
           "pos": [
             5,
             21
           ],
-          "zone": "vasterhus"
+          "zone": "vasterhus",
+          "level_range": [
+            8,
+            8
+          ],
+          "groups": [
+            1,
+            2
+          ],
+          "group_size": [
+            1,
+            2
+          ]
         },
         {
           "id": "osterhus_n",
           "radius": 3,
-          "max_alive": 3,
           "pos": [
             26,
             13
           ],
-          "zone": "osterhus"
+          "zone": "osterhus",
+          "level_range": [
+            8,
+            8
+          ],
+          "groups": [
+            1,
+            2
+          ],
+          "group_size": [
+            1,
+            2
+          ]
         },
         {
           "id": "osterhus_s",
           "radius": 3,
-          "max_alive": 2,
           "pos": [
             26,
             21
           ],
-          "zone": "osterhus"
+          "zone": "osterhus",
+          "level_range": [
+            8,
+            8
+          ],
+          "groups": [
+            1,
+            2
+          ],
+          "group_size": [
+            1,
+            2
+          ]
         },
         {
           "id": "kyrkogarden_v",
           "radius": 3,
-          "max_alive": 2,
           "pos": [
             9,
             11
           ],
-          "zone": "kyrkogarden"
+          "zone": "kyrkogarden",
+          "level_range": [
+            9,
+            9
+          ],
+          "groups": [
+            1,
+            1
+          ],
+          "group_size": [
+            1,
+            2
+          ]
         },
         {
           "id": "kyrkogarden_m",
           "radius": 2,
-          "max_alive": 2,
           "pos": [
             16,
             10
           ],
-          "zone": "kyrkogarden"
+          "zone": "kyrkogarden",
+          "level_range": [
+            9,
+            9
+          ],
+          "groups": [
+            1,
+            1
+          ],
+          "group_size": [
+            1,
+            2
+          ]
         },
         {
           "id": "kyrkogarden_o",
           "radius": 3,
-          "max_alive": 2,
           "pos": [
             23,
             11
           ],
-          "zone": "kyrkogarden"
+          "zone": "kyrkogarden",
+          "level_range": [
+            9,
+            9
+          ],
+          "groups": [
+            1,
+            1
+          ],
+          "group_size": [
+            1,
+            2
+          ]
         }
       ],
       "enemy_table": [
@@ -297,53 +528,7 @@
           ]
         }
       ],
-      "state_spawn_multiplier": {
-        "besatt": 1.0,
-        "rensad": 0.0,
-        "aterbefolkad_1": 0.0,
-        "aterbefolkad_2": 0.0,
-        "aterbefolkad_3": 0.0
-      },
       "note": "Ersätter de fasta spawns i portal_by.json med slumpade punkter. Zonerna begränsar urvalet via zone_tables. Portalgläntan och kapellet har inga punkter.",
-      "outskirts": {
-        "note": "Efter rensning kan enstaka vandrare dyka upp utanför byporten tills vakter finns.",
-        "spawn_points": [
-          {
-            "id": "utanfor_byporten",
-            "radius": 3,
-            "max_alive": 2,
-            "pos": [
-              16,
-              29
-            ]
-          }
-        ],
-        "enemy_table": [
-          {
-            "enemy": "skelett_krigare",
-            "weight": 60
-          },
-          {
-            "enemy": "skelett_hund",
-            "weight": 40,
-            "group": [
-              1,
-              2
-            ]
-          }
-        ],
-        "state_spawn_multiplier": {
-          "besatt": 0.0,
-          "rensad": 1.0,
-          "aterbefolkad_1": 0.5,
-          "aterbefolkad_2": 0.0,
-          "aterbefolkad_3": 0.0
-        },
-        "respawn_s": [
-          1200,
-          1500
-        ]
-      },
       "zone_tables": {
         "byporten": [
           {
@@ -431,12 +616,59 @@
           4
         ],
         "zone": "benkungens_kapell",
-        "respawn": false
+        "respawn": false,
+        "level": 10
       },
       "no_spawn_zones": [
         "portalgladet",
         "benkungens_kapell"
-      ]
+      ],
+      "level_range": [
+        7,
+        9
+      ],
+      "spawn_states": {
+        "besatt": true,
+        "rensad": false,
+        "aterbefolkad_1": false,
+        "aterbefolkad_2": false,
+        "aterbefolkad_3": false
+      },
+      "session_roll": {
+        "active_spawn_points": [
+          9,
+          11
+        ],
+        "groups_per_point": "se spawn_points[].groups",
+        "monsters_per_group": [
+          1,
+          2
+        ],
+        "champions": {
+          "chance_per_group": 0.06,
+          "max": 2
+        },
+        "uniques": {
+          "chance_per_game": 0.35,
+          "max": 1
+        },
+        "rolled": "en gång per game med hash(game_seed, area_id)",
+        "always_active": [
+          "kyrkogarden_v",
+          "kyrkogarden_m",
+          "kyrkogarden_o"
+        ],
+        "expected_monsters_per_game": {
+          "p5": 16,
+          "medel": 23,
+          "p95": 30,
+          "note": "exklusive boss och unika minions"
+        },
+        "groups_total": [
+          9,
+          22
+        ]
+      }
     },
     {
       "id": "vargaby",
@@ -444,60 +676,106 @@
       "family": "bestar",
       "city_id": "vargaby",
       "coord_system": "rutor (portal_by grid, 1 ruta = 2 enheter)",
-      "max_alive_area": 12,
-      "respawn_s": [
-        90,
-        150
-      ],
-      "group_size": [
-        1,
-        3
-      ],
       "min_player_distance": 12,
       "spawn_points": [
         {
           "id": "vargaby_port",
           "radius": 4,
-          "max_alive": 3,
           "pos": [
             16,
             25
+          ],
+          "level_range": [
+            4,
+            4
+          ],
+          "groups": [
+            1,
+            3
+          ],
+          "group_size": [
+            1,
+            3
           ]
         },
         {
           "id": "vargaby_vast",
           "radius": 4,
-          "max_alive": 3,
           "pos": [
             6,
             18
+          ],
+          "level_range": [
+            4,
+            5
+          ],
+          "groups": [
+            1,
+            3
+          ],
+          "group_size": [
+            1,
+            3
           ]
         },
         {
           "id": "vargaby_ost",
           "radius": 4,
-          "max_alive": 3,
           "pos": [
             26,
             18
+          ],
+          "level_range": [
+            4,
+            5
+          ],
+          "groups": [
+            1,
+            3
+          ],
+          "group_size": [
+            1,
+            3
           ]
         },
         {
           "id": "vargaby_centrum",
           "radius": 4,
-          "max_alive": 3,
           "pos": [
             16,
             15
+          ],
+          "level_range": [
+            5,
+            6
+          ],
+          "groups": [
+            2,
+            3
+          ],
+          "group_size": [
+            1,
+            3
           ]
         },
         {
           "id": "vargaby_norr",
           "radius": 4,
-          "max_alive": 3,
           "pos": [
             16,
             9
+          ],
+          "level_range": [
+            6,
+            6
+          ],
+          "groups": [
+            2,
+            3
+          ],
+          "group_size": [
+            1,
+            3
           ]
         }
       ],
@@ -531,55 +809,56 @@
           ]
         }
       ],
-      "state_spawn_multiplier": {
-        "besatt": 1.0,
-        "rensad": 0.0,
-        "aterbefolkad_1": 0.0,
-        "aterbefolkad_2": 0.0,
-        "aterbefolkad_3": 0.0
-      },
       "note": "Grundnivå. Layout ej designad, 32x32 rutor antas, nivå 3 till 6.",
-      "outskirts": {
-        "spawn_points": [
-          {
-            "id": "vargaby_utkant",
-            "radius": 4,
-            "max_alive": 2,
-            "pos": [
-              16,
-              29
-            ]
-          }
-        ],
-        "enemy_table": [
-          {
-            "enemy": "skogsvarg",
-            "weight": 35,
-            "group": [
-              2,
-              4
-            ]
-          }
-        ],
-        "state_spawn_multiplier": {
-          "besatt": 0.0,
-          "rensad": 1.0,
-          "aterbefolkad_1": 0.5,
-          "aterbefolkad_2": 0.0,
-          "aterbefolkad_3": 0.0
-        },
-        "respawn_s": [
-          1200,
-          1500
-        ]
-      },
       "boss": {
         "enemy": "grabjornen_ulvhild",
         "pos": [
           16,
           4
         ],
-        "respawn": false
+        "respawn": false,
+        "level": 6
+      },
+      "level_range": [
+        4,
+        6
+      ],
+      "spawn_states": {
+        "besatt": true,
+        "rensad": false,
+        "aterbefolkad_1": false,
+        "aterbefolkad_2": false,
+        "aterbefolkad_3": false
+      },
+      "session_roll": {
+        "active_spawn_points": [
+          4,
+          5
+        ],
+        "groups_per_point": "se spawn_points[].groups",
+        "monsters_per_group": [
+          1,
+          3
+        ],
+        "champions": {
+          "chance_per_group": 0.05,
+          "max": 2
+        },
+        "uniques": {
+          "chance_per_game": 0.35,
+          "max": 1
+        },
+        "rolled": "en gång per game med hash(game_seed, area_id)",
+        "expected_monsters_per_game": {
+          "p5": 12,
+          "medel": 20,
+          "p95": 29,
+          "note": "exklusive boss och unika minions"
+        },
+        "groups_total": [
+          4,
+          15
+        ]
       }
     },
     {
@@ -588,60 +867,106 @@
       "family": "gastar",
       "city_id": "dimmerstrand",
       "coord_system": "rutor (portal_by grid, 1 ruta = 2 enheter)",
-      "max_alive_area": 12,
-      "respawn_s": [
-        90,
-        150
-      ],
-      "group_size": [
-        1,
-        3
-      ],
       "min_player_distance": 12,
       "spawn_points": [
         {
           "id": "dimmerstrand_port",
           "radius": 4,
-          "max_alive": 3,
           "pos": [
             16,
             25
+          ],
+          "level_range": [
+            11,
+            11
+          ],
+          "groups": [
+            1,
+            3
+          ],
+          "group_size": [
+            1,
+            3
           ]
         },
         {
           "id": "dimmerstrand_vast",
           "radius": 4,
-          "max_alive": 3,
           "pos": [
             6,
             18
+          ],
+          "level_range": [
+            11,
+            12
+          ],
+          "groups": [
+            1,
+            3
+          ],
+          "group_size": [
+            1,
+            3
           ]
         },
         {
           "id": "dimmerstrand_ost",
           "radius": 4,
-          "max_alive": 3,
           "pos": [
             26,
             18
+          ],
+          "level_range": [
+            11,
+            12
+          ],
+          "groups": [
+            1,
+            3
+          ],
+          "group_size": [
+            1,
+            3
           ]
         },
         {
           "id": "dimmerstrand_centrum",
           "radius": 4,
-          "max_alive": 3,
           "pos": [
             16,
             15
+          ],
+          "level_range": [
+            12,
+            14
+          ],
+          "groups": [
+            2,
+            3
+          ],
+          "group_size": [
+            1,
+            3
           ]
         },
         {
           "id": "dimmerstrand_norr",
           "radius": 4,
-          "max_alive": 3,
           "pos": [
             16,
             9
+          ],
+          "level_range": [
+            14,
+            14
+          ],
+          "groups": [
+            2,
+            3
+          ],
+          "group_size": [
+            1,
+            3
           ]
         }
       ],
@@ -671,55 +996,56 @@
           ]
         }
       ],
-      "state_spawn_multiplier": {
-        "besatt": 1.0,
-        "rensad": 0.0,
-        "aterbefolkad_1": 0.0,
-        "aterbefolkad_2": 0.0,
-        "aterbefolkad_3": 0.0
-      },
       "note": "Grundnivå. Layout ej designad, 32x32 rutor antas, nivå 5 till 8.",
-      "outskirts": {
-        "spawn_points": [
-          {
-            "id": "dimmerstrand_utkant",
-            "radius": 4,
-            "max_alive": 2,
-            "pos": [
-              16,
-              29
-            ]
-          }
-        ],
-        "enemy_table": [
-          {
-            "enemy": "dimgast",
-            "weight": 50,
-            "group": [
-              1,
-              3
-            ]
-          }
-        ],
-        "state_spawn_multiplier": {
-          "besatt": 0.0,
-          "rensad": 1.0,
-          "aterbefolkad_1": 0.5,
-          "aterbefolkad_2": 0.0,
-          "aterbefolkad_3": 0.0
-        },
-        "respawn_s": [
-          1200,
-          1500
-        ]
-      },
       "boss": {
         "enemy": "trasdrottningen",
         "pos": [
           16,
           4
         ],
-        "respawn": false
+        "respawn": false,
+        "level": 14
+      },
+      "level_range": [
+        11,
+        14
+      ],
+      "spawn_states": {
+        "besatt": true,
+        "rensad": false,
+        "aterbefolkad_1": false,
+        "aterbefolkad_2": false,
+        "aterbefolkad_3": false
+      },
+      "session_roll": {
+        "active_spawn_points": [
+          4,
+          5
+        ],
+        "groups_per_point": "se spawn_points[].groups",
+        "monsters_per_group": [
+          1,
+          3
+        ],
+        "champions": {
+          "chance_per_group": 0.07,
+          "max": 2
+        },
+        "uniques": {
+          "chance_per_game": 0.4,
+          "max": 1
+        },
+        "rolled": "en gång per game med hash(game_seed, area_id)",
+        "expected_monsters_per_game": {
+          "p5": 9,
+          "medel": 15,
+          "p95": 22,
+          "note": "exklusive boss och unika minions"
+        },
+        "groups_total": [
+          4,
+          15
+        ]
       }
     },
     {
@@ -728,60 +1054,106 @@
       "family": "insekter",
       "city_id": "kopparberg",
       "coord_system": "rutor (portal_by grid, 1 ruta = 2 enheter)",
-      "max_alive_area": 12,
-      "respawn_s": [
-        90,
-        150
-      ],
-      "group_size": [
-        1,
-        3
-      ],
       "min_player_distance": 12,
       "spawn_points": [
         {
           "id": "kopparberg_port",
           "radius": 4,
-          "max_alive": 3,
           "pos": [
             16,
             25
+          ],
+          "level_range": [
+            15,
+            15
+          ],
+          "groups": [
+            1,
+            3
+          ],
+          "group_size": [
+            1,
+            3
           ]
         },
         {
           "id": "kopparberg_vast",
           "radius": 4,
-          "max_alive": 3,
           "pos": [
             6,
             18
+          ],
+          "level_range": [
+            15,
+            16
+          ],
+          "groups": [
+            1,
+            3
+          ],
+          "group_size": [
+            1,
+            3
           ]
         },
         {
           "id": "kopparberg_ost",
           "radius": 4,
-          "max_alive": 3,
           "pos": [
             26,
             18
+          ],
+          "level_range": [
+            15,
+            16
+          ],
+          "groups": [
+            1,
+            3
+          ],
+          "group_size": [
+            1,
+            3
           ]
         },
         {
           "id": "kopparberg_centrum",
           "radius": 4,
-          "max_alive": 3,
           "pos": [
             16,
             15
+          ],
+          "level_range": [
+            16,
+            18
+          ],
+          "groups": [
+            2,
+            3
+          ],
+          "group_size": [
+            1,
+            3
           ]
         },
         {
           "id": "kopparberg_norr",
           "radius": 4,
-          "max_alive": 3,
           "pos": [
             16,
             9
+          ],
+          "level_range": [
+            18,
+            18
+          ],
+          "groups": [
+            2,
+            3
+          ],
+          "group_size": [
+            1,
+            3
           ]
         }
       ],
@@ -811,55 +1183,56 @@
           ]
         }
       ],
-      "state_spawn_multiplier": {
-        "besatt": 1.0,
-        "rensad": 0.0,
-        "aterbefolkad_1": 0.0,
-        "aterbefolkad_2": 0.0,
-        "aterbefolkad_3": 0.0
-      },
       "note": "Grundnivå. Layout ej designad, 32x32 rutor antas, nivå 6 till 9.",
-      "outskirts": {
-        "spawn_points": [
-          {
-            "id": "kopparberg_utkant",
-            "radius": 4,
-            "max_alive": 2,
-            "pos": [
-              16,
-              29
-            ]
-          }
-        ],
-        "enemy_table": [
-          {
-            "enemy": "gruvspindel",
-            "weight": 50,
-            "group": [
-              3,
-              5
-            ]
-          }
-        ],
-        "state_spawn_multiplier": {
-          "besatt": 0.0,
-          "rensad": 1.0,
-          "aterbefolkad_1": 0.5,
-          "aterbefolkad_2": 0.0,
-          "aterbefolkad_3": 0.0
-        },
-        "respawn_s": [
-          1200,
-          1500
-        ]
-      },
       "boss": {
         "enemy": "spinnmodern",
         "pos": [
           16,
           4
         ],
-        "respawn": false
+        "respawn": false,
+        "level": 18
+      },
+      "level_range": [
+        15,
+        18
+      ],
+      "spawn_states": {
+        "besatt": true,
+        "rensad": false,
+        "aterbefolkad_1": false,
+        "aterbefolkad_2": false,
+        "aterbefolkad_3": false
+      },
+      "session_roll": {
+        "active_spawn_points": [
+          4,
+          5
+        ],
+        "groups_per_point": "se spawn_points[].groups",
+        "monsters_per_group": [
+          1,
+          3
+        ],
+        "champions": {
+          "chance_per_group": 0.08,
+          "max": 3
+        },
+        "uniques": {
+          "chance_per_game": 0.45,
+          "max": 1
+        },
+        "rolled": "en gång per game med hash(game_seed, area_id)",
+        "expected_monsters_per_game": {
+          "p5": 15,
+          "medel": 26,
+          "p95": 39,
+          "note": "exklusive boss och unika minions"
+        },
+        "groups_total": [
+          4,
+          15
+        ]
       }
     },
     {
@@ -868,60 +1241,106 @@
       "family": "demoner",
       "city_id": "askeborg",
       "coord_system": "rutor (portal_by grid, 1 ruta = 2 enheter)",
-      "max_alive_area": 12,
-      "respawn_s": [
-        90,
-        150
-      ],
-      "group_size": [
-        1,
-        3
-      ],
       "min_player_distance": 12,
       "spawn_points": [
         {
           "id": "askeborg_port",
           "radius": 4,
-          "max_alive": 3,
           "pos": [
             16,
             25
+          ],
+          "level_range": [
+            19,
+            19
+          ],
+          "groups": [
+            1,
+            3
+          ],
+          "group_size": [
+            1,
+            3
           ]
         },
         {
           "id": "askeborg_vast",
           "radius": 4,
-          "max_alive": 3,
           "pos": [
             6,
             18
+          ],
+          "level_range": [
+            19,
+            21
+          ],
+          "groups": [
+            1,
+            3
+          ],
+          "group_size": [
+            1,
+            3
           ]
         },
         {
           "id": "askeborg_ost",
           "radius": 4,
-          "max_alive": 3,
           "pos": [
             26,
             18
+          ],
+          "level_range": [
+            19,
+            21
+          ],
+          "groups": [
+            1,
+            3
+          ],
+          "group_size": [
+            1,
+            3
           ]
         },
         {
           "id": "askeborg_centrum",
           "radius": 4,
-          "max_alive": 3,
           "pos": [
             16,
             15
+          ],
+          "level_range": [
+            21,
+            23
+          ],
+          "groups": [
+            2,
+            3
+          ],
+          "group_size": [
+            1,
+            3
           ]
         },
         {
           "id": "askeborg_norr",
           "radius": 4,
-          "max_alive": 3,
           "pos": [
             16,
             9
+          ],
+          "level_range": [
+            23,
+            23
+          ],
+          "groups": [
+            2,
+            3
+          ],
+          "group_size": [
+            1,
+            3
           ]
         }
       ],
@@ -951,55 +1370,56 @@
           ]
         }
       ],
-      "state_spawn_multiplier": {
-        "besatt": 1.0,
-        "rensad": 0.0,
-        "aterbefolkad_1": 0.0,
-        "aterbefolkad_2": 0.0,
-        "aterbefolkad_3": 0.0
-      },
       "note": "Grundnivå. Layout ej designad, 32x32 rutor antas, nivå 8 till 10.",
-      "outskirts": {
-        "spawn_points": [
-          {
-            "id": "askeborg_utkant",
-            "radius": 4,
-            "max_alive": 2,
-            "pos": [
-              16,
-              29
-            ]
-          }
-        ],
-        "enemy_table": [
-          {
-            "enemy": "askimp",
-            "weight": 45,
-            "group": [
-              2,
-              3
-            ]
-          }
-        ],
-        "state_spawn_multiplier": {
-          "besatt": 0.0,
-          "rensad": 1.0,
-          "aterbefolkad_1": 0.5,
-          "aterbefolkad_2": 0.0,
-          "aterbefolkad_3": 0.0
-        },
-        "respawn_s": [
-          1200,
-          1500
-        ]
-      },
       "boss": {
         "enemy": "askfursten_morvath",
         "pos": [
           16,
           4
         ],
-        "respawn": false
+        "respawn": false,
+        "level": 25
+      },
+      "level_range": [
+        19,
+        23
+      ],
+      "spawn_states": {
+        "besatt": true,
+        "rensad": false,
+        "aterbefolkad_1": false,
+        "aterbefolkad_2": false,
+        "aterbefolkad_3": false
+      },
+      "session_roll": {
+        "active_spawn_points": [
+          4,
+          5
+        ],
+        "groups_per_point": "se spawn_points[].groups",
+        "monsters_per_group": [
+          1,
+          3
+        ],
+        "champions": {
+          "chance_per_group": 0.1,
+          "max": 3
+        },
+        "uniques": {
+          "chance_per_game": 0.5,
+          "max": 2
+        },
+        "rolled": "en gång per game med hash(game_seed, area_id)",
+        "expected_monsters_per_game": {
+          "p5": 10,
+          "medel": 17,
+          "p95": 24,
+          "note": "exklusive boss och unika minions"
+        },
+        "groups_total": [
+          4,
+          15
+        ]
       }
     }
   ]
