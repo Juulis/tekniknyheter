@@ -1,5 +1,5 @@
 *{box-sizing:border-box;margin:0;padding:0}
-html,body{width:100%;height:100%;overflow:hidden;background:#0d0f12;font-family:Georgia,serif;color:#dde3ea;touch-action:none;user-select:none}
+html,body{width:100%;height:100%;overflow:hidden;background:#0d0f12;font-family:Cinzel,Georgia,serif;color:#dde3ea;touch-action:none;user-select:none}
 canvas{display:block}
 .hidden{display:none!important}
 #vignette{position:fixed;inset:0;pointer-events:none;background:radial-gradient(ellipse at center,transparent 55%,#000a 100%);z-index:1}
@@ -52,3 +52,26 @@ button:hover{background:#4a5058}
  #atkBtn{right:24px;bottom:100px}#actBtn{right:100px;bottom:150px}#skBtn{right:30px;bottom:180px}
  #help{display:none}
 }
+
+/* --- grafikpass: orbs, ramar --- */
+.orb{position:absolute;bottom:14px;width:120px;height:120px;border-radius:50%;overflow:hidden;background:radial-gradient(circle at 50% 60%,#140a0c,#050506);border:3px solid #6b5a3e;box-shadow:0 0 0 2px #1a1510,0 0 0 5px #3b3020,0 0 18px #000,inset 0 0 18px #000}
+#orbL{left:22px}#orbR{right:22px}
+.orb .fill{position:absolute;left:0;right:0;bottom:0;width:100%;transition:height .15s}
+.orb .hp{background:radial-gradient(circle at 40% 30%,#e04050,#7a1018 60%,#3a0608)}
+.orb .st{background:radial-gradient(circle at 40% 30%,#f2c46b,#8a6a2a 60%,#3a2a0e)}
+.orb .gloss{position:absolute;inset:0;border-radius:50%;background:radial-gradient(circle at 35% 25%,#ffffff40,transparent 40%)}
+.orb span{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;text-shadow:0 0 4px #000,0 1px 2px #000}
+.orb label{position:absolute;bottom:14px;width:100%;text-align:center;font-size:10px;letter-spacing:1px;color:#e8d8c0cc;text-shadow:0 1px 2px #000}
+#plate{position:absolute;top:14px;left:14px;display:flex;gap:12px;align-items:center;padding:6px 14px;background:linear-gradient(#1a1714ee,#0d0c0aee);border:1px solid #6b5a3e;box-shadow:0 0 0 1px #000,inset 0 0 8px #000;border-radius:4px;font-size:14px}
+#plate b{color:#f2c46b}#qBtn{font-size:11px;padding:3px 8px;border-color:#6b5a3e;background:#2a2420}
+#xpwrap{position:absolute;bottom:6px;left:160px;right:160px;height:6px;background:#000c;border:1px solid #4a3e2a;border-radius:3px;overflow:hidden}
+#xp{height:100%;background:linear-gradient(90deg,#8a6a2a,#f2c46b);transition:width .2s}
+#quest{background:linear-gradient(#17140fee,#0b0a08ee);border:1px solid #6b5a3e;box-shadow:0 0 0 1px #000,0 0 0 4px #2a2218,inset 0 0 12px #000;border-radius:3px}
+#quest h3{color:#e8c890;font-weight:700;letter-spacing:1px;border-bottom:1px solid #6b5a3e66;padding-bottom:4px}
+.slot{background:linear-gradient(#1e1a15,#0b0a08);border:1px solid #6b5a3e;box-shadow:inset 0 0 8px #000,0 0 0 1px #000}
+#slots{bottom:20px}#help{bottom:84px;font-family:Georgia,serif}
+.bbar{border:1px solid #6b5a3e;box-shadow:0 0 0 1px #000,0 0 10px #c0182a55}
+#bossName{font-weight:700;letter-spacing:2px;color:#e8c890}
+.overlay h1{font-weight:700}.card{background:linear-gradient(#1e1a15ee,#0b0a08ee);border-color:#6b5a3e}
+#inv{top:70px;background:linear-gradient(#17140ff4,#0b0a08f4);border-color:#6b5a3e}
+@media (pointer:coarse){.orb{width:90px;height:90px}#xpwrap{left:120px;right:120px}#joy{left:120px;bottom:30px}}

@@ -4,18 +4,17 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <title>Runornas kall – 3D RPG-demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 <script type="importmap">{"imports":{"three":"https://unpkg.com/three@0.160.0/build/three.module.js","three/addons/":"https://unpkg.com/three@0.160.0/examples/jsm/"}}</script>
 </head>
 <body>
 <div id="vignette"></div>
 <div id="hud" class="hidden">
-  <div id="bars">
-    <div class="bar"><span id="hpT">HP</span><div class="fill hp" id="hp"></div></div>
-    <div class="bar"><span id="stT">Uthållighet</span><div class="fill st" id="st"></div></div>
-    <div class="bar xpb"><span id="xpT">XP</span><div class="fill xp" id="xp"></div></div>
-    <div id="lvgold"><b id="lvl">Nivå 1</b> · <span id="gold">🪙 0</span></div>
-  </div>
+  <div id="orbL" class="orb"><div class="fill hp" id="hp"></div><div class="gloss"></div><span id="hpT"></span><label>Hälsa</label></div>
+  <div id="orbR" class="orb"><div class="fill st" id="st"></div><div class="gloss"></div><span id="stT"></span><label>Uthållighet</label></div>
+  <div id="plate"><b id="lvl">Nivå 1</b><span id="gold">🪙 0</span><button id="qBtn">Grafik: Hög</button></div>
+  <div id="xpwrap"><div id="xp"></div></div>
   <div id="quest"><h3 id="qTitle">Runornas kall</h3><p id="qText">Väck de tre runstenarna i skogen.</p><p class="count" id="qCount"></p></div>
   <div id="bossbar" class="hidden"><div id="bossName">Benkungen Valdemar</div><div class="bbar"><div id="bossFill"></div></div><div id="bossPhase"></div></div>
   <div id="slots"></div>
