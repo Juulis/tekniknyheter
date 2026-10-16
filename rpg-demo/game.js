@@ -429,7 +429,7 @@ function dropLoot(m) {
   out.forEach((o, i) => { const a = i / out.length * 6.28 + rand(0, 1), r = out.length > 1 ? 0.9 : 0; spawnDrop(Z, p.x + Math.cos(a) * r, p.z + Math.sin(a) * r, o); });
 }
 function spawnDrop(z, x, y, o) {
-  const col = o.gold ? P.hope : RAR[ITEMS[o.item].rarity].color;
+  const col = o.gold ? P.hope : LBL_COLOR[ITEMS[o.item].rarity];
   const geo = o.gold ? new THREE.CylinderGeometry(0.18, 0.18, 0.05, 8) : new THREE.OctahedronGeometry(0.22);
   const mesh = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ color: col, emissive: col, emissiveIntensity: 0.8 })); mesh.position.set(x, 0.4, y);
   const pts = makeParticles(10, col, 0.08); pts.pts.material.opacity = 0.9; mesh.add(pts.pts);
@@ -603,6 +603,37 @@ tb('actBtn', () => activate()); tb('atkBtn', () => attack()); tb('skBtn', () => 
 addEventListener('resize', () => { camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth, innerHeight); composer.setSize(innerWidth, innerHeight); });
 $('qBtn').onclick = () => setQuality(quality === 'hog' ? 'lag' : 'hog', null, true);
 
+// ---------- Alt: etiketter för loot ----------
+let altDown = false;
+const LBL_COLOR = { common: '#c8c8c8', uncommon: '#6a8cff', rare: '#ffd84a', epic: '#3fd46a', legendary: '#ff9a2e' };
+document.addEventListener('contextmenu', e => e.preventDefault());
+const isAlt = e => e.key === 'Alt' || e.code === 'AltLeft' || e.code === 'AltRight';
+addEventListener('keydown', e => { if (isAlt(e)) { e.preventDefault(); altDown = true; } }, true);
+addEventListener('keyup', e => { if (isAlt(e)) { e.preventDefault(); altDown = false; } }, true);
+addEventListener('blur', () => { altDown = false; for (const k in keys) keys[k] = false; });
+const lblBox = document.createElement('div'); lblBox.id = 'lootLabels'; document.body.appendChild(lblBox);
+function grabDrop(d) {
+  if (!Z.drops.includes(d)) return;
+  if (Math.hypot(d.mesh.position.x - hero.position.x, d.mesh.position.z - hero.position.z) <= 2) { pickup(d); Z.g.remove(d.mesh); d.el?.remove(); Z.drops.splice(Z.drops.indexOf(d), 1); renderSlots(); }
+  else { enemyTarget = null; moveTarget = d.mesh.position.clone().setY(0); }
+}
+function updateLootLabels() {
+  for (const el of lblBox.children) el.style.display = 'none';
+  if (!altDown || !S.playing) return;
+  const items = [];
+  for (const d of Z.drops) {
+    if (!d.el) { const el = document.createElement('div'); el.className = 'lootLbl';
+      if (d.o.gold) { el.textContent = `${d.o.gold} guld`; el.style.color = '#f2c46b'; } else { el.textContent = NAMES[d.o.item]; el.style.color = LBL_COLOR[ITEMS[d.o.item].rarity]; }
+      el.addEventListener('mousedown', e => { e.preventDefault(); e.stopPropagation(); grabDrop(d); }); el.addEventListener('touchstart', e => { e.preventDefault(); e.stopPropagation(); grabDrop(d); }, { passive: false }); lblBox.appendChild(el); d.el = el; }
+    const v = d.mesh.position.clone().setY(0.9).project(camera); if (v.z > 1) continue;
+    items.push({ d, x: (v.x + 1) / 2 * innerWidth, y: (1 - v.y) / 2 * innerHeight });
+  }
+  items.sort((a, b) => b.y - a.y); const placed = [];
+  for (const it of items) { it.d.el.style.display = 'block'; const w = it.d.el.offsetWidth, h = 20; let y = it.y;
+    for (let moved = true; moved;) { moved = false; for (const p of placed) if (Math.abs(p.x - it.x) < (p.w + w) / 2 + 4 && Math.abs(p.y - y) < h) { y = p.y - h; moved = true; } }
+    placed.push({ x: it.x, y, w }); it.d.el.style.left = it.x + 'px'; it.d.el.style.top = y + 'px'; }
+}
+
 // ---------- runor / portal / zonbyte ----------
 function nearRune() { return Z?.runes?.find(r => !r.active && Math.hypot(r.x - hero.position.x, r.z - hero.position.z) < 2.6); }
 function activate(r = nearRune(), free = false) {
@@ -632,7 +663,7 @@ function renderSlots() {
   $('slots').innerHTML = [['⚔️', 1, '', 'active'], [SKILL_ICON[S.cls.id], 2, 'Q', ''], ['🧪', 3, hpN, ''], ['🍶', 4, stN, ''], ['🔒', 5, '', 'locked']]
     .map(([i, k, n, c]) => `<div class="slot ${c}"><i>${i}</i><small>${k}</small><em>${n}</em>${k === 2 ? '<div class="cd" id="skcd"></div>' : ''}</div>`).join('');
 }
-$('help').textContent = 'Vänsterklick: gå / anfall · Musen mot kanten: vrid kameran · Högerdrag: kamera · WASD: gå · Mellanslag: hugg · Q: färdighet · E: aktivera · 3/4: drycker · I: packning';
+$('help').textContent = 'Vänsterklick: gå / anfall · Musen mot kanten: vrid kameran · Högerdrag: kamera · WASD: gå · Mellanslag: hugg · Q: färdighet · E: aktivera · 3/4: drycker · I: packning · Alt: visa föremål';
 let chosen = 'riddare';
 $('classes').innerHTML = CLS.classes.map(c => `<div class="card${c.id === chosen ? ' sel' : ''}" data-id="${c.id}"><h2>${c.name}</h2><i>${c.role}</i><br>HP ${c.base.hp} · Uthållighet ${c.base.stamina}<br>Skada ${c.base.damage} (${c.main_damage_type}) · Försvar ${c.base.defense}<br>Fart ${c.base.speed} · Krit ${Math.round(c.base.crit_chance * 100)} %<br><i>Färdighet: ${c.skills[0].name}</i></div>`).join('');
 document.querySelectorAll('.card').forEach(el => el.onclick = () => { chosen = el.dataset.id; document.querySelectorAll('.card').forEach(x => x.classList.toggle('sel', x === el)); });
@@ -695,7 +726,8 @@ function tick() {
     else if (f.kind === 'slam') { f.life -= dt; f.mesh.material.opacity = 0.4 + Math.sin(t * 20) * 0.3; if (f.life <= 0) { f.onEnd(); Z.fx.splice(i, 1); } } }
   for (let i = Z.drops.length - 1; i >= 0; i--) { const d = Z.drops[i]; d.t += dt; d.mesh.position.y = 0.4 + Math.sin(d.t * 3) * 0.1; d.mesh.rotation.y += dt * 2;
     for (let j = 0; j < d.pts.n; j++) { const a = j * 2.4 + d.t * 2, ph = (d.t * 0.7 + j / d.pts.n) % 1; d.pts.pos[j * 3] = Math.cos(a) * 0.3; d.pts.pos[j * 3 + 1] = ph * 0.8 - 0.2; d.pts.pos[j * 3 + 2] = Math.sin(a) * 0.3; } d.pts.pts.geometry.attributes.position.needsUpdate = true;
-    if (S.playing && Math.hypot(d.mesh.position.x - hero.position.x, d.mesh.position.z - hero.position.z) < 1.2) { pickup(d); Z.g.remove(d.mesh); Z.drops.splice(i, 1); renderSlots(); } }
+    if (S.playing && Math.hypot(d.mesh.position.x - hero.position.x, d.mesh.position.z - hero.position.z) < 1.2) { pickup(d); Z.g.remove(d.mesh); d.el?.remove(); Z.drops.splice(i, 1); renderSlots(); } }
+  updateLootLabels();
   if (S.stDelay > 0) S.stDelay -= dt; else S.st = Math.min(stats.maxSt, S.st + stats.regen * dt);
   if (!near && S.playing) S.hp = Math.min(stats.maxHp, S.hp + dt * 2);
   if (Z.runes) for (const r of Z.runes) { if (!r.active) continue; r.light.intensity = 3 + Math.sin(t * 4) * 0.6; r.parts.pts.material.opacity = 0.9;
@@ -745,5 +777,7 @@ window.__rpg = {
   screenOf(m) { const v = m.g.position.clone().setY(1).project(camera); return [(v.x + 1) / 2 * innerWidth, (1 - v.y) / 2 * innerHeight]; },
   spawnInfo() { return { area: Z.sp?.A.id, points: Z.sp?.points.length, alive: Z.monsters.filter(m => !m.dead).map(m => m.id) }; },
   killBoss() { const b = this.boss(); b.immune = 0; b.hp = 0; drawHp(b); killMonster(b); },
+  dropDemo() { const ids = ['liten_halsodryck', 'jarnyxa', 'runsmidd_klinga', 'gravvaktarens_pansar', 'benkungens_lie', 'ringbrynja', 'benhjalm']; ids.forEach((id, i) => { const a = i / 8 * 6.28; spawnDrop(Z, hero.position.x + Math.cos(a) * 2.5, hero.position.z + Math.sin(a) * 2.5, { item: id }); }); spawnDrop(Z, hero.position.x + 2.5 * Math.cos(7 / 8 * 6.28), hero.position.z + 2.5 * Math.sin(7 / 8 * 6.28), { gold: 37 }); },
+  get alt() { return altDown; },
   god(on = true) { S.god = on; }
 };

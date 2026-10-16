@@ -75,3 +75,4 @@ button:hover{background:#4a5058}
 .overlay h1{font-weight:700}.card{background:linear-gradient(#1e1a15ee,#0b0a08ee);border-color:#6b5a3e}
 #inv{top:70px;background:linear-gradient(#17140ff4,#0b0a08f4);border-color:#6b5a3e}
 @media (pointer:coarse){.orb{width:90px;height:90px}#xpwrap{left:120px;right:120px}#joy{left:120px;bottom:30px}}
+#lootLabels{position:fixed;inset:0;pointer-events:none;z-index:3}.lootLbl{position:absolute;transform:translate(-50%,-100%);padding:1px 7px;background:#000c;border:1px solid #3a3226;border-radius:2px;font:600 13px Georgia,serif;white-space:nowrap;cursor:pointer;pointer-events:auto;text-shadow:0 1px 1px #000}.lootLbl:hover{border-color:#f2c46b}
