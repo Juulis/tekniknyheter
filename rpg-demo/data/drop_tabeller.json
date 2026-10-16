@@ -29,7 +29,9 @@
         23
       ]
     },
-    "ilvl_rule": "ilvl = monster_level (champion och unik inklusive levelbonus, unik +1), boss +2. Se monster_niva.json."
+    "ilvl_rule": "ilvl = monster_level (champion och unik inklusive levelbonus, unik +1), boss +2. Se monster_niva.json.",
+    "guld_category_note": "Kategorin guld i category_weights ger en extra guldhög (×2 mot vanligt guldbelopp) utöver gold_chance.",
+    "removed": "Ädelstenar och hylsor borttagna tills vidare; deras vikt fördelad 40 % dryck, 20 % amulett, 20 % ring, 20 % guld."
   },
   "family_tables": {
     "ododa": {
@@ -38,11 +40,10 @@
       "category_weights": {
         "vapen": 30,
         "rustning": 25,
-        "adelsten": 8,
-        "dryck": 22,
-        "amulett": 3,
-        "ring": 3,
-        "guld": 0
+        "dryck": 25,
+        "amulett": 5,
+        "ring": 5,
+        "guld": 2
       },
       "gold_chance": 0.6,
       "extra": [
@@ -56,10 +57,10 @@
       "drop_chance": 0.4,
       "gold_mult": 0.6,
       "category_weights": {
-        "adelsten": 30,
-        "dryck": 50,
-        "amulett": 10,
-        "ring": 10
+        "dryck": 62,
+        "amulett": 16,
+        "ring": 16,
+        "guld": 6
       },
       "gold_chance": 0.4,
       "extra": []
@@ -68,10 +69,10 @@
       "drop_chance": 0.45,
       "gold_mult": 1.2,
       "category_weights": {
-        "adelsten": 35,
-        "dryck": 40,
-        "amulett": 13,
-        "ring": 12
+        "dryck": 54,
+        "amulett": 20,
+        "ring": 19,
+        "guld": 7
       },
       "gold_chance": 0.6,
       "extra": []
@@ -80,10 +81,10 @@
       "drop_chance": 0.4,
       "gold_mult": 0.8,
       "category_weights": {
-        "adelsten": 40,
-        "dryck": 45,
-        "amulett": 8,
-        "ring": 7
+        "dryck": 61,
+        "amulett": 16,
+        "ring": 15,
+        "guld": 8
       },
       "gold_chance": 0.4,
       "extra": [
@@ -99,10 +100,10 @@
       "category_weights": {
         "vapen": 10,
         "rustning": 15,
-        "adelsten": 25,
-        "dryck": 35,
-        "amulett": 8,
-        "ring": 7
+        "dryck": 45,
+        "amulett": 13,
+        "ring": 12,
+        "guld": 5
       },
       "gold_chance": 0.7,
       "extra": []
@@ -111,10 +112,10 @@
       "drop_chance": 0.55,
       "gold_mult": 1.5,
       "category_weights": {
-        "adelsten": 40,
-        "dryck": 30,
-        "amulett": 15,
-        "ring": 15
+        "dryck": 46,
+        "amulett": 23,
+        "ring": 23,
+        "guld": 8
       },
       "gold_chance": 0.7,
       "extra": []
@@ -181,10 +182,10 @@
       "weapon_type": null,
       "table_override": {
         "category_weights": {
-          "adelsten": 30,
-          "dryck": 60,
-          "amulett": 5,
-          "ring": 5
+          "dryck": 72,
+          "amulett": 11,
+          "ring": 11,
+          "guld": 6
         }
       },
       "note": "Vapenlöst odött djur.",
@@ -662,47 +663,6 @@
       "stor_halsodryck": 45,
       "uthallighetsdryck": 35,
       "foryngringsdryck": 20
-    }
-  },
-  "gem_grade_weights_by_tier": {
-    "note": "vanlig kräver ilvl 9, felfri ilvl 18; vikter för ej tillåtna grader blir 0",
-    "1": {
-      "flisig": 85,
-      "vanlig": 15,
-      "felfri": 0
-    },
-    "2": {
-      "flisig": 45,
-      "vanlig": 45,
-      "felfri": 10
-    },
-    "3": {
-      "flisig": 15,
-      "vanlig": 55,
-      "felfri": 30
-    }
-  },
-  "socket_rule": {
-    "normal": {
-      "chance": 0.2,
-      "count_weights": {
-        "1": 50,
-        "2": 35,
-        "3": 15
-      }
-    },
-    "magic": {
-      "chance": 0.12,
-      "count_weights": {
-        "1": 70,
-        "2": 30
-      }
-    },
-    "rare": {
-      "chance": 0.05,
-      "count_weights": {
-        "1": 100
-      }
     }
   },
   "elite_loot_ref": "monster_niva.json elites",

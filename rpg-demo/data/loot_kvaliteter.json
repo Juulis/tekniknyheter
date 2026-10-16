@@ -26,10 +26,8 @@
           0
         ]
       },
-      "sockets_max": 3,
       "base_chance": null,
-      "note": "Resten när inga andra kvaliteter träffar. Kan ha 0 till 3 hylsor (sockets), även kallad Hylsad i grått #9a9a9a om sockets > 0.",
-      "socketed_color": "#9a9a9a"
+      "note": "Resten när inga andra kvaliteter träffar."
     },
     {
       "id": "magic",
@@ -50,7 +48,6 @@
           2
         ]
       },
-      "sockets_max": 2,
       "base_chance": 0.2,
       "mf_curve": "full"
     },
@@ -73,7 +70,6 @@
           6
         ]
       },
-      "sockets_max": 1,
       "base_chance": 0.05,
       "mf_curve": "rare",
       "name_rule": "Två slumpade ord ur rare_names, t.ex. Gravens Klo."
@@ -84,7 +80,6 @@
       "color": "#00c400",
       "label_color": "grön",
       "affixes": "fasta enligt set.json",
-      "sockets_max": 0,
       "base_chance": 0.012,
       "mf_curve": "set"
     },
@@ -94,7 +89,6 @@
       "color": "#c7a35a",
       "label_color": "guld",
       "affixes": "fasta enligt legendary i foremal_bas.json",
-      "sockets_max": 0,
       "base_chance": 0.008,
       "mf_curve": "legendary"
     }
@@ -109,7 +103,6 @@
   "fallback": "Om legendary eller set träffar men ingen sådan finns för bastypen och nivån: legendary blir rare med 3 extra affix-värde, set blir magic med max värden.",
   "non_quality_categories": [
     "potion",
-    "gem",
     "gold",
     "material"
   ],

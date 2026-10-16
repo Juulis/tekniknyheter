@@ -230,7 +230,8 @@
           "fixed": {
             "vs_ododa_damage_pct": 0.5
           },
-          "id": "vaktarens_hammare"
+          "id": "vaktarens_hammare",
+          "visual": "Tung tvåhandsklubba av svartnat ekträ, huvudet beslaget med järnband och kistspikar, ett rostigt gravkors inbränt i änden."
         },
         {
           "base": "kampskold",
@@ -254,7 +255,8 @@
           "fixed": {
             "strong_hit_chance": 0.05
           },
-          "id": "vaktarens_grepp"
+          "id": "vaktarens_grepp",
+          "visual": "Slitna läderhandskar mörkade av gravjord, knogarna förstärkta med benbitar och små ristade vaktrunor."
         },
         {
           "base": "bensmycke",

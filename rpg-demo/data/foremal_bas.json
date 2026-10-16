@@ -4,7 +4,6 @@
     "categories": [
       "vapen",
       "rustning",
-      "adelsten",
       "dryck",
       "amulett",
       "ring",
@@ -120,7 +119,6 @@
         "amazonkrigare",
         "barbar"
       ],
-      "sockets_max": 2,
       "item_level": 1
     },
     {
@@ -145,7 +143,6 @@
         "riddare",
         "barbar"
       ],
-      "sockets_max": 2,
       "item_level": 6
     },
     {
@@ -169,7 +166,6 @@
       "classes": [
         "riddare"
       ],
-      "sockets_max": 2,
       "item_level": 15
     },
     {
@@ -194,7 +190,6 @@
         "barbar",
         "riddare"
       ],
-      "sockets_max": 2,
       "item_level": 1
     },
     {
@@ -218,7 +213,6 @@
       "classes": [
         "barbar"
       ],
-      "sockets_max": 2,
       "item_level": 7
     },
     {
@@ -242,7 +236,6 @@
       "classes": [
         "barbar"
       ],
-      "sockets_max": 3,
       "item_level": 15
     },
     {
@@ -267,7 +260,6 @@
         "barbar",
         "riddare"
       ],
-      "sockets_max": 2,
       "item_level": 1
     },
     {
@@ -291,7 +283,6 @@
       "classes": [
         "barbar"
       ],
-      "sockets_max": 3,
       "item_level": 5
     },
     {
@@ -316,7 +307,6 @@
         "barbar",
         "riddare"
       ],
-      "sockets_max": 2,
       "item_level": 15
     },
     {
@@ -340,7 +330,6 @@
       "classes": [
         "amazonkrigare"
       ],
-      "sockets_max": 3,
       "item_level": 1
     },
     {
@@ -365,7 +354,6 @@
         "amazonkrigare",
         "riddare"
       ],
-      "sockets_max": 3,
       "item_level": 8
     },
     {
@@ -389,7 +377,6 @@
       "classes": [
         "amazonkrigare"
       ],
-      "sockets_max": 3,
       "item_level": 15
     },
     {
@@ -413,7 +400,6 @@
       "classes": [
         "amazonkrigare"
       ],
-      "sockets_max": 3,
       "item_level": 1,
       "ammo": "pilar"
     },
@@ -438,7 +424,6 @@
       "classes": [
         "amazonkrigare"
       ],
-      "sockets_max": 3,
       "item_level": 8,
       "ammo": "pilar"
     },
@@ -463,7 +448,6 @@
       "classes": [
         "amazonkrigare"
       ],
-      "sockets_max": 3,
       "item_level": 15,
       "ammo": "pilar"
     },
@@ -490,7 +474,6 @@
         "riddare",
         "barbar"
       ],
-      "sockets_max": 2,
       "item_level": 1
     },
     {
@@ -514,7 +497,6 @@
       "classes": [
         "amazonkrigare"
       ],
-      "sockets_max": 2,
       "item_level": 9
     },
     {
@@ -539,7 +521,6 @@
         "amazonkrigare",
         "riddare"
       ],
-      "sockets_max": 2,
       "item_level": 15
     },
     {
@@ -560,7 +541,6 @@
         "riddare",
         "barbar"
       ],
-      "sockets_max": 2,
       "item_level": 1
     },
     {
@@ -580,7 +560,6 @@
       "classes": [
         "riddare"
       ],
-      "sockets_max": 2,
       "item_level": 7
     },
     {
@@ -600,7 +579,6 @@
       "classes": [
         "riddare"
       ],
-      "sockets_max": 2,
       "item_level": 15
     },
     {
@@ -644,7 +622,6 @@
       "requirements": {
         "level": 1
       },
-      "sockets_max": 2,
       "item_level": 1
     },
     {
@@ -661,7 +638,6 @@
       "requirements": {
         "level": 6
       },
-      "sockets_max": 2,
       "item_level": 6
     },
     {
@@ -678,7 +654,6 @@
       "requirements": {
         "level": 15
       },
-      "sockets_max": 2,
       "item_level": 15
     },
     {
@@ -695,7 +670,6 @@
       "requirements": {
         "level": 1
       },
-      "sockets_max": 3,
       "item_level": 1,
       "max_hp_bonus": 10
     },
@@ -713,7 +687,6 @@
       "requirements": {
         "level": 1
       },
-      "sockets_max": 3,
       "item_level": 1
     },
     {
@@ -730,7 +703,6 @@
       "requirements": {
         "level": 7
       },
-      "sockets_max": 3,
       "item_level": 7
     },
     {
@@ -747,7 +719,6 @@
       "requirements": {
         "level": 15
       },
-      "sockets_max": 3,
       "item_level": 15
     },
     {
@@ -764,7 +735,6 @@
       "requirements": {
         "level": 17
       },
-      "sockets_max": 3,
       "item_level": 17
     },
     {
@@ -781,7 +751,6 @@
       "requirements": {
         "level": 1
       },
-      "sockets_max": 0,
       "item_level": 1
     },
     {
@@ -798,7 +767,6 @@
       "requirements": {
         "level": 7
       },
-      "sockets_max": 0,
       "item_level": 7
     },
     {
@@ -815,7 +783,6 @@
       "requirements": {
         "level": 15
       },
-      "sockets_max": 0,
       "item_level": 15
     },
     {
@@ -832,7 +799,6 @@
       "requirements": {
         "level": 1
       },
-      "sockets_max": 0,
       "item_level": 1,
       "potion_slots": 2
     },
@@ -850,7 +816,6 @@
       "requirements": {
         "level": 7
       },
-      "sockets_max": 0,
       "item_level": 7,
       "potion_slots": 3
     },
@@ -868,7 +833,6 @@
       "requirements": {
         "level": 15
       },
-      "sockets_max": 0,
       "item_level": 15,
       "potion_slots": 4
     },
@@ -886,7 +850,6 @@
       "requirements": {
         "level": 1
       },
-      "sockets_max": 0,
       "item_level": 1,
       "speed_bonus": 0.03
     },
@@ -904,7 +867,6 @@
       "requirements": {
         "level": 7
       },
-      "sockets_max": 0,
       "item_level": 7
     },
     {
@@ -921,7 +883,6 @@
       "requirements": {
         "level": 15
       },
-      "sockets_max": 0,
       "item_level": 15
     }
   ],
@@ -992,353 +953,6 @@
       "stamina_pct": 0.35,
       "stack": 3,
       "item_level": 15
-    }
-  ],
-  "gems": [
-    {
-      "id": "flisig_rubin",
-      "name": "Flisig rubin",
-      "category": "adelsten",
-      "gem": "rubin",
-      "grade": "flisig",
-      "color": "#c0182a",
-      "item_level": 1,
-      "socket_effect": {
-        "vapen": {
-          "stat": "strong_hit_chance",
-          "value": 0.02
-        },
-        "rustning": {
-          "stat": "life",
-          "value": 8
-        },
-        "skold": {
-          "stat": "life",
-          "value": 8
-        }
-      }
-    },
-    {
-      "id": "vanlig_rubin",
-      "name": "Rubin",
-      "category": "adelsten",
-      "gem": "rubin",
-      "grade": "vanlig",
-      "color": "#c0182a",
-      "item_level": 9,
-      "socket_effect": {
-        "vapen": {
-          "stat": "strong_hit_chance",
-          "value": 0.04
-        },
-        "rustning": {
-          "stat": "life",
-          "value": 15
-        },
-        "skold": {
-          "stat": "life",
-          "value": 15
-        }
-      }
-    },
-    {
-      "id": "felfri_rubin",
-      "name": "Felfri rubin",
-      "category": "adelsten",
-      "gem": "rubin",
-      "grade": "felfri",
-      "color": "#c0182a",
-      "item_level": 18,
-      "socket_effect": {
-        "vapen": {
-          "stat": "strong_hit_chance",
-          "value": 0.06
-        },
-        "rustning": {
-          "stat": "life",
-          "value": 25
-        },
-        "skold": {
-          "stat": "life",
-          "value": 25
-        }
-      }
-    },
-    {
-      "id": "flisig_safir",
-      "name": "Flisig safir",
-      "category": "adelsten",
-      "gem": "safir",
-      "grade": "flisig",
-      "color": "#3f7fff",
-      "item_level": 1,
-      "socket_effect": {
-        "vapen": {
-          "stat": "attack_rating",
-          "value": 15
-        },
-        "rustning": {
-          "stat": "stamina",
-          "value": 8
-        },
-        "skold": {
-          "stat": "stamina",
-          "value": 8
-        }
-      }
-    },
-    {
-      "id": "vanlig_safir",
-      "name": "Safir",
-      "category": "adelsten",
-      "gem": "safir",
-      "grade": "vanlig",
-      "color": "#3f7fff",
-      "item_level": 9,
-      "socket_effect": {
-        "vapen": {
-          "stat": "attack_rating",
-          "value": 30
-        },
-        "rustning": {
-          "stat": "stamina",
-          "value": 15
-        },
-        "skold": {
-          "stat": "stamina",
-          "value": 15
-        }
-      }
-    },
-    {
-      "id": "felfri_safir",
-      "name": "Felfri safir",
-      "category": "adelsten",
-      "gem": "safir",
-      "grade": "felfri",
-      "color": "#3f7fff",
-      "item_level": 18,
-      "socket_effect": {
-        "vapen": {
-          "stat": "attack_rating",
-          "value": 50
-        },
-        "rustning": {
-          "stat": "stamina",
-          "value": 25
-        },
-        "skold": {
-          "stat": "stamina",
-          "value": 25
-        }
-      }
-    },
-    {
-      "id": "flisig_topas",
-      "name": "Flisig topas",
-      "category": "adelsten",
-      "gem": "topas",
-      "grade": "flisig",
-      "color": "#ffd23f",
-      "item_level": 1,
-      "socket_effect": {
-        "vapen": {
-          "stat": "magic_find",
-          "value": 0.05
-        },
-        "rustning": {
-          "stat": "magic_find",
-          "value": 0.05
-        },
-        "skold": {
-          "stat": "magic_find",
-          "value": 0.05
-        }
-      }
-    },
-    {
-      "id": "vanlig_topas",
-      "name": "Topas",
-      "category": "adelsten",
-      "gem": "topas",
-      "grade": "vanlig",
-      "color": "#ffd23f",
-      "item_level": 9,
-      "socket_effect": {
-        "vapen": {
-          "stat": "magic_find",
-          "value": 0.1
-        },
-        "rustning": {
-          "stat": "magic_find",
-          "value": 0.1
-        },
-        "skold": {
-          "stat": "magic_find",
-          "value": 0.1
-        }
-      }
-    },
-    {
-      "id": "felfri_topas",
-      "name": "Felfri topas",
-      "category": "adelsten",
-      "gem": "topas",
-      "grade": "felfri",
-      "color": "#ffd23f",
-      "item_level": 18,
-      "socket_effect": {
-        "vapen": {
-          "stat": "magic_find",
-          "value": 0.15
-        },
-        "rustning": {
-          "stat": "magic_find",
-          "value": 0.15
-        },
-        "skold": {
-          "stat": "magic_find",
-          "value": 0.15
-        }
-      }
-    },
-    {
-      "id": "flisig_smaragd",
-      "name": "Flisig smaragd",
-      "category": "adelsten",
-      "gem": "smaragd",
-      "grade": "flisig",
-      "color": "#3fbf4f",
-      "item_level": 1,
-      "socket_effect": {
-        "vapen": {
-          "stat": "bleed_dps",
-          "value": 3
-        },
-        "rustning": {
-          "stat": "stamina_regen_pct",
-          "value": 0.05
-        },
-        "skold": {
-          "stat": "block_chance",
-          "value": 0.02
-        }
-      }
-    },
-    {
-      "id": "vanlig_smaragd",
-      "name": "Smaragd",
-      "category": "adelsten",
-      "gem": "smaragd",
-      "grade": "vanlig",
-      "color": "#3fbf4f",
-      "item_level": 9,
-      "socket_effect": {
-        "vapen": {
-          "stat": "bleed_dps",
-          "value": 6
-        },
-        "rustning": {
-          "stat": "stamina_regen_pct",
-          "value": 0.1
-        },
-        "skold": {
-          "stat": "block_chance",
-          "value": 0.03
-        }
-      }
-    },
-    {
-      "id": "felfri_smaragd",
-      "name": "Felfri smaragd",
-      "category": "adelsten",
-      "gem": "smaragd",
-      "grade": "felfri",
-      "color": "#3fbf4f",
-      "item_level": 18,
-      "socket_effect": {
-        "vapen": {
-          "stat": "bleed_dps",
-          "value": 10
-        },
-        "rustning": {
-          "stat": "stamina_regen_pct",
-          "value": 0.15
-        },
-        "skold": {
-          "stat": "block_chance",
-          "value": 0.05
-        }
-      }
-    },
-    {
-      "id": "flisig_onyx",
-      "name": "Flisig onyx",
-      "category": "adelsten",
-      "gem": "onyx",
-      "grade": "flisig",
-      "color": "#2a2a3a",
-      "item_level": 1,
-      "socket_effect": {
-        "vapen": {
-          "stat": "damage_flat",
-          "value": 2
-        },
-        "rustning": {
-          "stat": "defense",
-          "value": 2
-        },
-        "skold": {
-          "stat": "defense",
-          "value": 3
-        }
-      }
-    },
-    {
-      "id": "vanlig_onyx",
-      "name": "Onyx",
-      "category": "adelsten",
-      "gem": "onyx",
-      "grade": "vanlig",
-      "color": "#2a2a3a",
-      "item_level": 9,
-      "socket_effect": {
-        "vapen": {
-          "stat": "damage_flat",
-          "value": 4
-        },
-        "rustning": {
-          "stat": "defense",
-          "value": 4
-        },
-        "skold": {
-          "stat": "defense",
-          "value": 6
-        }
-      }
-    },
-    {
-      "id": "felfri_onyx",
-      "name": "Felfri onyx",
-      "category": "adelsten",
-      "gem": "onyx",
-      "grade": "felfri",
-      "color": "#2a2a3a",
-      "item_level": 18,
-      "socket_effect": {
-        "vapen": {
-          "stat": "damage_flat",
-          "value": 7
-        },
-        "rustning": {
-          "stat": "defense",
-          "value": 7
-        },
-        "skold": {
-          "stat": "defense",
-          "value": 10
-        }
-      }
     }
   ],
   "materials": [
