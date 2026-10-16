@@ -73,7 +73,7 @@ button:hover{background:#4a5058}
 #lootLabels{position:fixed;inset:0;pointer-events:none;z-index:3}.lootLbl{position:absolute;transform:translate(-50%,-100%);padding:1px 7px;background:#000000b3;border:1px solid #3a3226;border-radius:2px;font:600 13px Georgia,serif;white-space:nowrap;cursor:pointer;pointer-events:auto;text-shadow:0 1px 1px #000}.lootLbl:hover{border-color:#f2c46b}
 
 /* ---------- Inventory i D2-stil (ramar och färger från UI: assets/hud) ---------- */
-:root{--sten:#3a3f45;--jarn:#5a5f66;--text:#d8d2c2;--dim:#8a857a;--blod:#7a1018;--guld:#f2c46b;--q-normal:#e8e8e8;--q-hylsad:#9a9a9a;--q-magic:#6a6aff;--q-rare:#ffff64;--q-set:#00c400;--q-legendary:#c7a35a}
+:root{--sten:#3a3f45;--jarn:#5a5f66;--text:#d8d2c2;--dim:#8a857a;--blod:#7a1018;--guld:#f2c46b;--q-normal:#e8e8e8;--q-magic:#6a6aff;--q-rare:#ffff64;--q-set:#00c400;--q-legendary:#c7a35a}
 #invWin{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:20;border:18px solid transparent;border-image:url(assets/hud/panel_ram.svg) 24 fill stretch;color:var(--text);font-family:Cinzel,Georgia,serif;pointer-events:auto;user-select:none}
 .iwHead{display:flex;align-items:center;gap:10px;font-size:22px;color:#e6dfcc;border-bottom:2px solid var(--blod);padding:0 2px 4px;margin-bottom:8px}
 .iwHead small{font-size:11px;color:var(--dim)}
@@ -92,7 +92,6 @@ button:hover{background:#4a5058}
 .itm::after{content:'';position:absolute;inset:0;border:5px solid transparent;border-image:var(--ram) 14 stretch;pointer-events:none}
 .itm .ico{display:block;background-repeat:no-repeat;pointer-events:none;flex:none}.itm .emo{font-style:normal;font-size:20px}
 .itm em{position:absolute;right:3px;bottom:1px;font-size:11px;font-style:normal;color:var(--guld);text-shadow:0 1px 2px #000}
-.itm .sk{position:absolute;left:3px;top:3px;display:flex;flex-direction:column;gap:2px}.itm .sk b{width:7px;height:7px;border-radius:50%;border:1px solid #555;box-shadow:inset 0 1px 2px #000}
 .itm.dragging{opacity:.25}
 #dragGhost{position:fixed;z-index:40;pointer-events:none;opacity:.9}
 #statBox{width:210px;background:#111316;border:2px solid var(--sten);padding:0 10px 8px;font-size:13px;align-self:flex-start}
@@ -100,7 +99,7 @@ button:hover{background:#4a5058}
 #statBox div{display:flex;justify-content:space-between;border-bottom:1px dotted #333;padding:2px 0}#statBox b{color:#efe6d0;font-weight:500}
 #statBox .gold{border:0;margin-top:6px}#statBox .gold b{color:var(--guld)}
 #itTip{position:fixed;z-index:50;width:250px;padding:6px 10px;border:14px solid transparent;border-image:url(assets/hud/tooltip_normal.svg) 20 fill stretch;font:12px/1.3 Georgia,serif;color:var(--text);pointer-events:none}
-#itTip[data-q=magic]{border-image-source:url(assets/hud/tooltip_magic.svg)}#itTip[data-q=rare]{border-image-source:url(assets/hud/tooltip_rare.svg)}#itTip[data-q=set]{border-image-source:url(assets/hud/tooltip_set.svg)}#itTip[data-q=legendary]{border-image-source:url(assets/hud/tooltip_legendary.svg)}#itTip[data-q=hylsad]{border-image-source:url(assets/hud/tooltip_hylsad.svg)}
+#itTip[data-q=magic]{border-image-source:url(assets/hud/tooltip_magic.svg)}#itTip[data-q=rare]{border-image-source:url(assets/hud/tooltip_rare.svg)}#itTip[data-q=set]{border-image-source:url(assets/hud/tooltip_set.svg)}#itTip[data-q=legendary]{border-image-source:url(assets/hud/tooltip_legendary.svg)}
 #itTip .tn{font:700 15px Cinzel,Georgia,serif;text-align:center}#itTip .tb{color:var(--dim);text-align:center}#itTip .af{color:var(--q-magic)}
 #itTip .good{color:#5fe07a}#itTip .bad{color:#ff5a5a}#itTip .cmpH{margin-top:6px;border-top:1px solid #333;padding-top:4px;color:#cfc7b0}
 #itTip .setH{margin-top:6px;color:var(--q-set)}#itTip .setP,#itTip .setB{color:#1d6a1d;font-size:12px}#itTip .setP.on,#itTip .setB.on{color:#3fe04a}

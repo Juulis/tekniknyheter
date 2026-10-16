@@ -369,6 +369,12 @@ function okSpawn(z, x, y, minD, ignoreSight) {
 const zoneAlive = (z, id) => z.monsters.filter(m => !m.dead && m.zoneId === id).length;
 function updateSpawner(z, dt) {
   const sp = z.sp; if (!sp || !S.playing) return; const A = sp.A, st = A.city_id ? S.city : 'alltid';
+  if (!A.state_spawn_multiplier) { // spawnzoner v2 (D2-spawn): allt slumpas en gång när området laddas, ingen respawn. Full session_roll med seed kommer nästa runda.
+    if (!sp.rolled) { sp.rolled = true; if (!A.city_id || S.city === 'besatt') for (const p of sp.points) { const gr = p.groups || [1, 1]; for (let gi = randi(gr[0], gr[1]); gi > 0; gi--) {
+      const row = weighted(p.table || A.enemy_table), g = row.group || p.group_size || [1, 1], lvl = roll(p.level_range || A.level_range || [1, 1]);
+      for (let i = randi(g[0], g[1]); i > 0; i--) { const a = rand(0, 6.283), r = Math.sqrt(Math.random()) * p.radius, m = spawnMonster(z, row.enemy, p.pos[0] + Math.cos(a) * r, p.pos[1] + Math.sin(a) * r, lvl); m.point = p; m.zoneId = p.zone; p.alive.push(m); } } p.spawned = true; } }
+    for (const zid of z.zoneIds) if (!z.cleared[zid] && zoneAlive(z, zid) === 0) { z.cleared[zid] = true; flash(`Område rensat: ${zid.replace('_', ' ')}`); checkVillage(); }
+    return; }
   const mult = A.state_spawn_multiplier[st] ?? 0, outMult = A.outskirts?.state_spawn_multiplier[st] ?? 0, rs = A.runes_scaling ? (A.runes_scaling[String(S.runes)] || 1) : 1;
   let areaAlive = z.monsters.filter(m => !m.dead && m.point && !m.point.outskirts).length;
   for (const zid of z.zoneIds) if (!z.cleared[zid]) { const pts = sp.points.filter(p => p.zone === zid); if (pts.every(p => p.spawned) && zoneAlive(z, zid) === 0) { z.cleared[zid] = true; flash(`Område rensat: ${PB.village.zones.find(q => q.id === zid)?.id.replace('_', ' ') || zid}`); checkVillage(); } }
@@ -381,7 +387,7 @@ function updateSpawner(z, dt) {
     const row = weighted(p.table), g = row.group || A.group_size; let n = Math.min(randi(g[0], g[1]), cap - p.alive.length, p.outskirts ? 99 : areaCap - areaAlive), placed = 0;
     for (let i = 0; i < n; i++) for (let tries = 0; tries < 10; tries++) { const a = rand(0, 6.283), r = Math.sqrt(Math.random()) * p.radius, x = p.pos[0] + Math.cos(a) * r, y = p.pos[1] + Math.sin(a) * r;
       if (okSpawn(z, x, y, A.min_player_distance, p.first)) { const m = spawnMonster(z, row.enemy, x, y, roll(p.level_range || A.level_range || [1, 1])); m.point = p; m.zoneId = p.zone; p.alive.push(m); placed++; areaAlive++; break; } }
-    if (placed) { p.spawned = true; p.first = false; p.timer = p.resp ? rand(p.resp[0], p.resp[1]) : Infinity; } // utan respawn_s (session_roll kommer): ingen respawn else p.timer = 5;
+    if (placed) { p.spawned = true; p.first = false; p.timer = p.resp ? rand(p.resp[0], p.resp[1]) : Infinity; } else p.timer = 5; // utan respawn_s: ingen respawn
   }
   for (const m of z.monsters) if (!m.dead && !m.boss && m.g.position.distanceTo(hero.position) > 60 && !visible(m.g.position.x, m.g.position.z)) { z.g.remove(m.g); m.gone = true; }
 }
@@ -815,7 +821,7 @@ window.__rpg = {
   spawnInfo() { return { area: Z.sp?.A.id, points: Z.sp?.points.length, alive: Z.monsters.filter(m => !m.dead).map(m => m.id) }; },
   killBoss() { const b = this.boss(); b.immune = 0; b.hp = 0; drawHp(b); killMonster(b); },
   L, inv, camera, get lastSeeds() { return lastSeeds; },
-  dropDemo() { const mk = (b, o) => ({ item: L.makeItem(b, o) }), list = [mk('stor_halsodryck'), mk('jarnyxa', { quality: 'magic', affixes: [{ id: 'vass', name: 'Vass', kind: 'prefix', stat: 'damage_pct', value: 0.18 }] }), mk('langsvard', { quality: 'legendary', leg: 'runsmidd_klinga' }), mk('ringbrynja', { quality: 'set', set: 'gravvaktarens_arv' }), mk('benhjalm', { quality: 'rare', rareName: 'Gravens Klo', affixes: [{ id: 'livets', name: 'Livets', kind: 'suffix', stat: 'life', value: 10 }] }), mk('laderharnesk', { sockets: [null, null] }), mk('vanlig_safir'), { gold: 37 }];
+  dropDemo() { const mk = (b, o) => ({ item: L.makeItem(b, o) }), list = [mk('stor_halsodryck'), mk('jarnyxa', { quality: 'magic', affixes: [{ id: 'vass', name: 'Vass', kind: 'prefix', stat: 'damage_pct', value: 0.18 }] }), mk('langsvard', { quality: 'legendary', leg: 'runsmidd_klinga' }), mk('ringbrynja', { quality: 'set', set: 'gravvaktarens_arv' }), mk('benhjalm', { quality: 'rare', rareName: 'Gravens Klo', affixes: [{ id: 'livets', name: 'Livets', kind: 'suffix', stat: 'life', value: 10 }] }), mk('laderharnesk'), mk('silverring', { quality: 'magic', affixes: [{ id: 'lyckosam', name: 'Lyckosam', kind: 'prefix', stat: 'magic_find', value: 0.08 }] }), { gold: 37 }];
     list.forEach((o, i) => { const a = i / list.length * 6.28; spawnDrop(Z, hero.position.x + Math.cos(a) * 2.5, hero.position.z + Math.sin(a) * 2.5, o); }); },
   give(base, o = {}) { const it = L.makeItem(base, o); return inv.addToBag(it) ? it : null; },
   spawnDropAt(dx, dz, o) { spawnDrop(Z, hero.position.x + dx, hero.position.z + dz, o); return Z.drops[Z.drops.length - 1]; },
