@@ -18,7 +18,8 @@ let seedCounter = 1; export const newSeed = () => ((Date.now() & 0xffffff) * 977
 
 export function createLoot({ QUAL, BAS, AFX, SET, DROP, ATTR }) {
   const Q = Object.fromEntries(QUAL.qualities.map(q => [q.id, q]));
-  const all = [...BAS.weapons, ...BAS.armor, ...BAS.jewelry, ...BAS.potions, ...BAS.gems, ...BAS.materials];
+  // Juulis beslut: inga ädelstenar och inga hylsor i spelet. Gems och socket_rule i datan ignoreras.
+  const all = [...BAS.weapons, ...BAS.armor, ...BAS.jewelry, ...BAS.potions, ...BAS.materials];
   const B = Object.fromEntries(all.map(b => [b.id, b]));
   const LEG = Object.fromEntries(BAS.legendary.map(l => [l.id, l]));
   const SETS = Object.fromEntries(SET.sets.map(s => [s.id, s]));
@@ -36,7 +37,7 @@ export function createLoot({ QUAL, BAS, AFX, SET, DROP, ATTR }) {
 
   // ----- föremål -----
   function makeItem(baseId, o = {}) {
-    const b = B[baseId]; const it = { uid: Math.random().toString(36).slice(2, 10), base: baseId, quality: o.quality || 'normal', affixes: o.affixes || [], sockets: o.sockets || [], ilvl: o.ilvl || b.item_level || 1, seed: o.seed };
+    const b = B[baseId]; const it = { uid: Math.random().toString(36).slice(2, 10), base: baseId, quality: o.quality || 'normal', affixes: o.affixes || [], ilvl: o.ilvl || b.item_level || 1, seed: o.seed };
     if (o.set) it.set = o.set; if (o.leg) it.leg = o.leg; if (o.rareName) it.rareName = o.rareName; if (b.stack) it.n = o.n || 1; return it;
   }
   const baseOf = it => B[it.base];
@@ -45,16 +46,14 @@ export function createLoot({ QUAL, BAS, AFX, SET, DROP, ATTR }) {
     if (it.quality === 'magic') { const pre = it.affixes.find(a => a.kind === 'prefix'), suf = it.affixes.find(a => a.kind === 'suffix'); return [pre?.name, pre ? b.name.toLowerCase() : b.name, suf?.name].filter(Boolean).join(' '); }
     return b.name;
   }
-  function colorOf(it) { const b = B[it.base]; if (b.category === 'adelsten') return b.color; if (b.category === 'dryck') return b.heal || b.heal_pct ? '#e05a5a' : '#e0b24a'; if (b.category === 'material') return '#b0a890';
-    return it.quality === 'normal' && it.sockets.length ? Q.normal.socketed_color : Q[it.quality].color; }
+  function colorOf(it) { const b = B[it.base]; if (b.category === 'dryck') return b.heal || b.heal_pct ? '#e05a5a' : '#e0b24a'; if (b.category === 'material') return '#b0a890';
+    return Q[it.quality].color; }
   // Alla egna attribut på ett föremål (bas, affix, fasta värden, hylsor). Skada och försvar räknas ut per föremål.
   function itemStats(it) {
     const b = B[it.base], s = {}, add = (k, v) => { s[k] = (s[k] || 0) + v; };
     for (const a of it.affixes) add(a.stat, a.value);
     const fixed = it.leg ? LEG[it.leg].fixed : it.set ? SETPIECE[it.set + ':' + it.base].piece.fixed : null;
     if (fixed) for (const [k, v] of Object.entries(fixed)) if (typeof v === 'number') add(k, v);
-    const ctx = slotOf(b) === 'vapen' ? 'vapen' : slotOf(b) === 'offhand' ? 'skold' : 'rustning';
-    for (const g of it.sockets) if (g && B[g]) { const e = B[g].socket_effect[ctx]; if (e) add(e.stat, e.value); }
     if (b.damage) { const pct = s.damage_pct || 0; s.wdmg = [Math.round((b.damage[0]) * (1 + pct)), Math.round((b.damage[1]) * (1 + pct))]; }
     if (b.defense != null || s.defense || s.defense_pct) { s.def = Math.round(((b.defense || 0) + (s.defense || 0)) * (1 + (s.defense_pct || 0))); }
     if (b.block_chance) add('block_chance', b.block_chance); if (b.max_hp_bonus) add('life', b.max_hp_bonus); if (b.speed_bonus) add('move_speed_pct', b.speed_bonus);
@@ -72,7 +71,6 @@ export function createLoot({ QUAL, BAS, AFX, SET, DROP, ATTR }) {
     }
     return out;
   }
-  function rollSockets(b, q, R) { const r = DROP.socket_rule[q]; if (!r || !b.sockets_max || R() >= r.chance) return []; const n = Math.min(+R.weighted(r.count_weights), b.sockets_max, Q[q].sockets_max); return Array(n).fill(null); }
   // ----- kvalitet med Magic Find (attribut.json) -----
   const effMf = (q, mf) => { const k = ATTR.magic_find.k[q]; return k ? mf * k / (mf + k) : mf; };
   function qualityChance(q, mlvl, mf, bossBonus) { return Q[q].base_chance * (1 + effMf(q, mf) / 100) * (1 + (mlvl - 1) * 0.03) * ((bossBonus && bossBonus[q]) || 1); }
@@ -83,8 +81,8 @@ export function createLoot({ QUAL, BAS, AFX, SET, DROP, ATTR }) {
     if (q === 'set') { const c = SET.sets.filter(s => (forceSet ? s.id === forceSet : (s.item_level || s.level) <= ilvl) && s.pieces.some(p => p.base === b.id)); if (c.length) return makeItem(b.id, { ...o, quality: 'set', set: R.pick(c).id });
       q = 'magic'; o.maxVals = true; }
     if (q === 'magic' || q === 'rare') { let affixes = rollAffixes(b, ilvl, q, R, o.maxVals); if (o.extra) { const more = rollAffixes(b, ilvl, 'rare', R, true).filter(a => !affixes.some(x => x.id === a.id)); affixes = affixes.concat(more).slice(0, 6); }
-      const it = makeItem(b.id, { ilvl, quality: q, affixes, sockets: rollSockets(b, q, R) }); if (q === 'rare') it.rareName = R.pick(QUAL.rare_names.forsta) + ' ' + R.pick(QUAL.rare_names.andra); return it; }
-    return makeItem(b.id, { ilvl, quality: 'normal', sockets: rollSockets(b, 'normal', R) });
+      const it = makeItem(b.id, { ilvl, quality: q, affixes }); if (q === 'rare') it.rareName = R.pick(QUAL.rare_names.forsta) + ' ' + R.pick(QUAL.rare_names.andra); return it; }
+    return makeItem(b.id, { ilvl, quality: 'normal' });
   }
   function rollQuality(mlvl, mf, bossBonus, R, minQ) {
     const order = QUAL.roll_order; for (const q of order) { if (q === 'normal') break; if (R() < qualityChance(q, mlvl, mf, bossBonus)) return q; }
@@ -99,7 +97,6 @@ export function createLoot({ QUAL, BAS, AFX, SET, DROP, ATTR }) {
   function rollCategory(cat, mlvl, ilvl, mf, bossBonus, R, minQ) {
     const tier = tierOf(ilvl);
     if (cat === 'dryck') return makeItem(R.weighted(DROP.potion_weights_by_tier[tier]));
-    if (cat === 'adelsten') { const grade = R.weighted(DROP.gem_grade_weights_by_tier[tier]), gem = R.pick([...new Set(BAS.gems.map(g => g.gem))]); return makeItem(BAS.gems.find(g => g.gem === gem && g.grade === grade).id); }
     if (cat === 'material') return makeItem(R.pick(BAS.materials).id);
     const pool = cat === 'vapen' ? BAS.weapons : cat === 'rustning' ? BAS.armor : BAS.jewelry.filter(j => j.category === cat);
     const b = pickBase(pool, ilvl, R); if (!b) return null;
@@ -111,12 +108,12 @@ export function createLoot({ QUAL, BAS, AFX, SET, DROP, ATTR }) {
     const boss = DROP.bosses[id], mon = DROP.monsters[id], fam = DROP.family_tables[(boss || mon)?.table || (boss || mon)?.family || 'bestar'];
     mlvl = mlvl || (boss ? boss.monster_level : 1); ilvl = ilvl || mlvl; // ilvl styr bastyp och affixtier, mlvl kvalitetens nivåfaktor och guld
     const weights = { ...fam.category_weights, ...(mon?.table_override?.category_weights ? {} : {}) }; if (mon?.table_override?.category_weights) Object.assign(weights, mon.table_override.category_weights, Object.fromEntries(Object.keys(fam.category_weights).filter(k => !(k in mon.table_override.category_weights)).map(k => [k, 0])));
-    delete weights.guld;
+    delete weights.adelsten; // inga ädelstenar (äldre data)
     const goldMult = boss ? boss.gold_mult : fam.gold_mult, gold = () => Math.max(1, Math.round(mlvl * R.range(BAS.gold.gold_min_per_lvl, BAS.gold.gold_max_per_lvl) * goldMult * (1 + goldFind)));
     const one = (bossBonus, minQ) => { // steg 2 till 7 för ett föremål
       const wd = (boss || mon)?.weapon_drop; if (wd && R() < wd.chance) { const b = pickBase(BAS.weapons.filter(w => w.weapon_type === wd.weapon_type), ilvl, R); if (b) return finishQuality(b, rollQuality(mlvl, mf, bossBonus, R, minQ), ilvl, R); }
       if (mon?.shield_drop && R() < mon.shield_drop.chance) { const b = pickBase(BAS.weapons.filter(w => w.weapon_type === 'skold'), ilvl, R); if (b) return finishQuality(b, rollQuality(mlvl, mf, bossBonus, R, minQ), ilvl, R); }
-      let cat = R.weighted(weights); if (minQ) cat = R.pick(['vapen', 'rustning', 'amulett', 'ring']); return cat ? rollCategory(cat, mlvl, ilvl, mf, bossBonus, R, minQ) : null;
+      let cat = R.weighted(weights); if (minQ) cat = R.pick(['vapen', 'rustning', 'amulett', 'ring']); if (cat === 'guld') return { gold: gold() * 2 }; return cat ? rollCategory(cat, mlvl, ilvl, mf, bossBonus, R, minQ) : null;
     };
     if (boss) {
       const n = R.int(boss.drops[0], boss.drops[1]);
@@ -125,11 +122,11 @@ export function createLoot({ QUAL, BAS, AFX, SET, DROP, ATTR }) {
         if (nd.legendary) { const l = LEG[nd.legendary]; out.push({ item: makeItem(l.base, { quality: 'legendary', leg: l.id, ilvl }) }); }
         if (nd.set) { const s = SETS[nd.set], p = R.pick(s.pieces); out.push({ item: makeItem(p.base, { quality: 'set', set: s.id, ilvl }) }); }
       }
-      if (firstKill && boss.first_kill_bonus) for (let i = 0; i < boss.first_kill_bonus.count; i++) { const it = one(boss.quality_bonus, boss.first_kill_bonus.min_quality); if (it) out.push({ item: it }); }
-      while (out.length < n + (boss.guaranteed || []).reduce((s, g) => s + g.count, 0)) { const it = one(boss.quality_bonus); if (it) out.push({ item: it }); else break; }
+      if (firstKill && boss.first_kill_bonus) for (let i = 0; i < boss.first_kill_bonus.count; i++) { const it = one(boss.quality_bonus, boss.first_kill_bonus.min_quality); if (it) out.push(it.gold ? it : { item: it }); }
+      while (out.length < n + (boss.guaranteed || []).reduce((s, g) => s + g.count, 0)) { const it = one(boss.quality_bonus); if (it) out.push(it.gold ? it : { item: it }); else break; }
       out.push({ gold: gold() });
     } else {
-      if (R() < (mon?.drop_chance_override ?? fam.drop_chance)) { const it = one(null); if (it) out.push({ item: it }); }
+      if (R() < (mon?.drop_chance_override ?? fam.drop_chance)) { const it = one(null); if (it) out.push(it.gold ? it : { item: it }); }
       if (R() < fam.gold_chance) out.push({ gold: gold() });
       for (const e of fam.extra || []) if (R() < e.chance) out.push({ item: makeItem(e.item) });
     }

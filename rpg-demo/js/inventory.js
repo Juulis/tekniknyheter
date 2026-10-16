@@ -52,19 +52,17 @@ export function createInventory({ L, S, statsFor, onChange, onUse, flash }) {
       o.x = p[0]; o.y = p[1]; changed(); return true; }
     if (fromSlot) return unequip(fromSlot, [x, y]); if (fromBag) { it.x = x; it.y = y; changed(); return true; } return false;
   }
-  function socket(gem, target) { const b = L.baseOf(gem); if (b.category !== 'adelsten') return false; const i = target.sockets?.indexOf(null); if (i == null || i < 0) return false;
-    target.sockets[i] = gem.base; if (--gem.n > 0) {} else removeFrom(gem); changed(); flash(`${b.name} sitter nu i ${L.nameOf(target)}`); return true; }
   function changed() { save(); onChange(); if (isOpen()) render(); }
 
   // ----- rendering -----
   function itemEl(it, w, h) { const e = document.createElement('div'), fk = frameKey(it, L); e.className = 'itm q-' + fk; e.style.width = w * CELL - 2 + 'px'; e.style.height = h * CELL - 2 + 'px'; e.style.setProperty('--qc', L.colorOf(it));
-    e.style.setProperty('--ram', `url(${FRAME[fk]})`); if (fk !== 'normal' && fk !== 'hylsad') e.style.setProperty('--glod', `url(${GLOW[fk]})`);
-    e.innerHTML = `${iconHTML(it, w * CELL - 2, h * CELL - 2)}${it.n > 1 ? `<em>${it.n}</em>` : ''}${it.sockets?.length ? `<span class="sk">${it.sockets.map(s => `<b style="background:${s ? L.B[s].color : '#000'}"></b>`).join('')}</span>` : ''}`;
+    e.style.setProperty('--ram', `url(${FRAME[fk]})`); if (fk !== 'normal') e.style.setProperty('--glod', `url(${GLOW[fk]})`);
+    e.innerHTML = `${iconHTML(it, w * CELL - 2, h * CELL - 2, it.set && L.SETPIECE[it.set + ':' + it.base]?.piece.id)}${it.n > 1 ? `<em>${it.n}</em>` : ''}`;
     e._it = it; return e; }
   function render() {
     for (const s of SLOTS) { const e = slotEl[s]; e.querySelectorAll('.itm').forEach(x => x.remove()); const it = S.equip[s]; e.classList.toggle('filled', !!it);
       e.classList.toggle('blocked', s === 'offhand' && !!S.equip.vapen && L.baseOf(S.equip.vapen).two_handed);
-      if (it) { const [, , w, h] = SLOT_POS[s], el = itemEl(it, w, h); el.style.position = 'absolute'; el.style.inset = '1px'; el.style.width = el.style.height = 'auto'; el.dataset.slot = s; el.innerHTML = el.innerHTML.replace(/<i class="ico"[^>]*><\/i>/, iconHTML(it, w * CELL - 2, h * CELL - 2)); e.appendChild(el); } }
+      if (it) { const [, , w, h] = SLOT_POS[s], el = itemEl(it, w, h); el.style.position = 'absolute'; el.style.inset = '1px'; el.style.width = el.style.height = 'auto'; el.dataset.slot = s;  e.appendChild(el); } }
     bag.querySelectorAll('.itm').forEach(x => x.remove());
     for (const it of S.inv) { const [w, h] = size(it), el = itemEl(it, w, h); el.style.left = it.x * CELL + 1 + 'px'; el.style.top = it.y * CELL + 1 + 'px'; bag.appendChild(el); }
     renderStats();
@@ -79,17 +77,15 @@ export function createInventory({ L, S, statsFor, onChange, onUse, flash }) {
   const CMP = [['maxHp', 'Life', 0], ['maxSt', 'Uthållighet', 0], ['damage', 'Skada (snitt)', 0], ['defense', 'Defence', 0], ['block', 'Block', 1], ['AR', 'Träffvärde', 0], ['strong', 'Strong hit', 1], ['crit', 'Krit', 1], ['mf', 'MF', 2], ['speed', 'Fart', 3]];
   function tipHTML(it, inBag) {
     const b = L.baseOf(it), s = L.itemStats(it), q = L.Q[it.quality], col = L.colorOf(it); let h = `<div class="tn" style="color:${col}">${L.nameOf(it)}</div>`;
-    const qn = b.category === 'dryck' || b.category === 'adelsten' || b.category === 'material' ? '' : ` · ${q.name}`; h += `<div class="tb">${L.nameOf(it) !== b.name ? b.name : ''}${qn}</div>`;
+    const qn = b.category === 'dryck' || b.category === 'material' ? '' : ` · ${q.name}`; h += `<div class="tb">${L.nameOf(it) !== b.name ? b.name : ''}${qn}</div>`;
     if (s.wdmg) h += `<div>Skada: ${s.wdmg[0]}–${s.wdmg[1]} <small>(${b.damage_type || ''}${b.two_handed ? ', tvåhand' : ''})</small></div>`;
     if (s.def) h += `<div>Försvar: ${s.def}</div>`; if (b.block_chance) h += `<div>Block: ${pct(s.block_chance)}</div>`;
     if (b.heal) h += `<div>Läker ${b.heal} liv</div>`; if (b.stamina) h += `<div>Ger ${b.stamina} uthållighet</div>`; if (b.heal_pct) h += `<div>Läker ${pct(b.heal_pct)} liv och uthållighet</div>`;
-    if (b.socket_effect) h += Object.entries(b.socket_effect).map(([k, e]) => `<div class="tb">I ${k}: ${fmtStat(e.stat, e.value)}</div>`).join('');
     if (b.move_penalty) h += `<div class="bad">Fartstraff ${pct(b.move_penalty)}</div>`; if (b.potion_slots) h += `<div class="tb">Dryckesplatser: ${b.potion_slots}</div>`;
     if (b.requirements?.level > 1) h += `<div class="${reqOk(it) ? 'tb' : 'bad'}">Kräver nivå ${b.requirements.level}</div>`;
     const fixed = it.leg ? L.LEG[it.leg].fixed : it.set ? L.SETPIECE[it.set + ':' + it.base].piece.fixed : null;
     for (const a of it.affixes) h += `<div class="af">${fmtStat(a.stat, a.value)}</div>`;
     if (fixed) for (const [k, v] of Object.entries(fixed)) { if (k === 'note') h += `<div class="tb"><i>${v}</i></div>`; else { const f = fmtStat(k, v); if (f) h += `<div class="af" style="color:${col}">${f}</div>`; } }
-    if (it.sockets?.length) h += `<div class="tb">Hylsor: ${it.sockets.map(g => g ? L.B[g].name : 'tom').join(', ')}</div>`;
     if (it.set) { const set = L.SETS[it.set], n = L.setCounts(S.equip)[it.set] || 0, wrongCls = set.class && set.class !== 'alla' && set.class !== S.cls?.id;
       h += `<div class="setH">${set.name} (${n}/5)${wrongCls ? ' <span class="bad">– bonusar bara för ' + set.class + '</span>' : ''}</div>`;
       h += set.pieces.map(p => `<div class="setP ${Object.values(S.equip).some(e => e?.set === set.id && e.base === p.base) ? 'on' : ''}">${p.name}</div>`).join('');
@@ -116,7 +112,7 @@ export function createInventory({ L, S, statsFor, onChange, onUse, flash }) {
     for (const s of SLOTS) slotEl[s].classList.toggle('can', canEquip(it, s)); moveDrag(e); });
   function target(e) {
     drag.g.style.display = 'none'; const under = document.elementFromPoint(e.clientX, e.clientY); drag.g.style.display = '';
-    const it = drag.it, tItem = under?.closest('.itm'); if (tItem && tItem._it !== it && L.baseOf(it).category === 'adelsten' && tItem._it.sockets?.includes(null)) return { kind: 'socket', ok: true, el: tItem };
+    const it = drag.it;
     const sl = under?.closest('.eqSlot'); if (sl) return { kind: 'slot', slot: sl.dataset.slot, ok: canEquip(it, sl.dataset.slot), el: sl };
     const br = bag.getBoundingClientRect(); if (e.clientX >= br.left && e.clientX < br.right && e.clientY >= br.top && e.clientY < br.bottom) {
       const x = Math.floor((e.clientX - br.left) / CELL) - drag.cx, y = Math.floor((e.clientY - br.top) / CELL) - drag.cy, ov = (x >= 0 && y >= 0 && x + drag.w <= BAG_W && y + drag.h <= BAG_H) ? overlaps(x, y, drag.w, drag.h, it) : null;
@@ -131,7 +127,7 @@ export function createInventory({ L, S, statsFor, onChange, onUse, flash }) {
   addEventListener('mousemove', moveDrag);
   addEventListener('mouseup', e => { if (!drag) return; const t = target(e), d = drag; drag = null; d.g.remove(); d.el.classList.remove('dragging'); hl.classList.add('hidden');
     win.querySelectorAll('.ok,.bad,.can').forEach(x => x.classList.remove('ok', 'bad', 'can'));
-    if (t?.ok) { if (t.kind === 'slot') { if (SLOTS.find(s => S.equip[s] === d.it) !== t.slot) equipTo(d.it, t.slot); } else if (t.kind === 'bag') moveInBag(d.it, t.x, t.y); else if (t.kind === 'socket') socket(d.it, t.el._it); }
+    if (t?.ok) { if (t.kind === 'slot') { if (SLOTS.find(s => S.equip[s] === d.it) !== t.slot) equipTo(d.it, t.slot); } else if (t.kind === 'bag') moveInBag(d.it, t.x, t.y); }
     else if (t && !t.ok && t.kind === 'slot' && !reqOk(d.it) && L.slotOf(L.baseOf(d.it)) === slotKind(t.slot)) flash('Kräver högre nivå');
     render(); });
 
@@ -142,6 +138,6 @@ export function createInventory({ L, S, statsFor, onChange, onUse, flash }) {
   const key = () => 'rk_inv_' + S.cls?.id;
   function save() { if (S.cls) localStorage.setItem(key(), JSON.stringify({ inv: S.inv, equip: S.equip, gold: S.gold })); }
   function load() { try { const d = JSON.parse(localStorage.getItem(key()) || 'null'); if (!d || !Array.isArray(d.inv)) return false; const okIt = it => it && L.B[it.base];
-    S.inv.length = 0; S.inv.push(...d.inv.filter(okIt)); for (const s of SLOTS) S.equip[s] = okIt(d.equip?.[s]) ? d.equip[s] : null; S.gold = d.gold || 0; return true; } catch { return false; } }
+    S.inv.length = 0; S.inv.push(...d.inv.filter(okIt).map(i => (delete i.sockets, i))); /* äldre sparade hylsor rensas */ for (const s of SLOTS) S.equip[s] = okIt(d.equip?.[s]) ? d.equip[s] : null; S.gold = d.gold || 0; return true; } catch { return false; } }
   return { open, close, toggle: () => isOpen() ? close() : open(), isOpen, render, addToBag, equipTo, unequip, findSpot, save, load, canEquip, el: win, canvas: $('dollCv') };
 }
