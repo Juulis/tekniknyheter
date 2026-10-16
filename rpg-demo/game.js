@@ -31,23 +31,23 @@ ground.rotation.x = -Math.PI / 2; ground.receiveShadow = true; scene.add(ground)
 
 // seeded random
 let seed = 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
-const colliders = [];
+const colliders = [], trees = [];
 const treeMats = [toon(0x2f5a3c), toon(0x3a6b46), toon(0x274d35)];
 const trunkMat = toon(0x5a3f2a), rockMat = toon(0x8a8f96, { flatShading: true });
 const coneGeo = new THREE.ConeGeometry(1, 1.6, 7), trunkGeo = new THREE.CylinderGeometry(0.15, 0.2, 1, 6);
 const runePos = [[14, -10], [-16, -6], [4, 20]];
-const free = (x, z, r) => Math.hypot(x, z) > 5 && runePos.every(([a, b]) => Math.hypot(x - a, z - b) > 4) && colliders.every(c => Math.hypot(x - c.x, z - c.z) > c.r + r);
+const free = (x, z, r) => Math.hypot(x, z) > 12 && runePos.every(([a, b]) => Math.hypot(x - a, z - b) > 4) && colliders.every(c => Math.hypot(x - c.x, z - c.z) > c.r + r);
 
 function tree(x, z) {
   const s = 0.8 + rnd() * 0.9, t = new THREE.Group();
   const tr = new THREE.Mesh(trunkGeo, trunkMat); tr.position.y = 0.5; tr.castShadow = true; t.add(tr);
-  const m = treeMats[(rnd() * 3) | 0];
+  const m = treeMats[(rnd() * 3) | 0].clone(), tm = trunkMat.clone(); m.transparent = tm.transparent = true; tr.material = tm;
   for (let i = 0; i < 3; i++) {
     const c = new THREE.Mesh(coneGeo, m); const k = 1.3 - i * 0.3;
     c.scale.set(k, 1, k); c.position.y = 1.4 + i * 0.9; c.castShadow = true; t.add(c);
   }
   t.scale.setScalar(s); t.position.set(x, 0, z); t.rotation.y = rnd() * 6; scene.add(t);
-  colliders.push({ x, z, r: 0.45 * s });
+  colliders.push({ x, z, r: 0.45 * s }); trees.push({ g: t, mats: [m, tm] });
 }
 function rock(x, z) {
   const s = 0.5 + rnd() * 1.1;
@@ -151,7 +151,7 @@ $('actBtn').onclick = () => activate();
 
 addEventListener('resize', () => { camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth, innerHeight); });
 
-const clock = new THREE.Clock(); const camPos = new THREE.Vector3(0, 5, 8);
+const ray = new THREE.Raycaster(); const clock = new THREE.Clock(); const camPos = new THREE.Vector3(0, 5, 8);
 function tick() {
   const dt = Math.min(clock.getDelta(), 0.05), t = clock.elapsedTime;
   let ix = 0, iz = 0;
@@ -196,6 +196,11 @@ function tick() {
   camPos.lerp(want, Math.min(1, dt * 8)); camera.position.copy(camPos);
   camera.lookAt(hero.position.x, hero.position.y + 1.5, hero.position.z);
   sun.position.set(hero.position.x + 20, 30, hero.position.z + 10); sun.target.position.copy(hero.position);
+  // fade trees between camera and hero
+  const head = new THREE.Vector3(hero.position.x, 1.4, hero.position.z), dir = head.clone().sub(camera.position);
+  ray.set(camera.position, dir.clone().normalize()); ray.far = dir.length();
+  const hit = new Set(ray.intersectObjects(trees.map(o => o.g), true).map(h => h.object.parent));
+  for (const o of trees) { const f = hit.has(o.g); for (const mt of o.mats) { mt.opacity += ((f ? 0.3 : 1) - mt.opacity) * Math.min(1, dt * 10); mt.depthWrite = mt.opacity > 0.95; } }
   renderer.render(scene, camera);
   requestAnimationFrame(tick);
 }
