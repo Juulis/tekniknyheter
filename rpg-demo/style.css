@@ -26,10 +26,6 @@ canvas{display:block}
 #help{position:absolute;bottom:80px;left:50%;transform:translateX(-50%);font-size:12px;background:#0008;padding:3px 10px;border-radius:6px;white-space:nowrap}
 #prompt{position:absolute;top:62%;left:50%;transform:translateX(-50%);background:#0d0f12dd;border:1px solid #9fc4d4;padding:8px 16px;border-radius:6px;color:#cde}
 #msg{position:absolute;top:28%;left:50%;transform:translateX(-50%);font-size:22px;color:#f2c46b;text-shadow:0 0 8px #000,0 0 3px #000;white-space:nowrap}
-#inv{position:absolute;top:120px;left:16px;width:300px;max-height:60vh;overflow:auto;background:#0d0f12ee;border:1px solid #4a6a7a;border-radius:8px;padding:10px;pointer-events:auto}
-#inv h3{color:#9fc4d4;margin-bottom:6px}#inv small{font-size:11px;color:#889}
-.it{font-size:13px;padding:4px 6px;border-radius:4px;cursor:pointer;display:flex;justify-content:space-between}.it:hover{background:#ffffff14}
-#invStats{font-size:12px;margin-top:8px;color:#bcc}
 .overlay{position:fixed;inset:0;z-index:5;display:flex;flex-direction:column;align-items:center;justify-content:center;background:radial-gradient(#1c2128ee,#0d0f12f5);text-align:center;padding:20px;gap:14px}
 .overlay h1{font-size:52px;color:#e8d8c8;text-shadow:0 0 18px #c0182a88;letter-spacing:3px}
 #classes{display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
@@ -73,6 +69,39 @@ button:hover{background:#4a5058}
 .bbar{border:1px solid #6b5a3e;box-shadow:0 0 0 1px #000,0 0 10px #c0182a55}
 #bossName{font-weight:700;letter-spacing:2px;color:#e8c890}
 .overlay h1{font-weight:700}.card{background:linear-gradient(#1e1a15ee,#0b0a08ee);border-color:#6b5a3e}
-#inv{top:70px;background:linear-gradient(#17140ff4,#0b0a08f4);border-color:#6b5a3e}
 @media (pointer:coarse){.orb{width:90px;height:90px}#xpwrap{left:120px;right:120px}#joy{left:120px;bottom:30px}}
-#lootLabels{position:fixed;inset:0;pointer-events:none;z-index:3}.lootLbl{position:absolute;transform:translate(-50%,-100%);padding:1px 7px;background:#000c;border:1px solid #3a3226;border-radius:2px;font:600 13px Georgia,serif;white-space:nowrap;cursor:pointer;pointer-events:auto;text-shadow:0 1px 1px #000}.lootLbl:hover{border-color:#f2c46b}
+#lootLabels{position:fixed;inset:0;pointer-events:none;z-index:3}.lootLbl{position:absolute;transform:translate(-50%,-100%);padding:1px 7px;background:#000000b3;border:1px solid #3a3226;border-radius:2px;font:600 13px Georgia,serif;white-space:nowrap;cursor:pointer;pointer-events:auto;text-shadow:0 1px 1px #000}.lootLbl:hover{border-color:#f2c46b}
+
+/* ---------- Inventory i D2-stil (ramar och färger från UI: assets/hud) ---------- */
+:root{--sten:#3a3f45;--jarn:#5a5f66;--text:#d8d2c2;--dim:#8a857a;--blod:#7a1018;--guld:#f2c46b;--q-normal:#e8e8e8;--q-hylsad:#9a9a9a;--q-magic:#6a6aff;--q-rare:#ffff64;--q-set:#00c400;--q-legendary:#c7a35a}
+#invWin{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:20;border:18px solid transparent;border-image:url(assets/hud/panel_ram.svg) 24 fill stretch;color:var(--text);font-family:Cinzel,Georgia,serif;pointer-events:auto;user-select:none}
+.iwHead{display:flex;align-items:center;gap:10px;font-size:22px;color:#e6dfcc;border-bottom:2px solid var(--blod);padding:0 2px 4px;margin-bottom:8px}
+.iwHead small{font-size:11px;color:var(--dim)}
+#iwClose{margin-left:auto;width:30px;height:30px;border:2px solid var(--jarn);background:#16181b;color:var(--text);font-size:16px;cursor:pointer}
+.iwBody{display:flex;gap:12px}
+#doll{position:relative;width:300px;height:330px;background:url(assets/hud/siluett.svg) center 10px/100px no-repeat;margin-bottom:10px}
+#dollCv{position:absolute;inset:0;width:300px;height:330px;pointer-events:none}
+.eqSlot{position:absolute;background:url(assets/hud/slot_ram.svg) 0 0/100% 100%;display:flex;align-items:center;justify-content:center}
+.eqSlot .ph{font-size:9px;color:var(--dim);text-transform:uppercase;letter-spacing:.5px}
+.eqSlot.filled .ph{display:none}.eqSlot.can{box-shadow:0 0 0 1px #3fd46a88}
+.eqSlot.ok{box-shadow:0 0 0 2px #3fd46a,0 0 12px #3fd46a;background-color:#3fd46a33}.eqSlot.bad{box-shadow:0 0 0 2px #e03040,0 0 12px #e03040;background-color:#e0304033}
+.eqSlot.blocked::after{content:'';position:absolute;inset:4px;background:repeating-linear-gradient(45deg,#0000 0 6px,#7a101855 6px 9px)}
+#bag{position:relative;background-image:url(assets/hud/slot_ram.svg);background-size:34px 34px;outline:2px solid var(--sten)}
+.bagHl{position:absolute;pointer-events:none;z-index:3}.bagHl.ok{background:#3fd46a44;box-shadow:inset 0 0 0 2px #3fd46a}.bagHl.bad{background:#e0304044;box-shadow:inset 0 0 0 2px #e03040}
+.itm{position:absolute;display:flex;align-items:center;justify-content:center;cursor:grab;z-index:2;background:var(--glod,none) center/100% 100% no-repeat,#0b0c0ecc}
+.itm::after{content:'';position:absolute;inset:0;border:5px solid transparent;border-image:var(--ram) 14 stretch;pointer-events:none}
+.itm .ico{display:block;background-repeat:no-repeat;pointer-events:none;flex:none}.itm .emo{font-style:normal;font-size:20px}
+.itm em{position:absolute;right:3px;bottom:1px;font-size:11px;font-style:normal;color:var(--guld);text-shadow:0 1px 2px #000}
+.itm .sk{position:absolute;left:3px;top:3px;display:flex;flex-direction:column;gap:2px}.itm .sk b{width:7px;height:7px;border-radius:50%;border:1px solid #555;box-shadow:inset 0 1px 2px #000}
+.itm.dragging{opacity:.25}
+#dragGhost{position:fixed;z-index:40;pointer-events:none;opacity:.9}
+#statBox{width:210px;background:#111316;border:2px solid var(--sten);padding:0 10px 8px;font-size:13px;align-self:flex-start}
+#statBox h4{margin:0 -10px 6px;padding:5px 10px;background:linear-gradient(90deg,var(--blod),transparent);font-size:14px;font-weight:700}
+#statBox div{display:flex;justify-content:space-between;border-bottom:1px dotted #333;padding:2px 0}#statBox b{color:#efe6d0;font-weight:500}
+#statBox .gold{border:0;margin-top:6px}#statBox .gold b{color:var(--guld)}
+#itTip{position:fixed;z-index:50;width:250px;padding:6px 10px;border:14px solid transparent;border-image:url(assets/hud/tooltip_normal.svg) 20 fill stretch;font:12px/1.3 Georgia,serif;color:var(--text);pointer-events:none}
+#itTip[data-q=magic]{border-image-source:url(assets/hud/tooltip_magic.svg)}#itTip[data-q=rare]{border-image-source:url(assets/hud/tooltip_rare.svg)}#itTip[data-q=set]{border-image-source:url(assets/hud/tooltip_set.svg)}#itTip[data-q=legendary]{border-image-source:url(assets/hud/tooltip_legendary.svg)}#itTip[data-q=hylsad]{border-image-source:url(assets/hud/tooltip_hylsad.svg)}
+#itTip .tn{font:700 15px Cinzel,Georgia,serif;text-align:center}#itTip .tb{color:var(--dim);text-align:center}#itTip .af{color:var(--q-magic)}
+#itTip .good{color:#5fe07a}#itTip .bad{color:#ff5a5a}#itTip .cmpH{margin-top:6px;border-top:1px solid #333;padding-top:4px;color:#cfc7b0}
+#itTip .setH{margin-top:6px;color:var(--q-set)}#itTip .setP,#itTip .setB{color:#1d6a1d;font-size:12px}#itTip .setP.on,#itTip .setB.on{color:#3fe04a}
+.lootLbl i{position:absolute;left:50%;top:100%;width:1px;background:#fff6;display:block}
