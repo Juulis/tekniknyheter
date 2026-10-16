@@ -1,0 +1,1046 @@
+{
+  "meta": {
+    "id": "portal_by",
+    "version": "2.0",
+    "game": "runornas_kall",
+    "baseline_from_demo": {
+      "player_hp": 100,
+      "player_attack_damage": 25,
+      "player_speed": 5.5,
+      "forest_monster_hp": 50,
+      "forest_monster_damage": "8-12",
+      "forest_monster_attack_cd_s": 1.0,
+      "forest_monster_chase_speed": 3.6,
+      "forest_monster_aggro_range": 10,
+      "rune_positions": [
+        [
+          14,
+          -10
+        ],
+        [
+          -16,
+          -6
+        ],
+        [
+          4,
+          20
+        ]
+      ],
+      "safe_radius_center": 12,
+      "player_stamina": 100
+    },
+    "units": "Avstånd i världsenheter (1 ruta = 2 enheter), fart i enheter/s, tid i sekunder. Skada efter försvar: max(1, skada - försvar).",
+    "setting": "Övergiven värld. Den gamla byn är första staden att rensa och återbefolka.",
+    "family": "ododa",
+    "changes_v2": "Mana ersatt med uthållighet för spelaren. Mörk magi behålls för Runpräst och Benkungen. Skadetyper och familj tillagda. Spelarens nivåtillväxt flyttad till klasser.json."
+  },
+  "portal": {
+    "id": "rod_portal",
+    "trigger": {
+      "type": "all_runes_active",
+      "required_runes": 3,
+      "replaces": "win_screen_on_count_3",
+      "delay_s": 2.0
+    },
+    "forest_position": [
+      0,
+      0
+    ],
+    "note": "Mitt i skogens fria centrumcirkel (radie 12), lika långt från alla tre runor. Runorna aktiveras med uthållighet (rituell handling, inte magi); de vaknar av sig själva när hjälten rör dem.",
+    "interaction_radius": 2.0,
+    "color": "#c0182a",
+    "glow_color": "#ff3344",
+    "light_intensity": 3,
+    "village_entry_tile": [
+      16,
+      30
+    ],
+    "return_portal_id": "retur_portal",
+    "return_tile": [
+      16,
+      31
+    ],
+    "return_unlocked": "always"
+  },
+  "rarities": [
+    {
+      "id": "common",
+      "name": "Vanlig",
+      "color": "#bfbfbf",
+      "weight_default": 60
+    },
+    {
+      "id": "uncommon",
+      "name": "Ovanlig",
+      "color": "#3fbf4f",
+      "weight_default": 25
+    },
+    {
+      "id": "rare",
+      "name": "Sällsynt",
+      "color": "#3f7fff",
+      "weight_default": 10
+    },
+    {
+      "id": "epic",
+      "name": "Episk",
+      "color": "#a040ff",
+      "weight_default": 4
+    },
+    {
+      "id": "legendary",
+      "name": "Legendarisk",
+      "color": "#ff9a1f",
+      "weight_default": 1
+    }
+  ],
+  "items": [
+    {
+      "id": "liten_halsodryck",
+      "type": "potion",
+      "rarity": "common",
+      "heal": 30,
+      "stack": 10,
+      "value": 10
+    },
+    {
+      "id": "stor_halsodryck",
+      "type": "potion",
+      "rarity": "uncommon",
+      "heal": 70,
+      "stack": 5,
+      "value": 30
+    },
+    {
+      "id": "uthallighetsdryck",
+      "type": "potion",
+      "rarity": "common",
+      "stack": 10,
+      "value": 12,
+      "stamina": 40
+    },
+    {
+      "id": "benflisa",
+      "type": "material",
+      "rarity": "common",
+      "stack": 99,
+      "value": 2
+    },
+    {
+      "id": "rostig_kortsvard",
+      "type": "weapon",
+      "rarity": "common",
+      "attack_bonus": 3,
+      "value": 15,
+      "damage_type": "hugg"
+    },
+    {
+      "id": "jarnyxa",
+      "type": "weapon",
+      "rarity": "uncommon",
+      "attack_bonus": 7,
+      "value": 45,
+      "damage_type": "hugg"
+    },
+    {
+      "id": "runsmidd_klinga",
+      "type": "weapon",
+      "rarity": "rare",
+      "attack_bonus": 12,
+      "value": 120,
+      "note": "Smidd med runor, ingen magi för spelaren.",
+      "damage_type": "hugg"
+    },
+    {
+      "id": "gravvaktarens_hillebard",
+      "type": "weapon",
+      "rarity": "epic",
+      "attack_bonus": 18,
+      "attack_speed_mult": 0.9,
+      "value": 300,
+      "damage_type": "stick"
+    },
+    {
+      "id": "benkungens_lie",
+      "type": "weapon",
+      "rarity": "legendary",
+      "attack_bonus": 28,
+      "lifesteal": 0.1,
+      "value": 1000,
+      "damage_type": "hugg"
+    },
+    {
+      "id": "laderharnesk",
+      "type": "armor",
+      "slot": "body",
+      "rarity": "common",
+      "defense": 1,
+      "value": 15
+    },
+    {
+      "id": "ringbrynja",
+      "type": "armor",
+      "slot": "body",
+      "rarity": "uncommon",
+      "defense": 3,
+      "value": 50
+    },
+    {
+      "id": "benhjalm",
+      "type": "armor",
+      "slot": "head",
+      "rarity": "uncommon",
+      "defense": 2,
+      "value": 40
+    },
+    {
+      "id": "runskold",
+      "type": "armor",
+      "slot": "offhand",
+      "rarity": "rare",
+      "defense": 5,
+      "value": 130
+    },
+    {
+      "id": "gravvaktarens_pansar",
+      "type": "armor",
+      "slot": "body",
+      "rarity": "epic",
+      "defense": 8,
+      "max_hp_bonus": 20,
+      "value": 320
+    },
+    {
+      "id": "benkungens_krona",
+      "type": "armor",
+      "slot": "head",
+      "rarity": "legendary",
+      "defense": 6,
+      "value": 1000,
+      "max_stamina_bonus": 30,
+      "stamina_regen_mult": 1.3
+    }
+  ],
+  "enemies": [
+    {
+      "id": "skelett_krigare",
+      "name": "Skelettkrigare",
+      "hp": 60,
+      "damage": [
+        9,
+        13
+      ],
+      "defense": 2,
+      "speed": 3.4,
+      "attack_cd": 1.0,
+      "attack_range": 1.8,
+      "aggro_range": 10,
+      "xp": 20,
+      "ai": "Samma som skogsmonstret: vandrar, jagar inom 10, närstrid.",
+      "attacks": [
+        {
+          "id": "svardshugg",
+          "damage": [
+            9,
+            13
+          ],
+          "cd": 1.0
+        }
+      ],
+      "family": "ododa",
+      "weak": [
+        "kross"
+      ],
+      "resist": [
+        "stick"
+      ]
+    },
+    {
+      "id": "skelett_bagskytt",
+      "name": "Skelettbågskytt",
+      "hp": 40,
+      "damage": [
+        7,
+        10
+      ],
+      "defense": 0,
+      "speed": 3.0,
+      "attack_cd": 1.8,
+      "attack_range": 12,
+      "aggro_range": 14,
+      "xp": 25,
+      "ai": "Håller avstånd 6 till 10, backar om spelaren är närmare än 5, skjuter pil (projektil fart 14).",
+      "attacks": [
+        {
+          "id": "benpil",
+          "damage": [
+            7,
+            10
+          ],
+          "cd": 1.8,
+          "projectile_speed": 14
+        }
+      ],
+      "family": "ododa",
+      "weak": [
+        "kross"
+      ],
+      "resist": [
+        "stick"
+      ]
+    },
+    {
+      "id": "skelett_vakt",
+      "name": "Gravvakt",
+      "hp": 120,
+      "damage": [
+        14,
+        20
+      ],
+      "defense": 6,
+      "speed": 2.4,
+      "attack_cd": 1.6,
+      "attack_range": 2.0,
+      "aggro_range": 8,
+      "xp": 45,
+      "knockback_resist": 0.7,
+      "ai": "Långsam tank. Sköldblock: 50 % mindre skada framifrån. Patrullerar fast rutt.",
+      "attacks": [
+        {
+          "id": "skoldstot",
+          "damage": [
+            14,
+            20
+          ],
+          "cd": 1.6,
+          "knockback": 6
+        }
+      ],
+      "family": "ododa",
+      "weak": [
+        "kross"
+      ],
+      "resist": [
+        "stick"
+      ]
+    },
+    {
+      "id": "skelett_hund",
+      "name": "Benhund",
+      "hp": 30,
+      "damage": [
+        5,
+        8
+      ],
+      "defense": 0,
+      "speed": 5.0,
+      "attack_cd": 0.6,
+      "attack_range": 1.4,
+      "aggro_range": 12,
+      "xp": 12,
+      "pack_size": [
+        2,
+        4
+      ],
+      "ai": "Flock. Cirklar runt spelaren och biter i tur och ordning. Flyr kort under 30 % HP.",
+      "attacks": [
+        {
+          "id": "bett",
+          "damage": [
+            5,
+            8
+          ],
+          "cd": 0.6
+        }
+      ],
+      "family": "ododa",
+      "weak": [
+        "kross"
+      ],
+      "resist": [
+        "stick"
+      ]
+    },
+    {
+      "id": "skelett_runprast",
+      "name": "Runpräst",
+      "hp": 50,
+      "damage": [
+        12,
+        16
+      ],
+      "defense": 1,
+      "speed": 2.8,
+      "attack_cd": 3.0,
+      "attack_range": 10,
+      "aggro_range": 12,
+      "xp": 35,
+      "ai": "Stödjer: återupplivar ett dött skelett inom 8 var 10:e sekund (max 2 gånger), annars kastar röd eldboll. Teleporterar 5 bort om träffad i närstrid (cd 6).",
+      "attacks": [
+        {
+          "id": "rod_eldboll",
+          "damage": [
+            12,
+            16
+          ],
+          "cd": 3.0,
+          "projectile_speed": 9
+        },
+        {
+          "id": "aterupplivning",
+          "cd": 10,
+          "range": 8,
+          "max_uses": 2
+        }
+      ],
+      "family": "ododa",
+      "weak": [
+        "kross"
+      ],
+      "resist": [
+        "stick"
+      ],
+      "uses_dark_magic": true
+    }
+  ],
+  "boss": {
+    "id": "benkungen_valdemar",
+    "name": "Benkungen Valdemar",
+    "hp": 900,
+    "defense": 5,
+    "speed": 3.0,
+    "aggro_range": 14,
+    "xp": 400,
+    "arena_tiles": [
+      [
+        12,
+        2
+      ],
+      [
+        20,
+        8
+      ]
+    ],
+    "spawn_tile": [
+      16,
+      4
+    ],
+    "leash": "Låser arenan när striden börjar, återställs om spelaren dör.",
+    "phases": [
+      {
+        "id": "fas_1",
+        "hp_from": 1.0,
+        "hp_to": 0.6,
+        "name": "Kungens vrede",
+        "attacks": [
+          {
+            "id": "liehugg",
+            "damage": [
+              18,
+              24
+            ],
+            "cd": 1.4,
+            "range": 2.6,
+            "arc_deg": 120
+          },
+          {
+            "id": "benstorm",
+            "damage": [
+              6,
+              8
+            ],
+            "cd": 8,
+            "desc": "Kastar 8 benspjut i cirkel, projektil fart 10."
+          }
+        ],
+        "behavior": "Går mot spelaren, liehugg i närstrid, benstorm på avstånd."
+      },
+      {
+        "id": "fas_2",
+        "hp_from": 0.6,
+        "hp_to": 0.3,
+        "name": "De dödas hov",
+        "speed": 3.4,
+        "attacks": [
+          {
+            "id": "liehugg",
+            "damage": [
+              20,
+              26
+            ],
+            "cd": 1.2,
+            "range": 2.6,
+            "arc_deg": 120
+          },
+          {
+            "id": "kalla_hovet",
+            "cd": 15,
+            "summon": {
+              "skelett_krigare": 2,
+              "skelett_bagskytt": 1
+            }
+          },
+          {
+            "id": "gravslag",
+            "damage": [
+              25,
+              30
+            ],
+            "cd": 10,
+            "radius": 4,
+            "telegraph_s": 1.2,
+            "desc": "Röd cirkel på marken, slår ned efter 1,2 s."
+          }
+        ],
+        "behavior": "Kallar hjälp, immun 2 s vid fasbyte."
+      },
+      {
+        "id": "fas_3",
+        "hp_from": 0.3,
+        "hp_to": 0.0,
+        "name": "Runornas förbannelse",
+        "speed": 4.0,
+        "damage_mult": 1.2,
+        "attacks": [
+          {
+            "id": "liehugg",
+            "damage": [
+              22,
+              28
+            ],
+            "cd": 1.0,
+            "range": 2.8,
+            "arc_deg": 160
+          },
+          {
+            "id": "rod_runcirkel",
+            "damage_per_s": 10,
+            "cd": 12,
+            "duration": 5,
+            "desc": "Tre röda runcirklar på golvet som skadar tills spelaren står på dem i turordning."
+          },
+          {
+            "id": "benstorm",
+            "damage": [
+              6,
+              8
+            ],
+            "cd": 6
+          }
+        ],
+        "behavior": "Enrage. Blir sårbar (försvar 0) i 3 s efter varje gravslag om det missar."
+      }
+    ],
+    "family": "ododa",
+    "weak": [
+      "kross"
+    ],
+    "resist": [
+      "stick"
+    ],
+    "uses_dark_magic": true,
+    "lore": "En gång byns hövding, återuppväckt av demonernas runor. Hans krona höll byn bunden till döden."
+  },
+  "loot_tables": {
+    "skelett_krigare": {
+      "drop_chance": 0.35,
+      "gold": [
+        3,
+        8
+      ],
+      "rarity_weights": {
+        "common": 70,
+        "uncommon": 22,
+        "rare": 7,
+        "epic": 1,
+        "legendary": 0
+      },
+      "guaranteed": [
+        {
+          "item": "benflisa",
+          "chance": 0.5
+        }
+      ]
+    },
+    "skelett_bagskytt": {
+      "drop_chance": 0.35,
+      "gold": [
+        3,
+        8
+      ],
+      "rarity_weights": {
+        "common": 70,
+        "uncommon": 22,
+        "rare": 7,
+        "epic": 1,
+        "legendary": 0
+      },
+      "guaranteed": [
+        {
+          "item": "benflisa",
+          "chance": 0.5
+        }
+      ]
+    },
+    "skelett_hund": {
+      "drop_chance": 0.2,
+      "gold": [
+        1,
+        4
+      ],
+      "rarity_weights": {
+        "common": 80,
+        "uncommon": 18,
+        "rare": 2,
+        "epic": 0,
+        "legendary": 0
+      },
+      "guaranteed": [
+        {
+          "item": "benflisa",
+          "chance": 0.6
+        }
+      ]
+    },
+    "skelett_runprast": {
+      "drop_chance": 0.5,
+      "gold": [
+        6,
+        14
+      ],
+      "rarity_weights": {
+        "common": 55,
+        "uncommon": 30,
+        "rare": 12,
+        "epic": 3,
+        "legendary": 0
+      },
+      "guaranteed": [
+        {
+          "item": "uthallighetsdryck",
+          "chance": 0.4
+        }
+      ]
+    },
+    "skelett_vakt": {
+      "drop_chance": 0.6,
+      "gold": [
+        10,
+        20
+      ],
+      "rarity_weights": {
+        "common": 45,
+        "uncommon": 33,
+        "rare": 16,
+        "epic": 5,
+        "legendary": 1
+      },
+      "guaranteed": [
+        {
+          "item": "liten_halsodryck",
+          "chance": 0.4
+        }
+      ]
+    },
+    "benkungen_valdemar": {
+      "drop_chance": 1.0,
+      "gold": [
+        150,
+        250
+      ],
+      "rarity_weights": {
+        "common": 0,
+        "uncommon": 0,
+        "rare": 50,
+        "epic": 40,
+        "legendary": 10
+      },
+      "guaranteed": [
+        {
+          "item": "stor_halsodryck",
+          "chance": 1.0,
+          "count": 2
+        },
+        {
+          "item": "benkungens_lie",
+          "chance": 0.25
+        },
+        {
+          "item": "benkungens_krona",
+          "chance": 0.25
+        }
+      ]
+    },
+    "pool_by_rarity": {
+      "common": [
+        "liten_halsodryck",
+        "stor_halsodryck",
+        "uthallighetsdryck",
+        "rostig_kortsvard",
+        "jarnyxa",
+        "runsmidd_klinga",
+        "gravvaktarens_hillebard",
+        "benkungens_lie",
+        "laderharnesk",
+        "ringbrynja",
+        "benhjalm",
+        "runskold",
+        "gravvaktarens_pansar",
+        "benkungens_krona"
+      ],
+      "uncommon": [
+        "liten_halsodryck",
+        "stor_halsodryck",
+        "uthallighetsdryck",
+        "rostig_kortsvard",
+        "jarnyxa",
+        "runsmidd_klinga",
+        "gravvaktarens_hillebard",
+        "benkungens_lie",
+        "laderharnesk",
+        "ringbrynja",
+        "benhjalm",
+        "runskold",
+        "gravvaktarens_pansar",
+        "benkungens_krona"
+      ],
+      "rare": [
+        "liten_halsodryck",
+        "stor_halsodryck",
+        "uthallighetsdryck",
+        "rostig_kortsvard",
+        "jarnyxa",
+        "runsmidd_klinga",
+        "gravvaktarens_hillebard",
+        "benkungens_lie",
+        "laderharnesk",
+        "ringbrynja",
+        "benhjalm",
+        "runskold",
+        "gravvaktarens_pansar",
+        "benkungens_krona"
+      ],
+      "epic": [
+        "liten_halsodryck",
+        "stor_halsodryck",
+        "uthallighetsdryck",
+        "rostig_kortsvard",
+        "jarnyxa",
+        "runsmidd_klinga",
+        "gravvaktarens_hillebard",
+        "benkungens_lie",
+        "laderharnesk",
+        "ringbrynja",
+        "benhjalm",
+        "runskold",
+        "gravvaktarens_pansar",
+        "benkungens_krona"
+      ],
+      "legendary": [
+        "liten_halsodryck",
+        "stor_halsodryck",
+        "uthallighetsdryck",
+        "rostig_kortsvard",
+        "jarnyxa",
+        "runsmidd_klinga",
+        "gravvaktarens_hillebard",
+        "benkungens_lie",
+        "laderharnesk",
+        "ringbrynja",
+        "benhjalm",
+        "runskold",
+        "gravvaktarens_pansar",
+        "benkungens_krona"
+      ]
+    },
+    "rules": "Rulla drop_chance, sedan sällsynthet enligt vikter, sedan jämnt bland föremål i pool med den sällsyntheten. Guld alltid. guaranteed rullas separat."
+  },
+  "progression": {
+    "max_level": 10,
+    "xp_formula": "xp_to_next(n) = round(100 * n^1.5)",
+    "per_level": "se klasser.json growth",
+    "level_up": "Full HP och mana vid nivåupp.",
+    "xp_forest_monster": 10,
+    "levels": [
+      {
+        "level": 1,
+        "xp_to_next": 100,
+        "xp_total_at_level": 0
+      },
+      {
+        "level": 2,
+        "xp_to_next": 283,
+        "xp_total_at_level": 100
+      },
+      {
+        "level": 3,
+        "xp_to_next": 520,
+        "xp_total_at_level": 383
+      },
+      {
+        "level": 4,
+        "xp_to_next": 800,
+        "xp_total_at_level": 903
+      },
+      {
+        "level": 5,
+        "xp_to_next": 1118,
+        "xp_total_at_level": 1703
+      },
+      {
+        "level": 6,
+        "xp_to_next": 1470,
+        "xp_total_at_level": 2821
+      },
+      {
+        "level": 7,
+        "xp_to_next": 1852,
+        "xp_total_at_level": 4291
+      },
+      {
+        "level": 8,
+        "xp_to_next": 2263,
+        "xp_total_at_level": 6143
+      },
+      {
+        "level": 9,
+        "xp_to_next": 2700,
+        "xp_total_at_level": 8406
+      },
+      {
+        "level": 10,
+        "xp_to_next": null,
+        "xp_total_at_level": 11106
+      }
+    ],
+    "note": "XP kurvan gäller alla klasser. Stats per nivå finns i klasser.json."
+  },
+  "village": {
+    "id": "gamla_byn",
+    "name": "Den gamla byn",
+    "grid": [
+      32,
+      32
+    ],
+    "tile_size": 2,
+    "zones": [
+      {
+        "id": "portalgladet",
+        "tiles": [
+          [
+            12,
+            27
+          ],
+          [
+            20,
+            31
+          ]
+        ],
+        "safe": true
+      },
+      {
+        "id": "byporten",
+        "tiles": [
+          [
+            10,
+            22
+          ],
+          [
+            22,
+            26
+          ]
+        ]
+      },
+      {
+        "id": "torget",
+        "tiles": [
+          [
+            10,
+            14
+          ],
+          [
+            22,
+            21
+          ]
+        ]
+      },
+      {
+        "id": "vasterhus",
+        "tiles": [
+          [
+            1,
+            10
+          ],
+          [
+            9,
+            24
+          ]
+        ]
+      },
+      {
+        "id": "osterhus",
+        "tiles": [
+          [
+            23,
+            10
+          ],
+          [
+            30,
+            24
+          ]
+        ]
+      },
+      {
+        "id": "kyrkogarden",
+        "tiles": [
+          [
+            6,
+            9
+          ],
+          [
+            26,
+            13
+          ]
+        ]
+      },
+      {
+        "id": "benkungens_kapell",
+        "tiles": [
+          [
+            12,
+            2
+          ],
+          [
+            20,
+            8
+          ]
+        ],
+        "boss_arena": true
+      }
+    ],
+    "spawns": [
+      {
+        "zone": "byporten",
+        "enemy": "skelett_hund",
+        "count": 1,
+        "pack": [
+          2,
+          3
+        ]
+      },
+      {
+        "zone": "byporten",
+        "enemy": "skelett_krigare",
+        "count": 2
+      },
+      {
+        "zone": "torget",
+        "enemy": "skelett_krigare",
+        "count": 3
+      },
+      {
+        "zone": "torget",
+        "enemy": "skelett_bagskytt",
+        "count": 2
+      },
+      {
+        "zone": "vasterhus",
+        "enemy": "skelett_bagskytt",
+        "count": 2
+      },
+      {
+        "zone": "vasterhus",
+        "enemy": "skelett_runprast",
+        "count": 1
+      },
+      {
+        "zone": "osterhus",
+        "enemy": "skelett_hund",
+        "count": 1,
+        "pack": [
+          3,
+          4
+        ]
+      },
+      {
+        "zone": "osterhus",
+        "enemy": "skelett_krigare",
+        "count": 2
+      },
+      {
+        "zone": "kyrkogarden",
+        "enemy": "skelett_vakt",
+        "count": 3
+      },
+      {
+        "zone": "kyrkogarden",
+        "enemy": "skelett_runprast",
+        "count": 1
+      }
+    ],
+    "respawn_s": 120,
+    "boss_respawn": false,
+    "ascii_map": [
+      "################################",
+      "#...........#######............#",
+      "#..........#B.KAPELL#...........#",
+      "#..........#...@....#...........#",
+      "#..........###...####...........#",
+      "#..+..+..+..G..G..G...+..+..+...#",
+      "#..............................#",
+      "#.HH...HH....t.t.t.t....HH..HH..#",
+      "#.HH.b.HH....TORGET.....HH.d.HH.#",
+      "#..r.........w..w..w.....w......#",
+      "#.HH...HH.....a...a.....HH..HH..#",
+      "#.HH.b.HH...............HH.dHH..#",
+      "#..........==BYPORT==...........#",
+      "#............d.w.w..............#",
+      "#...........~~~~~~~~~...........#",
+      "#...........~~~P/R~~~...........#",
+      "################################"
+    ],
+    "ascii_legend": {
+      "#": "vägg/skog",
+      "@": "boss",
+      "B": "bossdörr",
+      "G": "gravvakt",
+      "+": "gravsten",
+      "H": "hus",
+      "w": "skelettkrigare",
+      "a": "bågskytt",
+      "b": "bågskytt i hus",
+      "r": "runpräst",
+      "d": "benhundar",
+      "t": "torgstånd",
+      "=": "byport",
+      "~": "portalglänta (säker)",
+      "P/R": "röd portal in och returportal"
+    },
+    "ascii_note": "Kartan är skalad 2:1 vertikalt jämfört med rutnätet 32x32."
+  },
+  "repopulation": {
+    "city_id": "gamla_byn",
+    "after": "benkungen_valdemar besegrad och alla zoner rensade",
+    "state_flow": [
+      "besatt",
+      "rensad",
+      "aterbefolkad_1",
+      "aterbefolkad_2",
+      "aterbefolkad_3"
+    ],
+    "visual_changes": {
+      "rensad": "Dimman lättar, röda portalen blir varm orange, skelett slutar spawna i byn.",
+      "aterbefolkad_1": "Handlare på torget, eldar i 2 hus.",
+      "aterbefolkad_2": "Smed i västerhus, vakter vid byporten, lagade hus.",
+      "aterbefolkad_3": "Kapellet blir minnesplats, mästarsmed, tavern i österhus."
+    },
+    "service_locations": {
+      "handlare": "torget",
+      "smed": "vasterhus",
+      "vakter": "byporten",
+      "tavern_uppdrag": "osterhus",
+      "mastersmed": "benkungens_kapell"
+    },
+    "unique_quest_lvl3": "begrav_benkungen"
+  }
+}

@@ -1,0 +1,322 @@
+{
+  "meta": {
+    "baseline": "Demo: 100 HP, 25 skada. Riddaren är referens nära baslinjen.",
+    "resource": {
+      "id": "uthallighet",
+      "name": "Uthållighet",
+      "replaces": "mana",
+      "regen_per_s": 8,
+      "regen_delay_s": 1.0,
+      "note": "Vanlig attack kostar 0, undanmanöver 20, sprint 10/s."
+    },
+    "magic": {
+      "status": "framtida_upplasning",
+      "note": "Magi låses upp senare i kampanjen (t.ex. via runorna). Ingen klass har magi från start."
+    },
+    "growth_note": "Ersätter generell tillväxt i portal_by.json: per klass nedan.",
+    "crit_multiplier": 1.75
+  },
+  "classes": [
+    {
+      "id": "amazonkrigare",
+      "name": "Amazonkrigare",
+      "role": "Snabb, stick och räckvidd",
+      "base": {
+        "hp": 90,
+        "stamina": 120,
+        "damage": 22,
+        "defense": 2,
+        "speed": 6.2,
+        "crit_chance": 0.12
+      },
+      "growth": {
+        "hp": 12,
+        "stamina": 6,
+        "damage": 3,
+        "defense": 0.5,
+        "crit_chance": 0.005
+      },
+      "main_damage_type": "stick",
+      "start_gear": [
+        "jaktspjut",
+        "laderharnesk",
+        "kastspjut_x5",
+        "liten_halsodryck_x3"
+      ],
+      "skills": [
+        {
+          "id": "spjutstot",
+          "name": "Spjutstöt",
+          "type": "aktiv",
+          "unlock_level": 1,
+          "stamina_cost": 15,
+          "cooldown_s": 3,
+          "effect": "Lång stöt, 150 % skada, räckvidd 3,5, genomborrar 2 fiender."
+        },
+        {
+          "id": "kastspjut",
+          "name": "Kastspjut",
+          "type": "aktiv",
+          "unlock_level": 2,
+          "stamina_cost": 10,
+          "cooldown_s": 4,
+          "effect": "Kastar spjut 120 % skada, räckvidd 14, förbrukar kastspjut."
+        },
+        {
+          "id": "vig_undanmanover",
+          "name": "Vig undanmanöver",
+          "type": "aktiv",
+          "unlock_level": 3,
+          "stamina_cost": 15,
+          "cooldown_s": 2,
+          "effect": "Rull 4 enheter, osårbar 0,3 s, nästa attack +30 % kritchans."
+        },
+        {
+          "id": "jagarblick",
+          "name": "Jägarblick",
+          "type": "passiv",
+          "unlock_level": 5,
+          "stamina_cost": 0,
+          "cooldown_s": 0,
+          "effect": "Passiv: +10 % skada mot fiender över 80 % HP."
+        },
+        {
+          "id": "virvelspjut",
+          "name": "Virvelspjut",
+          "type": "aktiv",
+          "unlock_level": 7,
+          "stamina_cost": 35,
+          "cooldown_s": 12,
+          "effect": "Snurrar spjutet 2 s, 60 % skada per 0,4 s i radie 3."
+        },
+        {
+          "id": "sarande_kast",
+          "name": "Sårande kast",
+          "type": "aktiv",
+          "unlock_level": 9,
+          "stamina_cost": 25,
+          "cooldown_s": 15,
+          "effect": "Kast som orsakar blödning 8 skada/s i 6 s och 30 % fartsänkning."
+        }
+      ]
+    },
+    {
+      "id": "barbar",
+      "name": "Barbar",
+      "role": "Rå styrka, kross och hugg",
+      "base": {
+        "hp": 120,
+        "stamina": 100,
+        "damage": 30,
+        "defense": 1,
+        "speed": 5.4,
+        "crit_chance": 0.08
+      },
+      "growth": {
+        "hp": 18,
+        "stamina": 4,
+        "damage": 4,
+        "defense": 0.5,
+        "crit_chance": 0.003
+      },
+      "main_damage_type": "kross",
+      "start_gear": [
+        "tvahands_klubba",
+        "palsvast",
+        "liten_halsodryck_x3"
+      ],
+      "skills": [
+        {
+          "id": "tungt_slag",
+          "name": "Tungt slag",
+          "type": "aktiv",
+          "unlock_level": 1,
+          "stamina_cost": 20,
+          "cooldown_s": 4,
+          "effect": "Laddat slag 200 % skada, slår omkull vanliga fiender 1 s."
+        },
+        {
+          "id": "stridsvral",
+          "name": "Stridsvrål",
+          "type": "aktiv",
+          "unlock_level": 2,
+          "stamina_cost": 15,
+          "cooldown_s": 15,
+          "effect": "Fiender inom 6 vänder sig mot dig, du får +20 % skada i 6 s."
+        },
+        {
+          "id": "markskakning",
+          "name": "Markskakning",
+          "type": "aktiv",
+          "unlock_level": 4,
+          "stamina_cost": 30,
+          "cooldown_s": 10,
+          "effect": "Slår i marken, 120 % skada i radie 4, 40 % fartsänkning 3 s."
+        },
+        {
+          "id": "blodtorst",
+          "name": "Blodtörst",
+          "type": "passiv",
+          "unlock_level": 5,
+          "stamina_cost": 0,
+          "cooldown_s": 0,
+          "effect": "Passiv: varje dödad fiende ger 5 % av max HP."
+        },
+        {
+          "id": "berserkerrus",
+          "name": "Berserkerrus",
+          "type": "aktiv",
+          "unlock_level": 7,
+          "stamina_cost": 40,
+          "cooldown_s": 30,
+          "effect": "8 s: +40 % skada och attackfart, tar 15 % mer skada."
+        },
+        {
+          "id": "yxkast",
+          "name": "Yxkast",
+          "type": "aktiv",
+          "unlock_level": 9,
+          "stamina_cost": 20,
+          "cooldown_s": 8,
+          "effect": "Kastar vapnet 160 % skada, det studsar tillbaka."
+        }
+      ]
+    },
+    {
+      "id": "riddare",
+      "name": "Riddare",
+      "role": "Försvar, balans, hugg",
+      "base": {
+        "hp": 110,
+        "stamina": 100,
+        "damage": 25,
+        "defense": 5,
+        "speed": 5.2,
+        "crit_chance": 0.05
+      },
+      "growth": {
+        "hp": 15,
+        "stamina": 5,
+        "damage": 3,
+        "defense": 1,
+        "crit_chance": 0.003
+      },
+      "main_damage_type": "hugg",
+      "start_gear": [
+        "langsvard",
+        "skold_ek",
+        "ringbrynja",
+        "liten_halsodryck_x3"
+      ],
+      "skills": [
+        {
+          "id": "skoldblock",
+          "name": "Sköldblock",
+          "type": "aktiv",
+          "unlock_level": 1,
+          "stamina_cost": 5,
+          "cooldown_s": 0,
+          "effect": "Håll: blockerar 70 % skada framifrån, kostar 5 uthållighet per träff."
+        },
+        {
+          "id": "skoldslag",
+          "name": "Sköldslag",
+          "type": "aktiv",
+          "unlock_level": 2,
+          "stamina_cost": 15,
+          "cooldown_s": 6,
+          "effect": "80 % skada, avbryter fiendens attack eller besvärjelse, omkull 1,5 s."
+        },
+        {
+          "id": "framstot",
+          "name": "Framstöt",
+          "type": "aktiv",
+          "unlock_level": 3,
+          "stamina_cost": 20,
+          "cooldown_s": 8,
+          "effect": "Rusar 6 enheter, 130 % skada på första fienden."
+        },
+        {
+          "id": "jarnvilja",
+          "name": "Järnvilja",
+          "type": "passiv",
+          "unlock_level": 5,
+          "stamina_cost": 0,
+          "cooldown_s": 0,
+          "effect": "Passiv: under 30 % HP får du +5 försvar."
+        },
+        {
+          "id": "motattack",
+          "name": "Motattack",
+          "type": "aktiv",
+          "unlock_level": 7,
+          "stamina_cost": 10,
+          "cooldown_s": 5,
+          "effect": "Perfekt block (0,3 s) ger motslag 180 % skada."
+        },
+        {
+          "id": "fanbararens_rop",
+          "name": "Fanbärarens rop",
+          "type": "aktiv",
+          "unlock_level": 9,
+          "stamina_cost": 30,
+          "cooldown_s": 40,
+          "effect": "Läker 25 % HP och ger +3 försvar i 10 s."
+        }
+      ]
+    }
+  ],
+  "items": [
+    {
+      "id": "jaktspjut",
+      "type": "weapon",
+      "damage_type": "stick",
+      "attack_bonus": 2,
+      "range": 2.6
+    },
+    {
+      "id": "kastspjut",
+      "type": "ammo",
+      "damage_type": "stick",
+      "stack": 10
+    },
+    {
+      "id": "tvahands_klubba",
+      "type": "weapon",
+      "damage_type": "kross",
+      "attack_bonus": 4,
+      "attack_speed_mult": 0.85
+    },
+    {
+      "id": "langsvard",
+      "type": "weapon",
+      "damage_type": "hugg",
+      "attack_bonus": 3
+    },
+    {
+      "id": "skold_ek",
+      "type": "armor",
+      "slot": "offhand",
+      "defense": 2
+    },
+    {
+      "id": "palsvast",
+      "type": "armor",
+      "slot": "body",
+      "defense": 1,
+      "max_hp_bonus": 10
+    },
+    {
+      "id": "laderharnesk",
+      "type": "armor",
+      "slot": "body",
+      "defense": 1
+    },
+    {
+      "id": "ringbrynja",
+      "type": "armor",
+      "slot": "body",
+      "defense": 3
+    }
+  ]
+}

@@ -1,0 +1,485 @@
+{
+  "damage_types": [
+    {
+      "id": "hugg",
+      "name": "Hugg"
+    },
+    {
+      "id": "stick",
+      "name": "Stick"
+    },
+    {
+      "id": "kross",
+      "name": "Kross"
+    }
+  ],
+  "multiplier_rules": {
+    "svag": 1.5,
+    "normal": 1.0,
+    "resistent": 0.6
+  },
+  "families": [
+    {
+      "id": "ododa",
+      "name": "Odöda",
+      "theme": "Skelett och gengångare ur gamla gravar, bundna av mörka runor.",
+      "color": "#a8b0a0",
+      "weak": [
+        "kross"
+      ],
+      "resist": [
+        "stick"
+      ],
+      "examples": [
+        "skelett_krigare",
+        "skelett_bagskytt",
+        "skelett_vakt",
+        "skelett_hund",
+        "skelett_runprast",
+        "benkungen_valdemar"
+      ]
+    },
+    {
+      "id": "demoner",
+      "name": "Demoner",
+      "theme": "Varelser ur sprickor i världen, eld och aska, smart och grym.",
+      "color": "#8a1a1a",
+      "weak": [
+        "stick"
+      ],
+      "resist": [
+        "kross"
+      ],
+      "examples": [
+        "askimp",
+        "hornslaktare",
+        "eldpiska_demon"
+      ],
+      "boss": "askfursten_morvath"
+    },
+    {
+      "id": "bestar",
+      "name": "Bestar",
+      "theme": "Förvridna vargar, björnar och vildsvin, jagar i flock.",
+      "color": "#5a4630",
+      "weak": [
+        "hugg"
+      ],
+      "resist": [],
+      "examples": [
+        "skogsvarg",
+        "skogsvarg",
+        "skuggvarg",
+        "ruttbjorn",
+        "taggsvin"
+      ],
+      "boss": "grabjornen_ulvhild"
+    },
+    {
+      "id": "gastar",
+      "name": "Gastar",
+      "theme": "Drunknade och glömda andar i dimma och träsk, halvgenomskinliga.",
+      "color": "#4a6a7a",
+      "weak": [
+        "hugg"
+      ],
+      "resist": [
+        "kross",
+        "stick"
+      ],
+      "examples": [
+        "dimgast",
+        "trasknacken",
+        "klagokvinna"
+      ],
+      "boss": "trasdrottningen"
+    },
+    {
+      "id": "forvridna",
+      "name": "Förvridna",
+      "theme": "Människor som förvandlats av demonisk smitta, sjuka och vanställda.",
+      "color": "#5a6a2a",
+      "weak": [
+        "hugg",
+        "stick"
+      ],
+      "resist": [],
+      "examples": [
+        "smittbarare",
+        "kottklump",
+        "galen_munk"
+      ],
+      "boss": "fadern_av_smittan"
+    },
+    {
+      "id": "insekter",
+      "name": "Kryp",
+      "theme": "Jättespindlar och kitinbaggar i gruvor och källare.",
+      "color": "#2a2a3a",
+      "weak": [
+        "kross"
+      ],
+      "resist": [
+        "hugg"
+      ],
+      "examples": [
+        "gruvspindel",
+        "syrabagge",
+        "kitinvakt"
+      ],
+      "boss": "spinnmodern"
+    }
+  ],
+  "monsters_note": "Stats för fiender utanför portalbyn. Odöda stats finns i portal_by.json. Skada efter försvar enligt skademodellen.",
+  "monsters": [
+    {
+      "id": "skogsvarg",
+      "name": "Skogsvarg",
+      "family": "bestar",
+      "hp": 50,
+      "damage": [
+        8,
+        12
+      ],
+      "defense": 0,
+      "speed": 3.6,
+      "attack_cd": 1.0,
+      "aggro_range": 10,
+      "xp": 10,
+      "ai": "Demons nuvarande varg: vandrar, jagar inom 10, biter.",
+      "note": "Matchar spawnWolf i game.js."
+    },
+    {
+      "id": "skuggvarg",
+      "name": "Skuggvarg",
+      "family": "bestar",
+      "hp": 70,
+      "damage": [
+        10,
+        14
+      ],
+      "defense": 1,
+      "speed": 4.2,
+      "attack_cd": 1.0,
+      "aggro_range": 12,
+      "xp": 18,
+      "ai": "Flockledare, flankerar, ylar och kallar närliggande vargar."
+    },
+    {
+      "id": "taggsvin",
+      "name": "Taggsvin",
+      "family": "bestar",
+      "hp": 80,
+      "damage": [
+        12,
+        18
+      ],
+      "defense": 3,
+      "speed": 3.0,
+      "attack_cd": 2.5,
+      "aggro_range": 10,
+      "xp": 20,
+      "ai": "Laddar rakt fram i fart 7 efter 1 s varning, kan undvikas."
+    },
+    {
+      "id": "ruttbjorn",
+      "name": "Ruttbjörn",
+      "family": "bestar",
+      "hp": 220,
+      "damage": [
+        20,
+        28
+      ],
+      "defense": 5,
+      "speed": 2.8,
+      "attack_cd": 2.0,
+      "aggro_range": 8,
+      "xp": 60,
+      "ai": "Långsam, slår omkull, rasar under 30 % HP."
+    },
+    {
+      "id": "grabjornen_ulvhild",
+      "name": "Gråbjörnen Ulvhild",
+      "family": "bestar",
+      "hp": 1300,
+      "damage": [
+        24,
+        32
+      ],
+      "defense": 7,
+      "speed": 3.2,
+      "attack_cd": 1.0,
+      "aggro_range": 10,
+      "xp": 550,
+      "ai": "Boss: tre faser, kallar vargar, laddning, ras.",
+      "boss": true
+    },
+    {
+      "id": "dimgast",
+      "name": "Dimgast",
+      "family": "gastar",
+      "hp": 60,
+      "damage": [
+        10,
+        14
+      ],
+      "defense": 0,
+      "speed": 3.2,
+      "attack_cd": 1.0,
+      "aggro_range": 10,
+      "xp": 22,
+      "ai": "Svävar genom hinder, blir osynlig 2 s efter träff.",
+      "dark_magic": true
+    },
+    {
+      "id": "trasknacken",
+      "name": "Träsknäcken",
+      "family": "gastar",
+      "hp": 110,
+      "damage": [
+        14,
+        20
+      ],
+      "defense": 2,
+      "speed": 2.6,
+      "attack_cd": 3.0,
+      "aggro_range": 10,
+      "xp": 40,
+      "ai": "Drar spelaren mot sig från vatten, räckvidd 6.",
+      "dark_magic": true
+    },
+    {
+      "id": "klagokvinna",
+      "name": "Klagokvinna",
+      "family": "gastar",
+      "hp": 70,
+      "damage": [
+        6,
+        9
+      ],
+      "defense": 0,
+      "speed": 2.4,
+      "attack_cd": 6.0,
+      "aggro_range": 10,
+      "xp": 35,
+      "ai": "Skrik i radie 6 sänker spelarens uthållighetsregen 50 % i 4 s.",
+      "dark_magic": true
+    },
+    {
+      "id": "trasdrottningen",
+      "name": "Träsdrottningen",
+      "family": "gastar",
+      "hp": 1600,
+      "damage": [
+        26,
+        34
+      ],
+      "defense": 4,
+      "speed": 3.0,
+      "attack_cd": 1.0,
+      "aggro_range": 10,
+      "xp": 700,
+      "ai": "Boss.",
+      "boss": true,
+      "dark_magic": true
+    },
+    {
+      "id": "gruvspindel",
+      "name": "Gruvspindel",
+      "family": "insekter",
+      "hp": 45,
+      "damage": [
+        8,
+        11
+      ],
+      "defense": 2,
+      "speed": 5.0,
+      "attack_cd": 0.8,
+      "aggro_range": 10,
+      "xp": 16,
+      "ai": "Hoppar från tak, flock 3 till 5."
+    },
+    {
+      "id": "syrabagge",
+      "name": "Syrabagge",
+      "family": "insekter",
+      "hp": 90,
+      "damage": [
+        10,
+        15
+      ],
+      "defense": 6,
+      "speed": 2.6,
+      "attack_cd": 2.2,
+      "aggro_range": 10,
+      "xp": 30,
+      "ai": "Spottar syra som sänker försvar 3 i 5 s."
+    },
+    {
+      "id": "kitinvakt",
+      "name": "Kitinvakt",
+      "family": "insekter",
+      "hp": 180,
+      "damage": [
+        18,
+        24
+      ],
+      "defense": 10,
+      "speed": 2.4,
+      "attack_cd": 1.8,
+      "aggro_range": 10,
+      "xp": 55,
+      "ai": "Pansar, svag bakifrån (dubbel skada)."
+    },
+    {
+      "id": "spinnmodern",
+      "name": "Spinnmodern",
+      "family": "insekter",
+      "hp": 1800,
+      "damage": [
+        28,
+        36
+      ],
+      "defense": 8,
+      "speed": 3.4,
+      "attack_cd": 1.0,
+      "aggro_range": 10,
+      "xp": 800,
+      "ai": "Boss.",
+      "boss": true
+    },
+    {
+      "id": "askimp",
+      "name": "Askimp",
+      "family": "demoner",
+      "hp": 55,
+      "damage": [
+        10,
+        14
+      ],
+      "defense": 1,
+      "speed": 4.6,
+      "attack_cd": 1.5,
+      "aggro_range": 10,
+      "xp": 24,
+      "ai": "Kastar glöd från avstånd, flyr i närstrid.",
+      "dark_magic": true
+    },
+    {
+      "id": "hornslaktare",
+      "name": "Hornslaktare",
+      "family": "demoner",
+      "hp": 200,
+      "damage": [
+        24,
+        32
+      ],
+      "defense": 6,
+      "speed": 3.4,
+      "attack_cd": 1.6,
+      "aggro_range": 10,
+      "xp": 70,
+      "ai": "Närstrid, svepande yxa, laddar."
+    },
+    {
+      "id": "eldpiska_demon",
+      "name": "Eldpiskedemon",
+      "family": "demoner",
+      "hp": 160,
+      "damage": [
+        18,
+        26
+      ],
+      "defense": 4,
+      "speed": 3.2,
+      "attack_cd": 2.0,
+      "aggro_range": 10,
+      "xp": 65,
+      "ai": "Piska räckvidd 5, drar spelaren.",
+      "dark_magic": true
+    },
+    {
+      "id": "askfursten_morvath",
+      "name": "Askfursten Morvath",
+      "family": "demoner",
+      "hp": 2500,
+      "damage": [
+        34,
+        44
+      ],
+      "defense": 10,
+      "speed": 3.6,
+      "attack_cd": 1.0,
+      "aggro_range": 10,
+      "xp": 1200,
+      "ai": "Slutboss för första akten.",
+      "boss": true,
+      "dark_magic": true
+    },
+    {
+      "id": "smittbarare",
+      "name": "Smittbärare",
+      "family": "forvridna",
+      "hp": 80,
+      "damage": [
+        9,
+        13
+      ],
+      "defense": 1,
+      "speed": 2.8,
+      "attack_cd": 1.0,
+      "aggro_range": 10,
+      "xp": 20,
+      "ai": "Exploderar vid död, giftmoln radie 3."
+    },
+    {
+      "id": "kottklump",
+      "name": "Köttklump",
+      "family": "forvridna",
+      "hp": 250,
+      "damage": [
+        16,
+        22
+      ],
+      "defense": 2,
+      "speed": 2.0,
+      "attack_cd": 2.0,
+      "aggro_range": 10,
+      "xp": 50,
+      "ai": "Delar sig i två små vid död."
+    },
+    {
+      "id": "galen_munk",
+      "name": "Galen munk",
+      "family": "forvridna",
+      "hp": 90,
+      "damage": [
+        12,
+        16
+      ],
+      "defense": 2,
+      "speed": 4.0,
+      "attack_cd": 1.2,
+      "aggro_range": 10,
+      "xp": 30,
+      "ai": "Oförutsägbar, byter mål."
+    },
+    {
+      "id": "fadern_av_smittan",
+      "name": "Fadern av smittan",
+      "family": "forvridna",
+      "hp": 1500,
+      "damage": [
+        24,
+        32
+      ],
+      "defense": 5,
+      "speed": 2.8,
+      "attack_cd": 1.0,
+      "aggro_range": 10,
+      "xp": 650,
+      "ai": "Boss, ej placerad ännu.",
+      "boss": true
+    }
+  ]
+}

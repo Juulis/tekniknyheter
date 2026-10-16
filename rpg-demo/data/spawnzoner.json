@@ -1,0 +1,1006 @@
+{
+  "meta": {
+    "version": "1.0",
+    "units": "Startskogen i världsenheter från game.js. Städer i rutor från respektive layout. Respawn är [min, max] sekunder, slumpas jämnt.",
+    "state_rule": "state_spawn_multiplier multipliceras med max_alive. 0 stänger av spawn. Bossar spawnar en gång och kopplas inte till respawn.",
+    "group_rule": "group_size gäller per spawnhändelse om inte fiendens rad har egen group."
+  },
+  "areas": [
+    {
+      "id": "startskogen",
+      "name": "Startskogen",
+      "family": "bestar",
+      "city_id": null,
+      "coord_system": "världsenheter (x, z) från game.js",
+      "max_alive_area": 8,
+      "respawn_s": [
+        25,
+        45
+      ],
+      "group_size": [
+        1,
+        3
+      ],
+      "min_player_distance": 18,
+      "spawn_points": [
+        {
+          "id": "skog_nordost",
+          "radius": 5,
+          "max_alive": 3,
+          "pos": [
+            24,
+            -22
+          ]
+        },
+        {
+          "id": "skog_ost",
+          "radius": 5,
+          "max_alive": 3,
+          "pos": [
+            30,
+            4
+          ]
+        },
+        {
+          "id": "skog_sydost",
+          "radius": 5,
+          "max_alive": 2,
+          "pos": [
+            20,
+            28
+          ]
+        },
+        {
+          "id": "skog_syd",
+          "radius": 5,
+          "max_alive": 3,
+          "pos": [
+            -6,
+            32
+          ]
+        },
+        {
+          "id": "skog_sydvast",
+          "radius": 5,
+          "max_alive": 2,
+          "pos": [
+            -26,
+            22
+          ]
+        },
+        {
+          "id": "skog_vast",
+          "radius": 5,
+          "max_alive": 3,
+          "pos": [
+            -32,
+            -2
+          ]
+        },
+        {
+          "id": "skog_nordvast",
+          "radius": 5,
+          "max_alive": 2,
+          "pos": [
+            -22,
+            -26
+          ]
+        },
+        {
+          "id": "skog_nord",
+          "radius": 5,
+          "max_alive": 3,
+          "pos": [
+            2,
+            -34
+          ]
+        }
+      ],
+      "enemy_table": [
+        {
+          "enemy": "skogsvarg",
+          "weight": 70,
+          "group": [
+            1,
+            3
+          ]
+        },
+        {
+          "enemy": "skuggvarg",
+          "weight": 20,
+          "group": [
+            1,
+            1
+          ]
+        },
+        {
+          "enemy": "taggsvin",
+          "weight": 10,
+          "group": [
+            1,
+            1
+          ]
+        }
+      ],
+      "state_spawn_multiplier": {
+        "alltid": 1.0
+      },
+      "note": "Punkter ligger på radie 30 till 35 som i spawnPack (18 till 40), utanför centrumcirkeln 12 och minst 8 från runorna (14,-10), (-16,-6), (4,20). Ingen stad, alltid aktiv.",
+      "runes_scaling": {
+        "0": 1.0,
+        "1": 1.15,
+        "2": 1.3,
+        "3": 1.5,
+        "note": "max_alive_area multipliceras med antal aktiva runor, skogen blir farligare."
+      },
+      "center_safe_radius": 12
+    },
+    {
+      "id": "gamla_byn",
+      "name": "Den gamla byn (portalbyn)",
+      "family": "ododa",
+      "city_id": "gamla_byn",
+      "coord_system": "rutor (portal_by grid, 1 ruta = 2 enheter)",
+      "max_alive_area": 16,
+      "respawn_s": [
+        90,
+        150
+      ],
+      "group_size": [
+        1,
+        2
+      ],
+      "min_player_distance": 12,
+      "spawn_points": [
+        {
+          "id": "byporten_v",
+          "radius": 3,
+          "max_alive": 3,
+          "pos": [
+            12,
+            24
+          ],
+          "zone": "byporten"
+        },
+        {
+          "id": "byporten_o",
+          "radius": 3,
+          "max_alive": 3,
+          "pos": [
+            20,
+            24
+          ],
+          "zone": "byporten"
+        },
+        {
+          "id": "torget_n",
+          "radius": 3,
+          "max_alive": 3,
+          "pos": [
+            16,
+            15
+          ],
+          "zone": "torget"
+        },
+        {
+          "id": "torget_s",
+          "radius": 3,
+          "max_alive": 3,
+          "pos": [
+            16,
+            20
+          ],
+          "zone": "torget"
+        },
+        {
+          "id": "vasterhus_n",
+          "radius": 3,
+          "max_alive": 2,
+          "pos": [
+            5,
+            13
+          ],
+          "zone": "vasterhus"
+        },
+        {
+          "id": "vasterhus_s",
+          "radius": 3,
+          "max_alive": 2,
+          "pos": [
+            5,
+            21
+          ],
+          "zone": "vasterhus"
+        },
+        {
+          "id": "osterhus_n",
+          "radius": 3,
+          "max_alive": 3,
+          "pos": [
+            26,
+            13
+          ],
+          "zone": "osterhus"
+        },
+        {
+          "id": "osterhus_s",
+          "radius": 3,
+          "max_alive": 2,
+          "pos": [
+            26,
+            21
+          ],
+          "zone": "osterhus"
+        },
+        {
+          "id": "kyrkogarden_v",
+          "radius": 3,
+          "max_alive": 2,
+          "pos": [
+            9,
+            11
+          ],
+          "zone": "kyrkogarden"
+        },
+        {
+          "id": "kyrkogarden_m",
+          "radius": 2,
+          "max_alive": 2,
+          "pos": [
+            16,
+            10
+          ],
+          "zone": "kyrkogarden"
+        },
+        {
+          "id": "kyrkogarden_o",
+          "radius": 3,
+          "max_alive": 2,
+          "pos": [
+            23,
+            11
+          ],
+          "zone": "kyrkogarden"
+        }
+      ],
+      "enemy_table": [
+        {
+          "enemy": "skelett_krigare",
+          "weight": 40
+        },
+        {
+          "enemy": "skelett_bagskytt",
+          "weight": 25
+        },
+        {
+          "enemy": "skelett_hund",
+          "weight": 20,
+          "group": [
+            2,
+            4
+          ]
+        },
+        {
+          "enemy": "skelett_runprast",
+          "weight": 8,
+          "group": [
+            1,
+            1
+          ]
+        },
+        {
+          "enemy": "skelett_vakt",
+          "weight": 7,
+          "group": [
+            1,
+            1
+          ]
+        }
+      ],
+      "state_spawn_multiplier": {
+        "besatt": 1.0,
+        "rensad": 0.0,
+        "aterbefolkad_1": 0.0,
+        "aterbefolkad_2": 0.0,
+        "aterbefolkad_3": 0.0
+      },
+      "note": "Ersätter de fasta spawns i portal_by.json med slumpade punkter. Zonerna begränsar urvalet via zone_tables. Portalgläntan och kapellet har inga punkter.",
+      "outskirts": {
+        "note": "Efter rensning kan enstaka vandrare dyka upp utanför byporten tills vakter finns.",
+        "spawn_points": [
+          {
+            "id": "utanfor_byporten",
+            "radius": 3,
+            "max_alive": 2,
+            "pos": [
+              16,
+              29
+            ]
+          }
+        ],
+        "enemy_table": [
+          {
+            "enemy": "skelett_krigare",
+            "weight": 60
+          },
+          {
+            "enemy": "skelett_hund",
+            "weight": 40,
+            "group": [
+              1,
+              2
+            ]
+          }
+        ],
+        "state_spawn_multiplier": {
+          "besatt": 0.0,
+          "rensad": 1.0,
+          "aterbefolkad_1": 0.5,
+          "aterbefolkad_2": 0.0,
+          "aterbefolkad_3": 0.0
+        },
+        "respawn_s": [
+          1200,
+          1500
+        ]
+      },
+      "zone_tables": {
+        "byporten": [
+          {
+            "enemy": "skelett_hund",
+            "weight": 50,
+            "group": [
+              2,
+              3
+            ]
+          },
+          {
+            "enemy": "skelett_krigare",
+            "weight": 50
+          }
+        ],
+        "torget": [
+          {
+            "enemy": "skelett_krigare",
+            "weight": 60
+          },
+          {
+            "enemy": "skelett_bagskytt",
+            "weight": 40
+          }
+        ],
+        "vasterhus": [
+          {
+            "enemy": "skelett_bagskytt",
+            "weight": 60
+          },
+          {
+            "enemy": "skelett_runprast",
+            "weight": 25,
+            "group": [
+              1,
+              1
+            ]
+          },
+          {
+            "enemy": "skelett_krigare",
+            "weight": 15
+          }
+        ],
+        "osterhus": [
+          {
+            "enemy": "skelett_hund",
+            "weight": 45,
+            "group": [
+              3,
+              4
+            ]
+          },
+          {
+            "enemy": "skelett_krigare",
+            "weight": 55
+          }
+        ],
+        "kyrkogarden": [
+          {
+            "enemy": "skelett_vakt",
+            "weight": 60,
+            "group": [
+              1,
+              1
+            ]
+          },
+          {
+            "enemy": "skelett_runprast",
+            "weight": 20,
+            "group": [
+              1,
+              1
+            ]
+          },
+          {
+            "enemy": "skelett_krigare",
+            "weight": 20
+          }
+        ]
+      },
+      "boss": {
+        "enemy": "benkungen_valdemar",
+        "pos": [
+          16,
+          4
+        ],
+        "zone": "benkungens_kapell",
+        "respawn": false
+      },
+      "no_spawn_zones": [
+        "portalgladet",
+        "benkungens_kapell"
+      ]
+    },
+    {
+      "id": "vargaby",
+      "name": "Vargaby",
+      "family": "bestar",
+      "city_id": "vargaby",
+      "coord_system": "rutor (portal_by grid, 1 ruta = 2 enheter)",
+      "max_alive_area": 12,
+      "respawn_s": [
+        90,
+        150
+      ],
+      "group_size": [
+        1,
+        3
+      ],
+      "min_player_distance": 12,
+      "spawn_points": [
+        {
+          "id": "vargaby_port",
+          "radius": 4,
+          "max_alive": 3,
+          "pos": [
+            16,
+            25
+          ]
+        },
+        {
+          "id": "vargaby_vast",
+          "radius": 4,
+          "max_alive": 3,
+          "pos": [
+            6,
+            18
+          ]
+        },
+        {
+          "id": "vargaby_ost",
+          "radius": 4,
+          "max_alive": 3,
+          "pos": [
+            26,
+            18
+          ]
+        },
+        {
+          "id": "vargaby_centrum",
+          "radius": 4,
+          "max_alive": 3,
+          "pos": [
+            16,
+            15
+          ]
+        },
+        {
+          "id": "vargaby_norr",
+          "radius": 4,
+          "max_alive": 3,
+          "pos": [
+            16,
+            9
+          ]
+        }
+      ],
+      "enemy_table": [
+        {
+          "enemy": "skogsvarg",
+          "weight": 35,
+          "group": [
+            2,
+            4
+          ]
+        },
+        {
+          "enemy": "skuggvarg",
+          "weight": 30,
+          "group": [
+            1,
+            2
+          ]
+        },
+        {
+          "enemy": "taggsvin",
+          "weight": 20
+        },
+        {
+          "enemy": "ruttbjorn",
+          "weight": 15,
+          "group": [
+            1,
+            1
+          ]
+        }
+      ],
+      "state_spawn_multiplier": {
+        "besatt": 1.0,
+        "rensad": 0.0,
+        "aterbefolkad_1": 0.0,
+        "aterbefolkad_2": 0.0,
+        "aterbefolkad_3": 0.0
+      },
+      "note": "Grundnivå. Layout ej designad, 32x32 rutor antas, nivå 3 till 6.",
+      "outskirts": {
+        "spawn_points": [
+          {
+            "id": "vargaby_utkant",
+            "radius": 4,
+            "max_alive": 2,
+            "pos": [
+              16,
+              29
+            ]
+          }
+        ],
+        "enemy_table": [
+          {
+            "enemy": "skogsvarg",
+            "weight": 35,
+            "group": [
+              2,
+              4
+            ]
+          }
+        ],
+        "state_spawn_multiplier": {
+          "besatt": 0.0,
+          "rensad": 1.0,
+          "aterbefolkad_1": 0.5,
+          "aterbefolkad_2": 0.0,
+          "aterbefolkad_3": 0.0
+        },
+        "respawn_s": [
+          1200,
+          1500
+        ]
+      },
+      "boss": {
+        "enemy": "grabjornen_ulvhild",
+        "pos": [
+          16,
+          4
+        ],
+        "respawn": false
+      }
+    },
+    {
+      "id": "dimmerstrand",
+      "name": "Dimmerstrand",
+      "family": "gastar",
+      "city_id": "dimmerstrand",
+      "coord_system": "rutor (portal_by grid, 1 ruta = 2 enheter)",
+      "max_alive_area": 12,
+      "respawn_s": [
+        90,
+        150
+      ],
+      "group_size": [
+        1,
+        3
+      ],
+      "min_player_distance": 12,
+      "spawn_points": [
+        {
+          "id": "dimmerstrand_port",
+          "radius": 4,
+          "max_alive": 3,
+          "pos": [
+            16,
+            25
+          ]
+        },
+        {
+          "id": "dimmerstrand_vast",
+          "radius": 4,
+          "max_alive": 3,
+          "pos": [
+            6,
+            18
+          ]
+        },
+        {
+          "id": "dimmerstrand_ost",
+          "radius": 4,
+          "max_alive": 3,
+          "pos": [
+            26,
+            18
+          ]
+        },
+        {
+          "id": "dimmerstrand_centrum",
+          "radius": 4,
+          "max_alive": 3,
+          "pos": [
+            16,
+            15
+          ]
+        },
+        {
+          "id": "dimmerstrand_norr",
+          "radius": 4,
+          "max_alive": 3,
+          "pos": [
+            16,
+            9
+          ]
+        }
+      ],
+      "enemy_table": [
+        {
+          "enemy": "dimgast",
+          "weight": 50,
+          "group": [
+            1,
+            3
+          ]
+        },
+        {
+          "enemy": "trasknacken",
+          "weight": 25,
+          "group": [
+            1,
+            1
+          ]
+        },
+        {
+          "enemy": "klagokvinna",
+          "weight": 25,
+          "group": [
+            1,
+            1
+          ]
+        }
+      ],
+      "state_spawn_multiplier": {
+        "besatt": 1.0,
+        "rensad": 0.0,
+        "aterbefolkad_1": 0.0,
+        "aterbefolkad_2": 0.0,
+        "aterbefolkad_3": 0.0
+      },
+      "note": "Grundnivå. Layout ej designad, 32x32 rutor antas, nivå 5 till 8.",
+      "outskirts": {
+        "spawn_points": [
+          {
+            "id": "dimmerstrand_utkant",
+            "radius": 4,
+            "max_alive": 2,
+            "pos": [
+              16,
+              29
+            ]
+          }
+        ],
+        "enemy_table": [
+          {
+            "enemy": "dimgast",
+            "weight": 50,
+            "group": [
+              1,
+              3
+            ]
+          }
+        ],
+        "state_spawn_multiplier": {
+          "besatt": 0.0,
+          "rensad": 1.0,
+          "aterbefolkad_1": 0.5,
+          "aterbefolkad_2": 0.0,
+          "aterbefolkad_3": 0.0
+        },
+        "respawn_s": [
+          1200,
+          1500
+        ]
+      },
+      "boss": {
+        "enemy": "trasdrottningen",
+        "pos": [
+          16,
+          4
+        ],
+        "respawn": false
+      }
+    },
+    {
+      "id": "kopparberg",
+      "name": "Kopparberg",
+      "family": "insekter",
+      "city_id": "kopparberg",
+      "coord_system": "rutor (portal_by grid, 1 ruta = 2 enheter)",
+      "max_alive_area": 12,
+      "respawn_s": [
+        90,
+        150
+      ],
+      "group_size": [
+        1,
+        3
+      ],
+      "min_player_distance": 12,
+      "spawn_points": [
+        {
+          "id": "kopparberg_port",
+          "radius": 4,
+          "max_alive": 3,
+          "pos": [
+            16,
+            25
+          ]
+        },
+        {
+          "id": "kopparberg_vast",
+          "radius": 4,
+          "max_alive": 3,
+          "pos": [
+            6,
+            18
+          ]
+        },
+        {
+          "id": "kopparberg_ost",
+          "radius": 4,
+          "max_alive": 3,
+          "pos": [
+            26,
+            18
+          ]
+        },
+        {
+          "id": "kopparberg_centrum",
+          "radius": 4,
+          "max_alive": 3,
+          "pos": [
+            16,
+            15
+          ]
+        },
+        {
+          "id": "kopparberg_norr",
+          "radius": 4,
+          "max_alive": 3,
+          "pos": [
+            16,
+            9
+          ]
+        }
+      ],
+      "enemy_table": [
+        {
+          "enemy": "gruvspindel",
+          "weight": 50,
+          "group": [
+            3,
+            5
+          ]
+        },
+        {
+          "enemy": "syrabagge",
+          "weight": 30,
+          "group": [
+            1,
+            2
+          ]
+        },
+        {
+          "enemy": "kitinvakt",
+          "weight": 20,
+          "group": [
+            1,
+            1
+          ]
+        }
+      ],
+      "state_spawn_multiplier": {
+        "besatt": 1.0,
+        "rensad": 0.0,
+        "aterbefolkad_1": 0.0,
+        "aterbefolkad_2": 0.0,
+        "aterbefolkad_3": 0.0
+      },
+      "note": "Grundnivå. Layout ej designad, 32x32 rutor antas, nivå 6 till 9.",
+      "outskirts": {
+        "spawn_points": [
+          {
+            "id": "kopparberg_utkant",
+            "radius": 4,
+            "max_alive": 2,
+            "pos": [
+              16,
+              29
+            ]
+          }
+        ],
+        "enemy_table": [
+          {
+            "enemy": "gruvspindel",
+            "weight": 50,
+            "group": [
+              3,
+              5
+            ]
+          }
+        ],
+        "state_spawn_multiplier": {
+          "besatt": 0.0,
+          "rensad": 1.0,
+          "aterbefolkad_1": 0.5,
+          "aterbefolkad_2": 0.0,
+          "aterbefolkad_3": 0.0
+        },
+        "respawn_s": [
+          1200,
+          1500
+        ]
+      },
+      "boss": {
+        "enemy": "spinnmodern",
+        "pos": [
+          16,
+          4
+        ],
+        "respawn": false
+      }
+    },
+    {
+      "id": "askeborg",
+      "name": "Askeborg",
+      "family": "demoner",
+      "city_id": "askeborg",
+      "coord_system": "rutor (portal_by grid, 1 ruta = 2 enheter)",
+      "max_alive_area": 12,
+      "respawn_s": [
+        90,
+        150
+      ],
+      "group_size": [
+        1,
+        3
+      ],
+      "min_player_distance": 12,
+      "spawn_points": [
+        {
+          "id": "askeborg_port",
+          "radius": 4,
+          "max_alive": 3,
+          "pos": [
+            16,
+            25
+          ]
+        },
+        {
+          "id": "askeborg_vast",
+          "radius": 4,
+          "max_alive": 3,
+          "pos": [
+            6,
+            18
+          ]
+        },
+        {
+          "id": "askeborg_ost",
+          "radius": 4,
+          "max_alive": 3,
+          "pos": [
+            26,
+            18
+          ]
+        },
+        {
+          "id": "askeborg_centrum",
+          "radius": 4,
+          "max_alive": 3,
+          "pos": [
+            16,
+            15
+          ]
+        },
+        {
+          "id": "askeborg_norr",
+          "radius": 4,
+          "max_alive": 3,
+          "pos": [
+            16,
+            9
+          ]
+        }
+      ],
+      "enemy_table": [
+        {
+          "enemy": "askimp",
+          "weight": 45,
+          "group": [
+            2,
+            3
+          ]
+        },
+        {
+          "enemy": "eldpiska_demon",
+          "weight": 30,
+          "group": [
+            1,
+            1
+          ]
+        },
+        {
+          "enemy": "hornslaktare",
+          "weight": 25,
+          "group": [
+            1,
+            1
+          ]
+        }
+      ],
+      "state_spawn_multiplier": {
+        "besatt": 1.0,
+        "rensad": 0.0,
+        "aterbefolkad_1": 0.0,
+        "aterbefolkad_2": 0.0,
+        "aterbefolkad_3": 0.0
+      },
+      "note": "Grundnivå. Layout ej designad, 32x32 rutor antas, nivå 8 till 10.",
+      "outskirts": {
+        "spawn_points": [
+          {
+            "id": "askeborg_utkant",
+            "radius": 4,
+            "max_alive": 2,
+            "pos": [
+              16,
+              29
+            ]
+          }
+        ],
+        "enemy_table": [
+          {
+            "enemy": "askimp",
+            "weight": 45,
+            "group": [
+              2,
+              3
+            ]
+          }
+        ],
+        "state_spawn_multiplier": {
+          "besatt": 0.0,
+          "rensad": 1.0,
+          "aterbefolkad_1": 0.5,
+          "aterbefolkad_2": 0.0,
+          "aterbefolkad_3": 0.0
+        },
+        "respawn_s": [
+          1200,
+          1500
+        ]
+      },
+      "boss": {
+        "enemy": "askfursten_morvath",
+        "pos": [
+          16,
+          4
+        ],
+        "respawn": false
+      }
+    }
+  ]
+}
