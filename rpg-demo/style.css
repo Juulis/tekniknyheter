@@ -19,10 +19,16 @@ canvas{display:block}
 .overlay h1{font-size:52px;color:#bdf;text-shadow:0 0 18px #48f;letter-spacing:3px}
 button{pointer-events:auto;font:inherit;font-size:20px;padding:10px 34px;background:#2b5f8f;color:#fff;border:1px solid #9df;border-radius:8px;cursor:pointer}
 button:hover{background:#3a78b0}
-#joy,#actBtn{display:none}
+#joy,#actBtn,#atkBtn{display:none}
 @media (pointer:coarse){
  #joy{display:block;position:absolute;left:24px;bottom:90px;width:110px;height:110px;border-radius:50%;background:#fff2;border:1px solid #fff5;pointer-events:auto}
  #knob{position:absolute;left:35px;top:35px;width:40px;height:40px;border-radius:50%;background:#fff7}
  #actBtn{display:block;position:absolute;right:28px;bottom:110px;width:70px;height:70px;padding:0;border-radius:50%}
+ #atkBtn{display:block;position:absolute;right:110px;bottom:60px;width:70px;height:70px;padding:0;border-radius:50%;font-size:28px}
  #help{display:none}
 }
+.slot.active{border-color:#ffd76a;box-shadow:0 0 10px #ffd76a88}
+#flash{position:fixed;inset:0;background:radial-gradient(transparent 40%,#f00a);opacity:0;transition:opacity .3s;pointer-events:none}
+#flash.on{opacity:1;transition:none}
+.dmg{position:fixed;font:bold 22px Georgia,serif;color:#ffd76a;text-shadow:0 0 4px #000,0 2px 2px #000;pointer-events:none;transform:translate(-50%,-50%)}
+#lose h1{color:#f99;text-shadow:0 0 18px #a22}
