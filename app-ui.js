@@ -49,7 +49,10 @@ function cardHtml(item, index) {
     .join('');
   // Tom sammanfattning visas aldrig; äldre mallfyllnad ("Nyhet från X om Y.") döljs också.
   const summaryText = String(item.summary || '').trim();
-  const summary = summaryText && !/^Nyhet från .+ om .+\.$/.test(summaryText) ? `<p>${escapeHtml(summaryText)}</p>` : '';
+  const summary =
+    summaryText && !/^Nyhet från .+ om .+\.$/.test(summaryText)
+      ? `<p class="summary-clamp">${escapeHtml(summaryText)}</p>`
+      : '';
   const alsoLinks = (Array.isArray(item.alsoIn) ? item.alsoIn : [])
     .filter((r) => r && /^https?:\/\//i.test(r.url || ''))
     .slice(0, 3)
